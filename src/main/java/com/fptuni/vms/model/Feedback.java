@@ -10,54 +10,40 @@ public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "feedback_id")
-    private Long feedbackId;
+    private Integer feedbackId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "opp_id", nullable = false)
-    private Opportunity opportunity;   // Mỗi feedback thuộc về 1 opportunity
+    private Opportunity opportunity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;                 // Mỗi feedback do 1 user viết
+    private User user;
 
     @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
     @Column(name = "rating")
-    private Integer rating;            // 1 → 5
+    private Integer rating;
 
-    @Column(name = "feedback_type")
-    private String feedbackType;       // VOLUNTEER, ORGANIZATION
+    @Column(name = "feedback_type", length = 20)
+    private String feedbackType = "VOLUNTEER";
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ================== Constructors ==================
-    public Feedback() {
-    }
+    // ======================
+    // GETTER & SETTER
+    // ======================
 
-    public Feedback(Long feedbackId, Opportunity opportunity, User user,
-                    String content, Integer rating, String feedbackType,
-                    LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.feedbackId = feedbackId;
-        this.opportunity = opportunity;
-        this.user = user;
-        this.content = content;
-        this.rating = rating;
-        this.feedbackType = feedbackType;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // ================== Getter & Setter ==================
-    public Long getFeedbackId() {
+    public Integer getFeedbackId() {
         return feedbackId;
     }
 
-    public void setFeedbackId(Long feedbackId) {
+    public void setFeedbackId(Integer feedbackId) {
         this.feedbackId = feedbackId;
     }
 

@@ -2,7 +2,6 @@ package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "Applications")
@@ -10,6 +9,7 @@ public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "app_id")
     private Integer appId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -24,39 +24,83 @@ public class Application {
     @JoinColumn(name = "processed_by")
     private User processedBy;
 
-    private String status;
+    @Column(name = "status", length = 20)
+    private String status = "PENDING";
+
+    @Column(name = "reason", length = 255)
     private String reason;
-    private LocalDateTime appliedAt;
+
+    @Column(name = "applied_at")
+    private LocalDateTime appliedAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Attendance> attendanceRecords;
-
+    // ======================
     // GETTER & SETTER
-    public Integer getAppId() { return appId; }
-    public void setAppId(Integer appId) { this.appId = appId; }
+    // ======================
 
-    public Opportunity getOpportunity() { return opportunity; }
-    public void setOpportunity(Opportunity opportunity) { this.opportunity = opportunity; }
+    public Integer getAppId() {
+        return appId;
+    }
 
-    public User getVolunteer() { return volunteer; }
-    public void setVolunteer(User volunteer) { this.volunteer = volunteer; }
+    public void setAppId(Integer appId) {
+        this.appId = appId;
+    }
 
-    public User getProcessedBy() { return processedBy; }
-    public void setProcessedBy(User processedBy) { this.processedBy = processedBy; }
+    public Opportunity getOpportunity() {
+        return opportunity;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setOpportunity(Opportunity opportunity) {
+        this.opportunity = opportunity;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public User getVolunteer() {
+        return volunteer;
+    }
 
-    public LocalDateTime getAppliedAt() { return appliedAt; }
-    public void setAppliedAt(LocalDateTime appliedAt) { this.appliedAt = appliedAt; }
+    public void setVolunteer(User volunteer) {
+        this.volunteer = volunteer;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public User getProcessedBy() {
+        return processedBy;
+    }
 
-    public List<Attendance> getAttendanceRecords() { return attendanceRecords; }
-    public void setAttendanceRecords(List<Attendance> attendanceRecords) { this.attendanceRecords = attendanceRecords; }
+    public void setProcessedBy(User processedBy) {
+        this.processedBy = processedBy;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public LocalDateTime getAppliedAt() {
+        return appliedAt;
+    }
+
+    public void setAppliedAt(LocalDateTime appliedAt) {
+        this.appliedAt = appliedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

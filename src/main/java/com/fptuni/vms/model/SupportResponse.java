@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "SupportResponses")
+@Table(name = "Supportresponses")
 public class SupportResponse {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "response_id")
     private Integer responseId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -19,24 +20,50 @@ public class SupportResponse {
     @JoinColumn(name = "responder_id", nullable = false)
     private User responder;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "message", columnDefinition = "NVARCHAR(MAX)", nullable = false)
     private String message;
 
-    private LocalDateTime createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     // GETTER & SETTER
-    public Integer getResponseId() { return responseId; }
-    public void setResponseId(Integer responseId) { this.responseId = responseId; }
+    public Integer getResponseId() {
+        return responseId;
+    }
 
-    public SupportTicket getTicket() { return ticket; }
-    public void setTicket(SupportTicket ticket) { this.ticket = ticket; }
+    public void setResponseId(Integer responseId) {
+        this.responseId = responseId;
+    }
 
-    public User getResponder() { return responder; }
-    public void setResponder(User responder) { this.responder = responder; }
+    public SupportTicket getTicket() {
+        return ticket;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setTicket(SupportTicket ticket) {
+        this.ticket = ticket;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public User getResponder() {
+        return responder;
+    }
+
+    public void setResponder(User responder) {
+        this.responder = responder;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
