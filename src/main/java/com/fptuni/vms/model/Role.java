@@ -1,7 +1,6 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "Roles")
@@ -9,17 +8,19 @@ public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "role_id")
     private Integer roleId;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "role_name", nullable = false, unique = true, length = 50)
     private String roleName;
 
+    @Column(name = "description", length = 255)
     private String description;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<User> users;
-
+    // ======================
     // GETTER & SETTER
+    // ======================
+
     public Integer getRoleId() {
         return roleId;
     }
@@ -42,13 +43,5 @@ public class Role {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public List<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<User> users) {
-        this.users = users;
     }
 }

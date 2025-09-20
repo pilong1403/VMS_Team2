@@ -2,7 +2,6 @@ package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "Opportunities")
@@ -10,6 +9,7 @@ public class Opportunity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "opp_id")
     private Integer oppId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -20,73 +20,119 @@ public class Opportunity {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Column(nullable = false, length = 500)
+    @Column(name = "title", nullable = false, length = 500)
     private String title;
 
+    @Column(name = "subtitle", length = 500)
     private String subtitle;
+
+    @Column(name = "location", length = 255)
     private String location;
+
+    @Column(name = "needed_volunteers", nullable = false)
     private Integer neededVolunteers;
-    private String status;
 
+    @Column(name = "status", length = 20)
+    private String status = "OPEN";
+
+    @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
+
+    @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
-    private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<OpportunitySection> sections;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Application> applications;
-
-    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Feedback> feedbacks;
-
-    @OneToMany(mappedBy = "opportunity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Donation> donations;
-
+    // ======================
     // GETTER & SETTER
-    public Integer getOppId() { return oppId; }
-    public void setOppId(Integer oppId) { this.oppId = oppId; }
+    // ======================
 
-    public Organization getOrganization() { return organization; }
-    public void setOrganization(Organization organization) { this.organization = organization; }
+    public Integer getOppId() {
+        return oppId;
+    }
 
-    public Category getCategory() { return category; }
-    public void setCategory(Category category) { this.category = category; }
+    public void setOppId(Integer oppId) {
+        this.oppId = oppId;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public Organization getOrganization() {
+        return organization;
+    }
 
-    public String getSubtitle() { return subtitle; }
-    public void setSubtitle(String subtitle) { this.subtitle = subtitle; }
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public Category getCategory() {
+        return category;
+    }
 
-    public Integer getNeededVolunteers() { return neededVolunteers; }
-    public void setNeededVolunteers(Integer neededVolunteers) { this.neededVolunteers = neededVolunteers; }
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getTitle() {
+        return title;
+    }
 
-    public LocalDateTime getStartTime() { return startTime; }
-    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public LocalDateTime getEndTime() { return endTime; }
-    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public String getSubtitle() {
+        return subtitle;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
 
-    public List<OpportunitySection> getSections() { return sections; }
-    public void setSections(List<OpportunitySection> sections) { this.sections = sections; }
+    public String getLocation() {
+        return location;
+    }
 
-    public List<Application> getApplications() { return applications; }
-    public void setApplications(List<Application> applications) { this.applications = applications; }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-    public List<Feedback> getFeedbacks() { return feedbacks; }
-    public void setFeedbacks(List<Feedback> feedbacks) { this.feedbacks = feedbacks; }
+    public Integer getNeededVolunteers() {
+        return neededVolunteers;
+    }
 
-    public List<Donation> getDonations() { return donations; }
-    public void setDonations(List<Donation> donations) { this.donations = donations; }
+    public void setNeededVolunteers(Integer neededVolunteers) {
+        this.neededVolunteers = neededVolunteers;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
