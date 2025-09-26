@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Otpverification")
+@Table(name = "otpverification", schema = "dbo")
 public class OtpVerification {
 
     @Id

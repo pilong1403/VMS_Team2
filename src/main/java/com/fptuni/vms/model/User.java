@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Users")
+@Table(name = "users", schema = "dbo")
 public class User {
 
     @Id
@@ -30,9 +30,6 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
-    @Column(name = "trust_score")
-    private Integer trustScore = 100;
 
     @Column(name = "status", length = 20)
     private String status = "ACTIVE";
@@ -106,13 +103,7 @@ public class User {
         this.role = role;
     }
 
-    public Integer getTrustScore() {
-        return trustScore;
-    }
 
-    public void setTrustScore(Integer trustScore) {
-        this.trustScore = trustScore;
-    }
 
     public String getStatus() {
         return status;

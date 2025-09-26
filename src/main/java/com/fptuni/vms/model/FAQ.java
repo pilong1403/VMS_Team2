@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "FAQ")
+@Table(name = "faq" , schema = "dbo")
 public class FAQ {
 
     @Id
@@ -20,6 +20,9 @@ public class FAQ {
 
     @Column(name = "answer", columnDefinition = "NVARCHAR(MAX)")
     private String answer;
+
+    @Column(name = "status", nullable = false)
+    private Boolean status = true; // true = hiện, false = ẩn
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -62,6 +65,14 @@ public class FAQ {
 
     public void setAnswer(String answer) {
         this.answer = answer;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {

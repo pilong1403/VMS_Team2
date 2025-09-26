@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Userauthproviders")
+@Table(name = "userauthproviders", schema = "dbo")
 public class UserAuthProvider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "provider_id")                 // <-- map đúng tên cột
     private Integer providerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -18,9 +19,10 @@ public class UserAuthProvider {
     @Column(nullable = false, length = 20)
     private String provider;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "external_uid", nullable = false, length = 255)
     private String externalUid;
 
+    @Column(name = "created_at", insertable = false, updatable = false)  // DB tự set DEFAULT SYSDATETIME()
     private LocalDateTime createdAt;
 
     // GETTER & SETTER

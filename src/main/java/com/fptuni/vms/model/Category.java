@@ -3,7 +3,7 @@ package com.fptuni.vms.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Categories")
+@Table(name = "categories" , schema = "dbo" )
 public class Category {
 
     @Id
