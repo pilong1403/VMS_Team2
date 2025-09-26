@@ -2,7 +2,7 @@ package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
+//canh ne
 @Entity
 @Table(name = "feedback" , schema = "dbo")
 public class Feedback {
