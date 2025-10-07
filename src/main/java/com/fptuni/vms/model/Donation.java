@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "donations" , schema = "dbo")
+@Table(name = "donations", schema = "dbo")
 public class Donation {
 
     @Id
@@ -13,10 +13,12 @@ public class Donation {
     @Column(name = "donation_id")
     private Integer donationId;
 
+    // donor_id: NULLable theo DDL
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donor_id")
     private User donor;
 
+    // opp_id: NULLable theo DDL
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "opp_id")
     private Opportunity opportunity;
@@ -27,8 +29,9 @@ public class Donation {
     @Column(name = "method", length = 50)
     private String method;
 
-    @Column(name = "status", length = 20)
-    private String status = "PENDING";
+    // DB: NOT NULL DEFAULT 'PENDING'
+    @Column(name = "status", length = 20, nullable = false)
+    private String status = "PENDING"; // PENDING/PAID/FAILED/REFUNDED
 
     @Column(name = "content", length = 255)
     private String content;
@@ -36,11 +39,12 @@ public class Donation {
     @Column(name = "receipt_url", length = 500)
     private String receiptUrl;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // Lấy mặc định từ DB (DEFAULT SYSDATETIME())
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     // ======================
-    // GETTER & SETTER
+    // GETTERS & SETTERS
     // ======================
 
     public Integer getDonationId() {

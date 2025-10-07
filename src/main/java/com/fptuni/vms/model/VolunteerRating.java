@@ -5,10 +5,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "volunteerratings", schema = "dbo",
+        name = "volunteerratings",
+        schema = "dbo",
         uniqueConstraints = @UniqueConstraint(
                 name = "UQ_vr_org",
-                columnNames = { "opp_id", "rater_org_id", "ratee_user_id" }
+                columnNames = {"opp_id", "rater_org_id", "ratee_user_id"}
         )
 )
 public class VolunteerRating {
@@ -18,34 +19,39 @@ public class VolunteerRating {
     @Column(name = "vr_id")
     private Integer id;
 
-    // Cơ hội (FK -> opportunities.opp_id)
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Opportunity being rated (NOT NULL). DB: FK with ON DELETE CASCADE.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "opp_id", nullable = false)
     private Opportunity opportunity;
 
-    // Tổ chức chấm (FK -> organizations.org_id)
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Organization that gives the rating (NOT NULL)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "rater_org_id", nullable = false)
     private Organization raterOrg;
 
-    // Tình nguyện viên được chấm (FK -> users.user_id)
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Volunteer (user) who is rated (NOT NULL)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ratee_user_id", nullable = false)
     private User rateeUser;
 
+    // 1..5 (DB TINYINT with CHECK). Validate in service/Bean Validation if desired.
     @Column(name = "stars", nullable = false)
-    private Short stars; // 1..5 (TINYINT ở DB, dùng Short/Integer ở Java)
+    private Short stars;
 
     @Column(name = "comment", length = 1000)
     private String comment;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    // DB default SYSDATETIME(); let DB populate it
+    @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ===== getters/setters =====
+    // ======================
+    // GETTERS & SETTERS
+    // ======================
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

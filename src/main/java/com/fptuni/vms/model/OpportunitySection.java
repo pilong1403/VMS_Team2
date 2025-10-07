@@ -12,7 +12,8 @@ public class OpportunitySection {
     @Column(name = "section_id")
     private Integer sectionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // FK → opportunities (NOT NULL). DB has ON DELETE CASCADE.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "opp_id", nullable = false)
     private Opportunity opportunity;
 
@@ -22,7 +23,8 @@ public class OpportunitySection {
     @Column(name = "heading", length = 255)
     private String heading;
 
-    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
+    // Long text (NVARCHAR(MAX) in DB)
+    @Column(name = "content")
     private String content;
 
     @Column(name = "image_url", length = 500)
@@ -31,74 +33,35 @@ public class OpportunitySection {
     @Column(name = "caption", length = 255)
     private String caption;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // DB default SYSDATETIME(); let DB populate it
+    @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
+    private LocalDateTime createdAt;
 
     // ======================
-    // GETTER & SETTER
+    // GETTERS & SETTERS
     // ======================
 
-    public Integer getSectionId() {
-        return sectionId;
-    }
+    public Integer getSectionId() { return sectionId; }
+    public void setSectionId(Integer sectionId) { this.sectionId = sectionId; }
 
-    public void setSectionId(Integer sectionId) {
-        this.sectionId = sectionId;
-    }
+    public Opportunity getOpportunity() { return opportunity; }
+    public void setOpportunity(Opportunity opportunity) { this.opportunity = opportunity; }
 
-    public Opportunity getOpportunity() {
-        return opportunity;
-    }
+    public Integer getSectionOrder() { return sectionOrder; }
+    public void setSectionOrder(Integer sectionOrder) { this.sectionOrder = sectionOrder; }
 
-    public void setOpportunity(Opportunity opportunity) {
-        this.opportunity = opportunity;
-    }
+    public String getHeading() { return heading; }
+    public void setHeading(String heading) { this.heading = heading; }
 
-    public Integer getSectionOrder() {
-        return sectionOrder;
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
 
-    public void setSectionOrder(Integer sectionOrder) {
-        this.sectionOrder = sectionOrder;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public String getHeading() {
-        return heading;
-    }
+    public String getCaption() { return caption; }
+    public void setCaption(String caption) { this.caption = caption; }
 
-    public void setHeading(String heading) {
-        this.heading = heading;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getCaption() {
-        return caption;
-    }
-
-    public void setCaption(String caption) {
-        this.caption = caption;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
