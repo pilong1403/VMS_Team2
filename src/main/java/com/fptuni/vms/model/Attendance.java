@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "attendance" , schema = "dbo")
+@Table(name = "attendance", schema = "dbo")
 public class Attendance {
 
     @Id
@@ -13,7 +13,7 @@ public class Attendance {
     @Column(name = "att_id")
     private Integer attId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "app_id", nullable = false)
     private Application application;
 
@@ -26,8 +26,9 @@ public class Attendance {
     @Column(name = "total_hours", precision = 5, scale = 2)
     private BigDecimal totalHours;
 
-    @Column(name = "status", length = 20)
-    private String status = "PRESENT";
+    // DB: NOT NULL DEFAULT 'PRESENT'
+    @Column(name = "status", length = 20, nullable = false)
+    private String status = "PRESENT"; // PRESENT / ABSENT / COMPLETED
 
     @Column(name = "notes", length = 255)
     private String notes;
@@ -36,7 +37,7 @@ public class Attendance {
     private String proofFileUrl;
 
     // ======================
-    // GETTER & SETTER
+    // GETTERS & SETTERS
     // ======================
 
     public Integer getAttId() {

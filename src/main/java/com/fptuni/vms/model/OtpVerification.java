@@ -12,67 +12,66 @@ public class OtpVerification {
     @Column(name = "otp_id")
     private Integer otpId;
 
+    // Email to verify / reset (NOT NULL)
     @Column(name = "email", length = 100, nullable = false)
     private String email;
 
+    // OTP code content (NOT NULL)
     @Column(name = "otp_code", length = 10, nullable = false)
     private String otpCode;
 
+    // Expiration timestamp (NOT NULL)
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
-    @Column(name = "verified")
+    // NOT NULL DEFAULT 0
+    @Column(name = "verified", nullable = false)
     private Boolean verified = false;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // DB default SYSDATETIME()
+    @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
+    private LocalDateTime createdAt;
 
-    // GETTER & SETTER
-    public Integer getOtpId() {
-        return otpId;
-    }
+    // Optional purpose tag: RESET_PASSWORD / VERIFY_EMAIL / ...
+    @Column(name = "purpose", length = 30)
+    private String purpose;
 
-    public void setOtpId(Integer otpId) {
-        this.otpId = otpId;
-    }
+    // Optional token (e.g., link-based verification)
+    @Column(name = "token", length = 200)
+    private String token;
 
-    public String getEmail() {
-        return email;
-    }
+    // When the OTP/token was consumed (nullable)
+    @Column(name = "consumed_at")
+    private LocalDateTime consumedAt;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    // ======================
+    // GETTERS & SETTERS
+    // ======================
 
-    public String getOtpCode() {
-        return otpCode;
-    }
+    public Integer getOtpId() { return otpId; }
+    public void setOtpId(Integer otpId) { this.otpId = otpId; }
 
-    public void setOtpCode(String otpCode) {
-        this.otpCode = otpCode;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
-    }
+    public String getOtpCode() { return otpCode; }
+    public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
 
-    public void setExpiredAt(LocalDateTime expiredAt) {
-        this.expiredAt = expiredAt;
-    }
+    public LocalDateTime getExpiredAt() { return expiredAt; }
+    public void setExpiredAt(LocalDateTime expiredAt) { this.expiredAt = expiredAt; }
 
-    public Boolean getVerified() {
-        return verified;
-    }
+    public Boolean getVerified() { return verified; }
+    public void setVerified(Boolean verified) { this.verified = verified; }
 
-    public void setVerified(Boolean verified) {
-        this.verified = verified;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
+    public LocalDateTime getConsumedAt() { return consumedAt; }
+    public void setConsumedAt(LocalDateTime consumedAt) { this.consumedAt = consumedAt; }
 }

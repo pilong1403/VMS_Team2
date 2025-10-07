@@ -12,11 +12,13 @@ public class Opportunity {
     @Column(name = "opp_id")
     private Integer oppId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // FK → organizations (NOT NULL). DB has ON DELETE CASCADE; do NOT cascade REMOVE in JPA.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "org_id", nullable = false)
     private Organization organization;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // FK → categories (NOT NULL)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
@@ -32,8 +34,9 @@ public class Opportunity {
     @Column(name = "needed_volunteers", nullable = false)
     private Integer neededVolunteers;
 
-    @Column(name = "status", length = 20)
-    private String status = "OPEN";
+    // NOT NULL, default 'OPEN' at DB
+    @Column(name = "status", length = 20, nullable = false)
+    private String status = "OPEN"; // OPEN / CLOSED / CANCELLED
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
@@ -41,98 +44,44 @@ public class Opportunity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // DB default SYSDATETIME(); let DB populate it
+    @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
+    private LocalDateTime createdAt;
 
     // ======================
-    // GETTER & SETTER
+    // GETTERS & SETTERS
     // ======================
 
-    public Integer getOppId() {
-        return oppId;
-    }
+    public Integer getOppId() { return oppId; }
+    public void setOppId(Integer oppId) { this.oppId = oppId; }
 
-    public void setOppId(Integer oppId) {
-        this.oppId = oppId;
-    }
+    public Organization getOrganization() { return organization; }
+    public void setOrganization(Organization organization) { this.organization = organization; }
 
-    public Organization getOrganization() {
-        return organization;
-    }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public Category getCategory() {
-        return category;
-    }
+    public String getSubtitle() { return subtitle; }
+    public void setSubtitle(String subtitle) { this.subtitle = subtitle; }
 
-    public void setCategory(Category category) {
-        this.category = category;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public String getTitle() {
-        return title;
-    }
+    public Integer getNeededVolunteers() { return neededVolunteers; }
+    public void setNeededVolunteers(Integer neededVolunteers) { this.neededVolunteers = neededVolunteers; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getSubtitle() {
-        return subtitle;
-    }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
 
-    public void setSubtitle(String subtitle) {
-        this.subtitle = subtitle;
-    }
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public Integer getNeededVolunteers() {
-        return neededVolunteers;
-    }
-
-    public void setNeededVolunteers(Integer neededVolunteers) {
-        this.neededVolunteers = neededVolunteers;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

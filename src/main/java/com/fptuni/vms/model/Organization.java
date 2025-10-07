@@ -12,82 +12,97 @@ public class Organization {
     @Column(name = "org_id")
     private Integer orgId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Owner user (NOT NULL)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
+    // Long text (NVARCHAR(MAX) in DB)
+    @Column(name = "description")
     private String description;
 
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 
-    @Column(name = "approved")
+    // NOT NULL DEFAULT 0
+    @Column(name = "approved", nullable = false)
     private Boolean approved = false;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // DB default SYSDATETIME()
+    @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    // ---------- Registration fields merged into organizations ----------
+    // NOT NULL DEFAULT 'PENDING' (values: PENDING, APPROVED, REJECTED)
+    @Column(name = "reg_status", nullable = false, length = 20)
+    private String regStatus = "PENDING";
+
+    @Column(name = "reg_doc_url", length = 500)
+    private String regDocUrl;
+
+    @Column(name = "reg_doc_cloud_id", length = 200)
+    private String regDocCloudId;
+
+    @Column(name = "reg_note", length = 500)
+    private String regNote;
+
+    @Column(name = "reg_submitted_at")
+    private LocalDateTime regSubmittedAt;
+
+    // Reviewer (users.user_id), nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reg_reviewed_by")
+    private User regReviewedBy;
+
+    @Column(name = "reg_reviewed_at")
+    private LocalDateTime regReviewedAt;
 
     // ======================
-    // GETTER & SETTER
+    // GETTERS & SETTERS
     // ======================
 
-    public Integer getOrgId() {
-        return orgId;
-    }
+    public Integer getOrgId() { return orgId; }
+    public void setOrgId(Integer orgId) { this.orgId = orgId; }
 
-    public void setOrgId(Integer orgId) {
-        this.orgId = orgId;
-    }
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
 
-    public User getOwner() {
-        return owner;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getName() {
-        return name;
-    }
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Boolean getApproved() { return approved; }
+    public void setApproved(Boolean approved) { this.approved = approved; }
 
-    public String getDescription() {
-        return description;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getRegStatus() { return regStatus; }
+    public void setRegStatus(String regStatus) { this.regStatus = regStatus; }
 
-    public String getLogoUrl() {
-        return logoUrl;
-    }
+    public String getRegDocUrl() { return regDocUrl; }
+    public void setRegDocUrl(String regDocUrl) { this.regDocUrl = regDocUrl; }
 
-    public void setLogoUrl(String logoUrl) {
-        this.logoUrl = logoUrl;
-    }
+    public String getRegDocCloudId() { return regDocCloudId; }
+    public void setRegDocCloudId(String regDocCloudId) { this.regDocCloudId = regDocCloudId; }
 
-    public Boolean getApproved() {
-        return approved;
-    }
+    public String getRegNote() { return regNote; }
+    public void setRegNote(String regNote) { this.regNote = regNote; }
 
-    public void setApproved(Boolean approved) {
-        this.approved = approved;
-    }
+    public LocalDateTime getRegSubmittedAt() { return regSubmittedAt; }
+    public void setRegSubmittedAt(LocalDateTime regSubmittedAt) { this.regSubmittedAt = regSubmittedAt; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public User getRegReviewedBy() { return regReviewedBy; }
+    public void setRegReviewedBy(User regReviewedBy) { this.regReviewedBy = regReviewedBy; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getRegReviewedAt() { return regReviewedAt; }
+    public void setRegReviewedAt(LocalDateTime regReviewedAt) { this.regReviewedAt = regReviewedAt; }
 }
