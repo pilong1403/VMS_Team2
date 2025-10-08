@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 @Table(name = "otpverification", schema = "dbo")
 public class OtpVerification {
 
+    public enum Purpose { RESET_PASSWORD, VERIFY_EMAIL }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "otp_id")
@@ -24,17 +26,18 @@ public class OtpVerification {
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
-    // NOT NULL DEFAULT 0
+    // BIT NOT NULL DEFAULT 0 (DB)
     @Column(name = "verified", nullable = false)
-    private Boolean verified = false;
+    private Boolean verified = Boolean.FALSE;
 
-    // DB default SYSDATETIME()
+    // DEFAULT SYSDATETIME() (DB side)
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // Optional purpose tag: RESET_PASSWORD / VERIFY_EMAIL / ...
+    // Optional purpose with CHECK (RESET_PASSWORD / VERIFY_EMAIL)
+    @Enumerated(EnumType.STRING)
     @Column(name = "purpose", length = 30)
-    private String purpose;
+    private Purpose purpose;
 
     // Optional token (e.g., link-based verification)
     @Column(name = "token", length = 200)
@@ -44,9 +47,13 @@ public class OtpVerification {
     @Column(name = "consumed_at")
     private LocalDateTime consumedAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
+    @PrePersist @PreUpdate
+    private void normalize() {
+        if (email != null) email = email.trim().toLowerCase();
+        if (verified == null) verified = Boolean.FALSE; // mirror DB default
+    }
+
+    // ====================== GETTERS & SETTERS ======================
 
     public Integer getOtpId() { return otpId; }
     public void setOtpId(Integer otpId) { this.otpId = otpId; }
@@ -66,8 +73,8 @@ public class OtpVerification {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public String getPurpose() { return purpose; }
-    public void setPurpose(String purpose) { this.purpose = purpose; }
+    public Purpose getPurpose() { return purpose; }
+    public void setPurpose(Purpose purpose) { this.purpose = purpose; }
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }

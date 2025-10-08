@@ -1,6 +1,8 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,9 +14,13 @@ public class OpportunitySection {
     @Column(name = "section_id")
     private Integer sectionId;
 
-    // FK → opportunities (NOT NULL). DB has ON DELETE CASCADE.
+    // FK → opportunities (NOT NULL). DB ON DELETE CASCADE.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "opp_id", nullable = false)
+    @JoinColumn(
+            name = "opp_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_oppsec_opp")
+    )
     private Opportunity opportunity;
 
     @Column(name = "section_order", nullable = false)
@@ -23,8 +29,10 @@ public class OpportunitySection {
     @Column(name = "heading", length = 255)
     private String heading;
 
-    // Long text (NVARCHAR(MAX) in DB)
-    @Column(name = "content")
+    // NVARCHAR(MAX)
+    @Lob
+    @Nationalized
+    @Column(name = "content",columnDefinition="NVARCHAR(MAX)")
     private String content;
 
     @Column(name = "image_url", length = 500)
@@ -33,14 +41,11 @@ public class OpportunitySection {
     @Column(name = "caption", length = 255)
     private String caption;
 
-    // DB default SYSDATETIME(); let DB populate it
+    // DEFAULT SYSDATETIME() từ DB
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
-
+    // ===== Getters & Setters =====
     public Integer getSectionId() { return sectionId; }
     public void setSectionId(Integer sectionId) { this.sectionId = sectionId; }
 
