@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quản lý Người dùng</title>
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
+</head>
+<body data-page="users">
+<!-- Global Error Popup -->
+<div th:if="${errorMessage}" id="errorPopup" class="error-popup">
+    <div class="error-content">
+        <strong>⚠ Lỗi!</strong>
+        <p th:text="${errorMessage}"></p>
+    </div>
+</div>
+<!-- Popup báo thành công -->
+<div th:if="${successMessage}" id="successPopup" class="success-popup">
+    <div class="success-content">
+        <strong>✅ Thành công!</strong>
+        <p th:text="${successMessage}"></p>
+    </div>
+</div>
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">👥</div>
+            <div class="logo-text">
+                <h2>Quản Lý Admin</h2><p>Hệ thống quản trị</p>
+            </div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">MENU CHÍNH</div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/admin/users}" class="nav-item active">Quản lý Người dùng</a></li>
+            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>
+            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>
+        </ul>
+    </nav>
+</aside>
+
+<div class="main-wrapper">
+    <header class="header">
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="header-title">Hệ thống Quản lý Tình nguyện</div>
+    </header>
+
+    <main class="content">
+        <div class="page-header-actions">
+            <div class="page-header">
+                <h1>Quản lý Người dùng</h1>
+                <p>Tổng số: <span id="totalUsers" th:text="${totalUsers}">0</span> người dùng</p>
+            </div>
+            <button class="btn btn-primary" id="btnOpenAddUser">+ Thêm Người Dùng</button>
+        </div>
+
+        <!-- Thanh tìm kiếm & Lọc -->
+        <div class="search-filter-bar">
+            <div class="search-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" id="searchInput" placeholder="Tìm theo tên, email, số điện thoại..." />
+            </div>
+            <div class="filter-group">
+                <select id="roleFilter">
+                    <option value="admin">Quản Lý</option>
+                    <option value="volunteer">Tổ Chức</option>
+                    <option value="organization">Tình nguyện viên</option>
+                    <option value="all" selected>Tất cả vai trò</option>
+                </select>
+
+                <select id="statusFilter">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="LOCKED">Bị khóa</option>
+                </select>
+                <input type="date" id="userFromDate" />
+                <input type="date" id="userToDate" />
+                <button class="btn btn-outline" id="userDateFilterBtn">Lọc ngày</button>
+            </div>
+        </div>
+
+        <!-- Bảng -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:60px">Avatar</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th style="text-align:right">Hành động</th>
+                </tr>
+                </thead>
+                <tbody id="userTableBody">
+
+                <tr th:each="u : ${users}">
+                    <td>
+                        <img class="avatar" th:src="${u.avatarUrl}"
+                             alt="avatar" width="40" height="40"
+                             th:attr="data-userid=${u.userId}"/>
+
+                    </td>
+                    <td th:text="${u.fullName}">Tên</td>
+                    <td th:text="${u.email}">Email</td>
+                    <td th:text="${u.phone}">SĐT</td>
+                    <td th:text="${u.role.roleName}">Vai trò</td>
+                    <td>
+                          <span th:classappend="${u.status=='ACTIVE' ? 'status-active':'status-locked'}"
+                                th:text="${u.status}">Trạng thái</span>
+                    </td>
+                    <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">Ngày</td>
+                    <td style="text-align:right">
+                        <form th:action="@{'/admin/users/' + ${u.userId} + '/toggle-status'}" method="post" style="display:inline;">
+                            <button class="btn btn-sm"
+                                    th:text="${u.status=='ACTIVE' ? 'Khóa' : 'Mở'}"></button>
+                        </form>
+                        <form th:action="@{'/admin/users/' + ${u.userId} + '/delete'}" method="post" style="display:inline;">
+                            <button class="btn btn-sm btn-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        <div class="pagination">
+            <div class="pagination-info">
+                <span>Hiển thị</span>
+                <select id="pageSizeSelect">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+                <span id="paginationText">—</span>
+            </div>
+            <div class="pagination-buttons" id="paginationButtons"></div>
+
+
+                <button class="btn" id="prevPage">«</button>
+                <span id="pageNumbers"></span>
+                <button class="btn" id="nextPage">»</button>
+
+
+        </div>
+
+    </main>
+</div>
+
+
+  <!-- Modal: Thêm người dùng (tab Nhập tay / Tải hàng loạt) -->
+  <div class="modal" id="addUserModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Thêm người dùng mới</h2>
+
+          <button class="modal-close" data-close="addUserModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="tabs" id="addUserTabs">
+          <button class="tab active" data-tab="manual">Nhập tay</button>
+          <button class="tab" data-tab="bulk">Tải lên hàng loạt</button>
+        </div>
+
+        <!-- Nhập tay -->
+        <form th:action="@{/admin/users/create}" method="post" id="addUserForm" data-tab-panel="manual">
+          <div class="form-grid">
+            <div class="form-group"><label>Họ tên *</label><input id="fullName" name="fullName" required></div>
+            <div class="form-group"><label>Email *</label><input id="email" type="email"  name="email" required></div>
+            <div class="form-group"><label>Mật khẩu *</label><input id="password" name="passwordHash" type="password" minlength="6" required></div>
+            <div class="form-group"><label>Số điện thoại</label><input id="phone" name="phone" type="tel"></div>
+
+            <div class="form-group"><label>Vai trò *</label>
+                <select id="roleId" name="role.roleId" required>
+                    <option value="">-- Chọn vai trò --</option>
+                    <option th:each="r: ${roles}" th:value="${r.roleId}" th:text="${r.roleName}"></option>
+                </select>
+            </div>
+              <div class="form-group">
+
+                  <div class="avatar-upload">
+                      <!-- Ảnh preview -->
+                      <img id="avatarPreview" src="/images/default.png" alt="Avatar mặc định">
+
+                      <!-- Input upload ảnh -->
+                      <input type="file" id="avatarFile" name="avatarFile" accept="image/*" style="display:none;">
+                      <button type="button" class="btn btn-outline" id="btnChooseAvatar">Chọn ảnh</button>
+                      <label>Avatar (không bắt buộc)</label>
+                      <!-- Giữ URL ảnh mặc định (hoặc ảnh đã upload) để gửi về backend -->
+                      <input type="hidden" id="avatarUrl" name="avatarUrl" value="/img/default-avatar.png">
+                  </div>
+              </div>
+              <div class="form-group full-width">
+                  <label>Địa chỉ</label>
+                  <div class="address-group">
+                      <select id="citySelect" name="citySelect" required>
+                          <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                      </select>
+                      <select id="districtSelect" name="districtSelect" disabled required>
+                          <option value="">-- Chọn Quận/Huyện --</option>
+                      </select>
+                      <select id="wardSelect" name="wardSelect" disabled required>
+                          <option value="">-- Chọn Phường/Xã --</option>
+                      </select>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-close="addUserModal">Hủy</button>
+            <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+          </div>
+        </form>
+
+        <!-- Bulk -->
+        <div id="bulkUploadPanel" class="bulk-panel" data-tab-panel="bulk" style="display:none">
+          <div class="note-box">
+            <h4>Yêu cầu file Excel</h4>
+            <ul>
+              <li>Định dạng: <strong>.xlsx</strong></li>
+              <li>Cột: <strong>Email, Họ tên, SĐT, Vai trò</strong></li>
+              <li>Vai trò hợp lệ: Admin / Quản lý / Nhân viên</li>
+              <li>Email trùng sẽ bị bỏ qua và báo cáo</li>
+              <li>Tối đa 1000 tài khoản/lần</li>
+            </ul>
+            <a class="btn btn-outline" href="/admin/users/bulk/template" download>⬇ Tải mẫu Excel</a>
+          </div>
+          <div class="dropzone" id="bulkDropzone">
+            <input type="file" id="bulkFile" accept=".xlsx" hidden />
+            <div class="dz-icon">📄</div>
+            <p>Kéo thả file Excel vào đây hoặc</p>
+            <button type="button" class="btn btn-primary" id="btnChooseBulk">Chọn file</button>
+            <div id="bulkFilename" class="muted mt-8"></div>
+          </div>
+          <div class="modal-footer" style="padding-left:0">
+            <button type="button" class="btn btn-outline" data-close="addUserModal">Hủy</button>
+            <button type="button" class="btn btn-primary" id="btnUploadBulk" disabled>Tải lên</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Chi tiết người dùng + Đánh giá sao -->
+  <div class="modal" id="userDetailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Chi tiết người dùng</h2>
+        <button class="modal-close" data-close="userDetailModal">×</button>
+      </div>
+      <div class="modal-body" id="userDetailContent"></div>
+    </div>
+  </div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <strong id="toastTitle"></strong>
+        <p id="toastMessage"></p>
+    </div>
+</div>
+
+<script th:src="@{/js/jsUser.js}"></script>
+</body>
+</html>

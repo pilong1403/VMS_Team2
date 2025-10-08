@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Báo cáo</title>
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
+</head>
+<body data-page="reports">
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">📊</div>
+            <div class="logo-text"><h2>Quản Lý Admin</h2><p>Hệ thống quản trị</p></div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">MENU CHÍNH</div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>
+            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>
+            <li><a th:href="@{/admin/reports}" class="nav-item active">Báo cáo</a></li>
+        </ul>
+    </nav>
+</aside>
+
+<div class="main-wrapper">
+    <header class="header"><div class="header-title">Báo cáo & Thống kê</div></header>
+    <main class="content">
+        <div class="page-header"><h1>Báo cáo</h1><p>Thống kê hệ thống theo thời gian</p></div>
+
+        <div class="search-filter-bar">
+            <div class="filter-group">
+                <select id="reportType">
+                    <option value="users">Người dùng</option>
+                    <option value="orgs">Tổ chức</option>
+                    <option value="activity">Hoạt động</option>
+                </select>
+                <input type="month" id="reportFrom" />
+                <input type="month" id="reportTo" />
+                <select id="reportSort">
+                    <option value="desc">Mới nhất</option>
+                    <option value="asc">Cũ nhất</option>
+                </select>
+                <button class="btn btn-outline" id="btnReportFilter">Lọc</button>
+            </div>
+            <div class="search-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" id="reportSearch" placeholder="Tìm theo tên/email..." />
+            </div>
+        </div>
+
+        <div class="stats-grid" id="reportStats"></div>
+
+        <div class="card">
+            <div class="card-header"><h3>Biểu đồ tổng quan</h3></div>
+            <canvas id="reportChart" height="160"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>Phân bố người dùng theo vai trò</h3>
+            <canvas id="roleChart" height="200"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>Xu hướng đăng ký tổ chức theo tháng</h3>
+            <canvas id="orgTrendChart" height="200"></canvas>
+        </div>
+
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th data-sort="name">Tên</th>
+                    <th data-sort="email">Email</th>
+                    <th data-sort="createdAt">Ngày tạo</th>
+                    <th data-sort="status">Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody id="reportTableBody"><!-- JS render --></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <strong id="toastTitle"></strong><p id="toastMessage"></p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script th:src="@{/js/jsUser.js}"></script>
+</body>
+</html>

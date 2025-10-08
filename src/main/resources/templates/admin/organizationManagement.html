@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Hồ sơ tổ chức</title>
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
+</head>
+<body data-page="orgs">
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">🏢</div>
+            <div class="logo-text"><h2>Quản Lý Admin</h2><p>Hệ thống quản trị</p></div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">MENU CHÍNH</div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>
+            <li><a th:href="@{/admin/organizations}" class="nav-item active">Hồ sơ tổ chức</a></li>
+            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>
+        </ul>
+    </nav>
+</aside>
+
+<div class="main-wrapper">
+    <header class="header"><div class="header-title">Hồ sơ đăng ký tổ chức</div></header>
+    <main class="content">
+        <div class="page-header">
+            <h1>Hồ sơ đăng ký chờ duyệt</h1>
+            <p>Quản lý hồ sơ tổ chức do người dùng gửi</p>
+        </div>
+
+        <!-- Tìm kiếm & lọc -->
+        <div class="search-filter-bar">
+            <div class="search-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" id="orgSearch" placeholder="Tìm tên người gửi, tổ chức..." />
+            </div>
+            <div class="filter-group">
+                <select id="orgStatusFilter">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="PENDING">Đang chờ</option>
+                    <option value="APPROVED">Đã duyệt</option>
+                    <option value="REJECTED">Từ chối</option>
+                </select>
+                <input type="date" id="orgFromDate" />
+                <input type="date" id="orgToDate" />
+                <button class="btn btn-outline" id="orgFilterBtn">Lọc</button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Người gửi</th>
+                    <th>Tổ chức</th>
+                    <th>Ngày gửi</th>
+                    <th>Bằng chứng</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align:right">Hành động</th>
+                </tr>
+                </thead>
+                <tbody id="orgTableBody"><!-- JS render --></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- Modal chi tiết -->
+<div class="modal" id="orgDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Chi tiết hồ sơ tổ chức</h2>
+            <button class="modal-close" data-close="orgDetailModal">×</button>
+        </div>
+        <div class="modal-body" id="orgDetailBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="btnExportExcel">Xuất Excel</button>
+            <button class="btn btn-outline" id="btnExportPdf">Xuất PDF</button>
+            <span style="flex:1"></span>
+            <button class="btn btn-primary" id="btnApproveOrg">Duyệt</button>
+            <button class="btn btn-danger" id="btnRejectOrg">Từ chối</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <strong id="toastTitle"></strong><p id="toastMessage"></p>
+    </div>
+</div>
+
+<script th:src="@{/js/jsUser.js}"></script>
+</body>
+</html>
