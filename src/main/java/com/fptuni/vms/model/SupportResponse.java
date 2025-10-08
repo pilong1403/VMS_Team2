@@ -1,10 +1,18 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "supportresponses", schema = "dbo")
+@Table(
+        name = "supportresponses",
+        schema = "dbo",
+        indexes = {
+                @Index(name = "IX_responses_ticket", columnList = "ticket_id, created_at")
+        }
+)
 public class SupportResponse {
 
     @Id
@@ -12,28 +20,38 @@ public class SupportResponse {
     @Column(name = "response_id")
     private Integer responseId;
 
-    // FK → supporttickets (NOT NULL). DB has ON DELETE CASCADE.
+    // FK → supporttickets (NOT NULL). DB ON DELETE CASCADE.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ticket_id", nullable = false)
+    @JoinColumn(
+            name = "ticket_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_resp_ticket")
+    )
     private SupportTicket ticket;
 
     // FK → users (NOT NULL)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "responder_id", nullable = false)
+    @JoinColumn(
+            name = "responder_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_resp_user")
+    )
     private User responder;
 
-    // Long text (NVARCHAR(MAX) in DB). NOT NULL.
-    @Column(name = "message", nullable = false)
+    // NVARCHAR(MAX) NOT NULL
+    @Lob
+    @Nationalized
+    @Column(name = "message", nullable = false, columnDefinition="NVARCHAR(MAX)")
     private String message;
 
-    // DB default SYSDATETIME(); let DB populate it
+    @Column(name = "attachment_url", length = 500)
+    private String attachmentUrl;
+
+    // DEFAULT SYSDATETIME() từ DB
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
-
+    // ===== Getters & Setters =====
     public Integer getResponseId() { return responseId; }
     public void setResponseId(Integer responseId) { this.responseId = responseId; }
 
@@ -45,6 +63,9 @@ public class SupportResponse {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

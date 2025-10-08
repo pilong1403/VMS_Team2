@@ -4,8 +4,16 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users", schema = "dbo")
+@Table(
+        name = "users",
+        schema = "dbo",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UQ_users_email", columnNames = "email")
+        }
+)
 public class User {
+
+    public enum UserStatus { ACTIVE, LOCKED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,7 +23,7 @@ public class User {
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
     @Column(name = "phone", length = 20)
@@ -29,27 +37,38 @@ public class User {
 
     // FK → roles (NOT NULL)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "role_id", nullable = false)
+    @JoinColumn(
+            name = "role_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_users_role")
+    )
     private Role role;
 
-    // NOT NULL, default 'ACTIVE' at DB
+    // NOT NULL DEFAULT 'ACTIVE' + CHECK (ACTIVE/LOCKED)
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
-    private String status = "ACTIVE"; // ACTIVE / LOCKED
+    private UserStatus status;
 
     @Column(name = "address", length = 500)
     private String address;
 
-    // DB default SYSDATETIME(); let DB populate it
+    // DEFAULT SYSDATETIME() (DB)
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
+    @PrePersist @PreUpdate
+    private void normalize() {
+        if (email != null) email = email.trim().toLowerCase();
+        if (fullName != null) fullName = fullName.trim();
+        if (phone != null) phone = phone.trim();
+        if (address != null) address = address.trim();
+        if (status == null) status = UserStatus.ACTIVE; // mirror DB default
+    }
 
+    // ===== Getters & Setters =====
     public Integer getUserId() { return userId; }
     public void setUserId(Integer userId) { this.userId = userId; }
 
@@ -71,8 +90,8 @@ public class User {
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }

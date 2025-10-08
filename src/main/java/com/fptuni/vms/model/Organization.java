@@ -1,44 +1,53 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "organizations", schema = "dbo")
+@Table(
+        name = "organizations",
+        schema = "dbo",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UQ_org_owner", columnNames = "owner_id")
+        }
+)
 public class Organization {
+
+    public enum RegStatus { PENDING, APPROVED, REJECTED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "org_id")
     private Integer orgId;
 
-    // Owner user (NOT NULL)
+    // Owner user (NOT NULL) — logo dùng chung = users.avatar_url
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @JoinColumn(
+            name = "owner_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_org_owner")
+    )
     private User owner;
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    // Long text (NVARCHAR(MAX) in DB)
-    @Column(name = "description")
+    // NVARCHAR(MAX)
+    @Lob
+    @Nationalized
+    @Column(name = "description", columnDefinition="NVARCHAR(MAX)")
     private String description;
-
-    @Column(name = "logo_url", length = 500)
-    private String logoUrl;
-
-    // NOT NULL DEFAULT 0
-    @Column(name = "approved", nullable = false)
-    private Boolean approved = false;
 
     // DB default SYSDATETIME()
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // ---------- Registration fields merged into organizations ----------
-    // NOT NULL DEFAULT 'PENDING' (values: PENDING, APPROVED, REJECTED)
+    // --- Registration fields ---
+    @Enumerated(EnumType.STRING)
     @Column(name = "reg_status", nullable = false, length = 20)
-    private String regStatus = "PENDING";
+    private RegStatus regStatus; // CHECK: PENDING/APPROVED/REJECTED
 
     @Column(name = "reg_doc_url", length = 500)
     private String regDocUrl;
@@ -52,18 +61,24 @@ public class Organization {
     @Column(name = "reg_submitted_at")
     private LocalDateTime regSubmittedAt;
 
-    // Reviewer (users.user_id), nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reg_reviewed_by")
+    @JoinColumn(
+            name = "reg_reviewed_by",
+            foreignKey = @ForeignKey(name = "FK_org_reviewed_by")
+    )
     private User regReviewedBy;
 
     @Column(name = "reg_reviewed_at")
     private LocalDateTime regReviewedAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
+    @PrePersist
+    private void prePersist() {
+        if (regStatus == null) regStatus = RegStatus.PENDING; // mirror DB default
+        if (name != null) name = name.trim();
+        if (regNote != null) regNote = regNote.trim();
+    }
 
+    // ===== Getters & Setters =====
     public Integer getOrgId() { return orgId; }
     public void setOrgId(Integer orgId) { this.orgId = orgId; }
 
@@ -76,17 +91,11 @@ public class Organization {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getLogoUrl() { return logoUrl; }
-    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
-
-    public Boolean getApproved() { return approved; }
-    public void setApproved(Boolean approved) { this.approved = approved; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public String getRegStatus() { return regStatus; }
-    public void setRegStatus(String regStatus) { this.regStatus = regStatus; }
+    public RegStatus getRegStatus() { return regStatus; }
+    public void setRegStatus(RegStatus regStatus) { this.regStatus = regStatus; }
 
     public String getRegDocUrl() { return regDocUrl; }
     public void setRegDocUrl(String regDocUrl) { this.regDocUrl = regDocUrl; }

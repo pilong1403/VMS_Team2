@@ -1,11 +1,17 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feedback", schema = "dbo")
 public class Feedback {
+
+    public enum FeedbackType { VOLUNTEER, ORG }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,35 +19,53 @@ public class Feedback {
     private Integer feedbackId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "opp_id", nullable = false)
+    @JoinColumn(
+            name = "opp_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fb_opp")
+    )
     private Opportunity opportunity;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fb_user")
+    )
     private User user;
 
-    // NVARCHAR(MAX) theo DDL; không cần columnDefinition
-    @Column(name = "content")
+    // NVARCHAR(MAX)
+    @Lob
+    @Nationalized
+    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
-    // DDL: CHECK (rating BETWEEN 1 AND 5) nhưng cho phép NULL
+    // NULLable theo DDL; nếu có giá trị thì 1..5
+    @Min(1) @Max(5)
     @Column(name = "rating")
     private Integer rating;
 
-    // DDL: NVARCHAR(20) NOT NULL DEFAULT 'VOLUNTEER'
+    // NVARCHAR(20) NOT NULL DEFAULT 'VOLUNTEER'
+    @Enumerated(EnumType.STRING)
     @Column(name = "feedback_type", length = 20, nullable = false)
-    private String feedbackType = "VOLUNTEER"; // VOLUNTEER / ORG (tùy app)
+    private FeedbackType feedbackType;
 
-    // Lấy DEFAULT SYSDATETIME() từ DB
+    @Column(name = "attachment_url", length = 500)
+    private String attachmentUrl;
+
+    // DEFAULT SYSDATETIME() từ DB
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
+    @PrePersist
+    private void prePersist() {
+        if (feedbackType == null) feedbackType = FeedbackType.VOLUNTEER;
+    }
+
+    // ====================== GETTERS & SETTERS ======================
 
     public Integer getFeedbackId() { return feedbackId; }
     public void setFeedbackId(Integer feedbackId) { this.feedbackId = feedbackId; }
@@ -58,8 +82,11 @@ public class Feedback {
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
 
-    public String getFeedbackType() { return feedbackType; }
-    public void setFeedbackType(String feedbackType) { this.feedbackType = feedbackType; }
+    public FeedbackType getFeedbackType() { return feedbackType; }
+    public void setFeedbackType(FeedbackType feedbackType) { this.feedbackType = feedbackType; }
+
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

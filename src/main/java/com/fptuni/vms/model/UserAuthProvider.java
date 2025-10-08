@@ -4,35 +4,48 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "userauthproviders", schema = "dbo")
+@Table(
+        name = "userauthproviders",
+        schema = "dbo",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UQ_uap_provider_uid", columnNames = {"provider", "external_uid"})
+        }
+)
 public class UserAuthProvider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "provider_id") // maps PK column name
+    @Column(name = "provider_id")
     private Integer providerId;
 
-    // Linked user (NOT NULL). DB has ON DELETE CASCADE.
+    // FK → users (NOT NULL). DB ON DELETE CASCADE.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "FK_uap_user")
+    )
     private User user;
 
-    // Provider name, e.g., "GOOGLE" (NOT NULL)
+    // e.g., "GOOGLE"
     @Column(name = "provider", nullable = false, length = 20)
     private String provider;
 
-    // External subject/UID from the provider (NOT NULL)
+    // External subject/UID from the provider
     @Column(name = "external_uid", nullable = false, length = 255)
     private String externalUid;
 
-    // Creation timestamp; populated by DB DEFAULT SYSDATETIME()
+    // DEFAULT SYSDATETIME() (DB)
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // ======================
-    // GETTERS & SETTERS
-    // ======================
+    @PrePersist @PreUpdate
+    private void normalize() {
+        if (provider != null) provider = provider.trim().toUpperCase();
+        if (externalUid != null) externalUid = externalUid.trim();
+    }
 
+    // Getters & Setters
     public Integer getProviderId() { return providerId; }
     public void setProviderId(Integer providerId) { this.providerId = providerId; }
 
