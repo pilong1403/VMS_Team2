@@ -8,7 +8,10 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @Transactional
@@ -44,65 +47,88 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public List<User> search(String keyword,
-                             Integer roleId,
-                             int page,
-                             int size,
-                             String sortDir) {
+    public List<User> search(
+            String keyword,
+            Integer roleId,
+            User.UserStatus status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            int page,
+            int size,
+            String sortField,
+            String sortDir
+    ) {
+        List<String> allowedFields = List.of("fullName", "createdAt", "email", "phone");
+        if (!allowedFields.contains(sortField)) sortField = "createdAt";
+        String direction = "ASC".equalsIgnoreCase(sortDir) ? "ASC" : "DESC";
 
         StringBuilder jpql = new StringBuilder("SELECT u FROM User u WHERE 1=1");
+        Map<String, Object> params = new HashMap<>();
 
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND (LOWER(u.fullName) LIKE LOWER(:kw) " +
                     "OR LOWER(u.email) LIKE LOWER(:kw) " +
-                    "OR LOWER(u.phone) LIKE LOWER(:kw) " +
-                    "OR LOWER(u.address) LIKE LOWER(:kw))");
+                    "OR LOWER(u.phone) LIKE LOWER(:kw))"); // ✅ thêm phone
+            params.put("kw", "%" + keyword.trim() + "%");
         }
         if (roleId != null) {
             jpql.append(" AND u.role.roleId = :roleId");
+            params.put("roleId", roleId);
+        }
+        if (status != null) {
+            jpql.append(" AND u.status = :status");
+            params.put("status", status);
+        }
+        if (fromDate != null) {
+            jpql.append(" AND u.createdAt >= :fromDt");
+            params.put("fromDt", fromDate.atStartOfDay());
+        }
+        if (toDate != null) {
+            // < ngày kế tiếp để bao gồm trọn ngày toDate
+            jpql.append(" AND u.createdAt < :toDt");
+            params.put("toDt", toDate.plusDays(1).atStartOfDay());
         }
 
-        jpql.append(" ORDER BY u.createdAt ")
-                .append(sortDir.equalsIgnoreCase("ASC") ? "ASC" : "DESC");
+        jpql.append(" ORDER BY u.").append(sortField).append(" ").append(direction);
 
         TypedQuery<User> query = em.createQuery(jpql.toString(), User.class);
-
-        if (keyword != null && !keyword.isBlank()) {
-            query.setParameter("kw", "%" + keyword + "%");
-        }
-        if (roleId != null) {
-            query.setParameter("roleId", roleId);
-        }
-
+        params.forEach(query::setParameter);
         query.setFirstResult(page * size);
         query.setMaxResults(size);
-
         return query.getResultList();
     }
 
     @Override
-    public long countFiltered(String keyword, Integer roleId) {
+    public long countFiltered(String keyword, Integer roleId, User.UserStatus status,
+                              LocalDate fromDate, LocalDate toDate) {
         StringBuilder jpql = new StringBuilder("SELECT COUNT(u) FROM User u WHERE 1=1");
+        Map<String, Object> params = new HashMap<>();
 
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND (LOWER(u.fullName) LIKE LOWER(:kw) " +
                     "OR LOWER(u.email) LIKE LOWER(:kw) " +
-                    "OR LOWER(u.phone) LIKE LOWER(:kw) " +
-                    "OR LOWER(u.address) LIKE LOWER(:kw))");
+                    "OR LOWER(u.phone) LIKE LOWER(:kw))"); // ✅ đồng nhất với search()
+            params.put("kw", "%" + keyword.trim() + "%");
         }
         if (roleId != null) {
             jpql.append(" AND u.role.roleId = :roleId");
+            params.put("roleId", roleId);
+        }
+        if (status != null) {
+            jpql.append(" AND u.status = :status");
+            params.put("status", status);
+        }
+        if (fromDate != null) {
+            jpql.append(" AND u.createdAt >= :fromDt");
+            params.put("fromDt", fromDate.atStartOfDay());
+        }
+        if (toDate != null) {
+            jpql.append(" AND u.createdAt < :toDt");
+            params.put("toDt", toDate.plusDays(1).atStartOfDay());
         }
 
         TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
-
-        if (keyword != null && !keyword.isBlank()) {
-            query.setParameter("kw", "%" + keyword + "%");
-        }
-        if (roleId != null) {
-            query.setParameter("roleId", roleId);
-        }
-
+        params.forEach(query::setParameter);
         return query.getSingleResult();
     }
 
