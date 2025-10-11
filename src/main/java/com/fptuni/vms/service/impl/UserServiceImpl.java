@@ -3,14 +3,12 @@ package com.fptuni.vms.service.impl;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.UserRepository;
 import com.fptuni.vms.service.UserService;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.pdf.PdfWriter;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.Document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;

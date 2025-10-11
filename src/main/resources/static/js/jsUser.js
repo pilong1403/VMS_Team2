@@ -107,7 +107,7 @@ function validateEmail(email) {
     return /^[\w.-]+@[\w.-]+\.\w+$/.test(email);
 }
 function validatePhone(phone) {
-    return /^0\d{8,9}$/.test(phone);   // Bắt đầu bằng 0, dài 9-10 số
+    return /^0\d{9,10}$/.test(phone);   // Bắt đầu bằng 0, dài 9-10 số
 }
 function validatePassword(pw) {
     return /^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/.test(pw);
@@ -115,7 +115,7 @@ function validatePassword(pw) {
 function normalizeName(name) {
     return name.trim().replace(/\s+/g, ' ');
 }
-$('#fullName')?.addEventListener('blur', e => {
+document.getElementById('fullName')?.addEventListener('blur', e => {
     e.target.value = normalizeName(e.target.value);
 });
 
@@ -134,44 +134,54 @@ async function loadLocations() {
         const districts = await dRes.json();
         const wards = await wRes.json();
 
-        const citySelect = $('#citySelect');
-        const districtSelect = $('#districtSelect');
-        const wardSelect = $('#wardSelect');
+        const citySelect = document.getElementById('citySelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const wardSelect = document.getElementById('wardSelect');
 
-        // Nạp tỉnh
+        //  Nạp Tỉnh/TP
         for (const [code, info] of Object.entries(provinces)) {
-            citySelect.add(new Option(info.name, code));
+            const opt = new Option(info.name, info.name); // gửi tên
+            opt.dataset.code = code; // lưu code để dùng cho lọc
+            citySelect.add(opt);
         }
 
-        // Khi chọn tỉnh → load quận/huyện
+        //  Khi chọn tỉnh -> load huyện
         citySelect.addEventListener('change', () => {
-            const selected = citySelect.value;
+            const selectedCode = citySelect.selectedOptions[0]?.dataset.code;
             districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            districtSelect.disabled = !selected;
+            districtSelect.disabled = !selectedCode;
             wardSelect.disabled = true;
+
             for (const [code, info] of Object.entries(districts)) {
-                if (info.parent_code === selected) {
-                    districtSelect.add(new Option(info.name, code));
+                if (info.parent_code === selectedCode) {
+                    const opt = new Option(info.name, info.name);
+                    opt.dataset.code = code;
+                    districtSelect.add(opt);
                 }
             }
         });
 
-        // Khi chọn huyện → load xã
+        //  Khi chọn huyện -> load xã
         districtSelect.addEventListener('change', () => {
-            const selected = districtSelect.value;
+            const selectedCode = districtSelect.selectedOptions[0]?.dataset.code;
             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            wardSelect.disabled = !selected;
+            wardSelect.disabled = !selectedCode;
+
             for (const [code, info] of Object.entries(wards)) {
-                if (info.parent_code === selected) {
-                    wardSelect.add(new Option(info.name, code));
+                if (info.parent_code === selectedCode) {
+                    const opt = new Option(info.name, info.name);
+                    opt.dataset.code = code;
+                    wardSelect.add(opt);
                 }
             }
         });
+
     } catch (err) {
-        console.error("❌ Lỗi khi tải dữ liệu địa phương:", err);
+        console.error(" Lỗi khi tải dữ liệu địa phương:", err);
     }
 }
+
 
 
 /*************************************************
@@ -217,3 +227,53 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const fields = [
+        { id: "email", validator: validateEmail, message: "Email không hợp lệ!" },
+        { id: "phone", validator: validatePhone, message: "Số điện thoại không hợp lệ!" },
+        { id: "password", validator: validatePassword, message: "Mật khẩu ≥ 8 ký tự, gồm số & ký tự đặc biệt!" },
+        { id: "fullName", validator: (v) => v.trim().length >= 2, message: "Tên quá ngắn!" }
+    ];
+
+    fields.forEach(f => {
+        const input = document.getElementById(f.id);
+        if (!input) return;
+
+        const small = input.parentElement.parentElement.querySelector(".error-text");
+        const icon = input.parentElement.querySelector(".validate-icon");
+
+        input.addEventListener("input", () => {
+            const value = input.value.trim();
+            const isValid = value === "" ? null : f.validator(value);
+
+            if (isValid === null) {
+                small.textContent = "";
+                icon.style.opacity = 0;
+                input.classList.remove("error-border", "success-border");
+                small.classList.remove("active");
+            }
+            else if (isValid) {
+                // ✅ Nếu hợp lệ
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>'; // <-- CHỖ NÀY
+                icon.style.opacity = 1;
+                input.classList.add("success-border");
+                input.classList.remove("error-border");
+                small.textContent = "✔ Hợp lệ";
+                small.className = "error-text success active";
+            }
+            else {
+                // ❌ Nếu lỗi
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>'; // <-- VÀ CHỖ NÀY
+                icon.style.opacity = 1;
+                input.classList.add("error-border");
+                input.classList.remove("success-border");
+                small.textContent = f.message;
+                small.className = "error-text error active";
+            }
+        });
+    });
+
+});
+

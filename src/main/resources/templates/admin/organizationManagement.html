@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <title>Hồ sơ tổ chức</title>
-    <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
+    <meta charset="UTF-8"/>
+    <title>Quản lý Hồ sơ Tổ chức</title>
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}"/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          integrity="sha512-...something..." crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
+
 <body data-page="orgs">
+<!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo">
             <div class="logo-icon">🏢</div>
-            <div class="logo-text"><h2>Quản Lý Admin</h2><p>Hệ thống quản trị</p></div>
+            <div class="logo-text">
+                <h2>Quản Lý Admin</h2>
+                <p>Hệ thống quản trị</p>
+            </div>
         </div>
     </div>
     <nav class="sidebar-nav">
@@ -23,77 +31,362 @@
     </nav>
 </aside>
 
+<!-- ================= MAIN ================= -->
 <div class="main-wrapper">
-    <header class="header"><div class="header-title">Hồ sơ đăng ký tổ chức</div></header>
+    <header class="header">
+        <div class="header-title">Hồ sơ đăng ký tổ chức</div>
+    </header>
+
     <main class="content">
         <div class="page-header">
-            <h1>Hồ sơ đăng ký chờ duyệt</h1>
+            <h1>Hồ sơ đăng ký</h1>
             <p>Quản lý hồ sơ tổ chức do người dùng gửi</p>
+            <p>Tổng số: <span id="totalUsers" th:text="${totalOrganizations}">0</span> đơn đăng kí</p>
+
         </div>
 
-        <!-- Tìm kiếm & lọc -->
-        <div class="search-filter-bar">
-            <div class="search-wrapper">
-                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="search" id="orgSearch" placeholder="Tìm tên người gửi, tổ chức..." />
+        <!-- ======= FILTER BAR ======= -->
+        <form method="get" th:action="@{/admin/organizations}" class="filter-form">
+            <div class="search-filter-bar">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="search" name="keyword" th:value="${keyword}" placeholder="Tìm tên người gửi, tổ chức..."/>
+                </div>
+                <div class="filter-group">
+                    <select id="statusFilter" name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="PENDING"
+                                th:selected="${status == T(com.fptuni.vms.model.Organization.RegStatus).PENDING}">Đang chờ</option>
+                        <option value="APPROVED"
+                                th:selected="${status == T(com.fptuni.vms.model.Organization.RegStatus).APPROVED}">Đã duyệt</option>
+                        <option value="REJECTED"
+                                th:selected="${status == T(com.fptuni.vms.model.Organization.RegStatus).REJECTED}">Từ chối</option>
+                    </select>
+                    <input type="date" name="fromDate" th:value="${fromDate}"/>
+                    <input type="date" name="toDate" th:value="${toDate}"/>
+                    <button type="submit" class="btn btn-outline">Lọc</button>
+                </div>
             </div>
-            <div class="filter-group">
-                <select id="orgStatusFilter">
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="PENDING">Đang chờ</option>
-                    <option value="APPROVED">Đã duyệt</option>
-                    <option value="REJECTED">Từ chối</option>
-                </select>
-                <input type="date" id="orgFromDate" />
-                <input type="date" id="orgToDate" />
-                <button class="btn btn-outline" id="orgFilterBtn">Lọc</button>
-            </div>
-        </div>
+        </form>
 
+        <!-- ======= TABLE ======= -->
         <div class="table-wrapper">
             <table>
                 <thead>
                 <tr>
-                    <th>Người gửi</th>
+                    <th>Ảnh đại diện</th>
+
+                    <!-- Sort by owner.fullName -->
+                    <th>
+                        Người gửi
+                        <div class="sort-icons">
+                            <a th:href="@{/admin/organizations(
+                                   sortField='owner.fullName',
+                                   sortDir='ASC',
+                                   keyword=${keyword}, status=${status},
+                                   fromDate=${fromDate}, toDate=${toDate},
+                                   page=0, size=${size}
+                              )}" class="sort-icon" title="Tăng dần">&#9650;</a>
+                            <a th:href="@{/admin/organizations(
+                                   sortField='owner.fullName',
+                                   sortDir='DESC',
+                                   keyword=${keyword}, status=${status},
+                                   fromDate=${fromDate}, toDate=${toDate},
+                                   page=0, size=${size}
+                              )}" class="sort-icon" title="Giảm dần">&#9660;</a>
+                        </div>
+                    </th>
+
                     <th>Tổ chức</th>
-                    <th>Ngày gửi</th>
+
+                    <!-- Sort by createdAt -->
+                    <th>
+                        Ngày gửi
+                        <div class="sort-icons">
+                            <a th:href="@{/admin/organizations(
+                                   sortField='createdAt',
+                                   sortDir='ASC',
+                                   keyword=${keyword}, status=${status},
+                                   fromDate=${fromDate}, toDate=${toDate},
+                                   page=0, size=${size}
+                              )}" class="sort-icon" title="Tăng dần">&#9650;</a>
+                            <a th:href="@{/admin/organizations(
+                                   sortField='createdAt',
+                                   sortDir='DESC',
+                                   keyword=${keyword}, status=${status},
+                                   fromDate=${fromDate}, toDate=${toDate},
+                                   page=0, size=${size}
+                              )}" class="sort-icon" title="Giảm dần">&#9660;</a>
+                        </div>
+                    </th>
+
                     <th>Bằng chứng</th>
                     <th>Trạng thái</th>
                     <th style="text-align:right">Hành động</th>
                 </tr>
                 </thead>
-                <tbody id="orgTableBody"><!-- JS render --></tbody>
+
+                <tbody>
+                <tr th:each="org : ${orgs}">
+                    <td>
+                        <img th:src="${org.owner.avatarUrl != null ? org.owner.avatarUrl : '/img/default-avatar.png'}"
+                             class="avatar"
+                             style="cursor:pointer"
+                             th:attr="onclick='window.location.href=\'/admin/organizations/' + ${org.orgId} + '/detail?view=user\''">
+                    </td>
+
+                    <td th:text="${org.owner.fullName}"></td>
+                    <td th:text="${org.name}"></td>
+                    <td th:text="${#temporals.format(org.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+
+                    <td>
+                        <a th:href="@{'/admin/organizations/' + ${org.orgId} + '/detail?view=proof'}"
+                           class="btn btn-outline">Xem</a>
+                    </td>
+
+                    <td>
+                        <span th:text="${org.regStatus}"
+                              th:classappend="${org.regStatus.name() == 'PENDING'} ? 'status-pending' :
+                                  (${org.regStatus.name() == 'APPROVED'} ? 'status-approved' : 'status-rejected')">
+                        </span>
+                    </td>
+
+                    <td class="actions" style="text-align:right">
+                        <!-- Nếu đang chờ -->
+                        <div th:if="${org.regStatus.name() == 'PENDING'}">
+                            <button type="button"
+                                    class="btn btn-green"
+                                    th:data-id="${org.orgId}"
+                                    th:data-name="${org.name}"
+                                    th:data-email="${org.owner.email}"
+                                    onclick="openApproveModal(this)">
+                                Duyệt
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    th:data-id="${org.orgId}"
+                                    th:data-name="${org.name}"
+                                    th:data-email="${org.owner.email}"
+                                    onclick="openRejectModal(this)">
+                                Từ chối
+                            </button>
+                        </div>
+
+                        <!-- Nếu đã duyệt -->
+                        <div th:if="${org.regStatus.name() == 'APPROVED'}">
+                            <button class="btn btn-outline" disabled>Đã duyệt</button>
+                        </div>
+
+                        <!-- Nếu đã từ chối -->
+                        <div th:if="${org.regStatus.name() == 'REJECTED'}">
+                            <button class="btn btn-outline" disabled>Đã từ chối</button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
             </table>
+        </div>
+
+        <!-- ======= PHÂN TRANG ======= -->
+        <div class="pagination">
+            <span th:text="'Tổng '+${filteredOrganizations}+' kết quả'"></span>
+            <select id="pageSizeSelect"
+                    onchange="location.href=this.options[this.selectedIndex].dataset.href">
+                <option th:each="s : ${pageSizes}"
+                        th:value="${s}"
+                        th:text="${s}"
+                        th:selected="${s == size}"
+                        th:attr="data-href=@{/admin/organizations(
+                            keyword=${keyword},
+                            status=${status},
+                            fromDate=${fromDate},
+                            toDate=${toDate},
+                            sortField=${sortField},
+                            sortDir=${sortDir},
+                            page=0, size=${s}
+                        )}">
+                </option>
+            </select>
+
+            <div class="pagination-buttons">
+                <!-- Trái -->
+                <a th:if="${page > 0}"
+                   th:href="@{/admin/organizations(
+                        page=${page - 1}, size=${size},
+                        sortField=${sortField}, sortDir=${sortDir},
+                        keyword=${keyword}, status=${status},
+                        fromDate=${fromDate}, toDate=${toDate}
+                   )}" class="btn">&laquo;</a>
+
+                <!-- Các nút trang -->
+                <span th:each="i : ${#numbers.sequence(0, ((filteredOrganizations + size - 1) / size) - 1)}">
+                    <a th:href="@{/admin/organizations(
+                            page=${i}, size=${size},
+                            sortField=${sortField}, sortDir=${sortDir},
+                            keyword=${keyword}, status=${status},
+                            fromDate=${fromDate}, toDate=${toDate}
+                       )}"
+                       th:text="${i + 1}"
+                       th:classappend="${i == page} ? 'btn active' : 'btn'"></a>
+                </span>
+
+                <!-- Phải -->
+                <a th:if="${(page + 1) * size < filteredOrganizations}"
+                   th:href="@{/admin/organizations(
+                        page=${page + 1}, size=${size},
+                        sortField=${sortField}, sortDir=${sortDir},
+                        keyword=${keyword}, status=${status},
+                        fromDate=${fromDate}, toDate=${toDate}
+                   )}" class="btn">&raquo;</a>
+            </div>
+        </div>
+
+        <!-- ========== MODAL CHI TIẾT BẰNG CHỨNG ========== -->
+        <div class="modal" id="orgProofModal"
+             th:if="${selectedOrg != null and viewType == 'proof'}"
+             th:classappend="${viewType == 'proof'} ? ' show' : ''">
+
+            <div class="modal-content user-detail-modal">
+                <div class="modal-header">
+                    <h2>Chi tiết bằng chứng</h2>
+                    <a th:href="@{/admin/organizations}" class="modal-close">&times;</a>
+                </div>
+
+                <div class="user-detail-body">
+                    <div class="user-detail-left">
+                        <i class="fa-solid fa-file-lines fa-4x" style="color:#555"></i>
+                    </div>
+
+                    <div class="user-detail-right">
+                        <h3 th:text="${selectedOrg.name}">Tên tổ chức</h3>
+                        <p><strong>Người gửi:</strong> <span th:text="${selectedOrg.owner.fullName}">Tên</span></p>
+                        <p><strong>Email:</strong> <span th:text="${selectedOrg.owner.email}">Email</span></p>
+                        <p><strong>Ngày gửi:</strong>
+                            <span th:text="${#temporals.format(selectedOrg.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                        </p>
+                        <p><strong>Trạng thái:</strong>
+                            <span th:text="${selectedOrg.regStatus}"></span>
+                        </p>
+                        <p><strong>Mô tả bằng chứng:</strong></p>
+                        <p th:text="${selectedOrg.description != null ? selectedOrg.description : 'Không có mô tả chi tiết.'}"></p>
+
+                        <div th:if="${selectedOrg.regDocUrl != null}">
+                            <strong>Tệp minh chứng:</strong>
+                            <p>
+                                <a th:href="${selectedOrg.regDocUrl}" target="_blank" class="btn btn-outline">
+                                    <i class="fa fa-file"></i> Mở tài liệu minh chứng
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <!-- Nút tải Excel -->
+                    <a th:href="@{'/admin/organizations/' + ${selectedOrg.orgId} + '/downloadExcel'}"
+                       class="btn btn-outline" target="_blank">
+                        <i class="fa fa-download"></i> Tải Excel
+                    </a>
+                    <a th:href="@{/admin/organizations}" class="btn btn-outline">Đóng</a>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ======= MODAL QUYẾT ĐỊNH (DUYỆT/TỪ CHỐI) ======= -->
+        <div class="modal" id="decisionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Lý do xử lý hồ sơ</h2>
+                    <button class="modal-close" onclick="closeDecisionModal()">&times;</button>
+                </div>
+                <form id="decisionForm" method="post">
+                    <div class="modal-body">
+                        <p id="orgName" style="font-weight:600"></p>
+                        <label id="reasonLabel" for="reason">Lý do / ghi chú:</label>
+                        <!-- KHÔNG required: JS sẽ bắt buộc khi từ chối -->
+                        <textarea name="reason" id="reason" rows="5" placeholder="Nhập lý do hoặc ghi chú..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" onclick="closeDecisionModal()">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Gửi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========== MODAL CHI TIẾT NGƯỜI GỬI ========== -->
+        <div class="modal" id="userDetailModal"
+             th:if="${selectedOrg != null and viewType == 'user'}"
+             th:classappend="${viewType == 'user'} ? ' show' : ''">
+            <div class="modal-content user-detail-modal">
+                <div class="modal-header">
+                    <h2>Thông tin người gửi</h2>
+                    <a href="/admin/organizations" class="modal-close">&times;</a>
+                </div>
+
+                <div class="modal-body user-detail-body" th:if="${selectedOrg != null}">
+                    <!-- Cột trái: avatar -->
+                    <div class="user-detail-left">
+                        <img th:src="${selectedOrg.owner.avatarUrl != null ? selectedOrg.owner.avatarUrl : '/img/default-avatar.png'}"
+                             alt="Avatar" class="user-avatar-large">
+                    </div>
+
+                    <!-- Cột phải: thông tin cá nhân -->
+                    <div class="user-detail-right">
+                        <h3 th:text="${selectedOrg.owner.fullName}">Tên người gửi</h3>
+                        <p><strong>Email:</strong> <span th:text="${selectedOrg.owner.email}">email@example.com</span></p>
+                        <p><strong>Số điện thoại:</strong> <span th:text="${selectedOrg.owner.phone}">0123456789</span></p>
+                        <p><strong>Địa chỉ:</strong> <span th:text="${selectedOrg.owner.address}">Không có dữ liệu</span></p>
+                        <p><strong>Vai trò:</strong>
+                            <span th:text="${selectedOrg.owner.role.roleName}">Tình nguyện viên</span>
+                        </p>
+                        <p><strong>Trạng thái tài khoản:</strong>
+                            <span th:text="${selectedOrg.owner.status}">ACTIVE</span>
+                        </p>
+                        <p><strong>Ngày tạo:</strong>
+                            <span th:text="${#temporals.format(selectedOrg.owner.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="/admin/organizations" class="btn btn-outline">Đóng</a>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ========== POPUP TOAST ========== -->
+        <div id="successPopup" class="success-popup" th:if="${successMessage}">
+            <div class="success-content">
+                <strong>Thành công!</strong>
+                <p th:text="${successMessage}"></p>
+            </div>
+        </div>
+
+        <div id="errorPopup" class="error-popup" th:if="${errorMessage}">
+            <div class="error-content">
+                <strong>Lỗi!</strong>
+                <p th:text="${errorMessage}"></p>
+            </div>
+        </div>
+
+        <div class="toast" id="toast">
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <p id="toastMessage"></p>
+            </div>
         </div>
     </main>
 </div>
 
-<!-- Modal chi tiết -->
-<div class="modal" id="orgDetailModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Chi tiết hồ sơ tổ chức</h2>
-            <button class="modal-close" data-close="orgDetailModal">×</button>
-        </div>
-        <div class="modal-body" id="orgDetailBody"></div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" id="btnExportExcel">Xuất Excel</button>
-            <button class="btn btn-outline" id="btnExportPdf">Xuất PDF</button>
-            <span style="flex:1"></span>
-            <button class="btn btn-primary" id="btnApproveOrg">Duyệt</button>
-            <button class="btn btn-danger" id="btnRejectOrg">Từ chối</button>
-        </div>
-    </div>
-</div>
-
-<div class="toast" id="toast">
-    <div class="toast-content">
-        <strong id="toastTitle"></strong><p id="toastMessage"></p>
-    </div>
-</div>
-
-<script th:src="@{/js/jsUser.js}"></script>
+<!-- JS chỉ lo UI (modal, toast, avatar preview) -->
+<script th:src="@{/js/jsOrg.js}"></script>
 </body>
 </html>

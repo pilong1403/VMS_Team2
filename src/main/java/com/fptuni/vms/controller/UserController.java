@@ -100,20 +100,14 @@ public class UserController {
                              RedirectAttributes redirectAttributes,
                              Model model) {
 
-        // Check trùng email
         if (userService.existsByEmail(user.getEmail())) {
-            model.addAttribute("errorMessage", "Email đã tồn tại");
-            model.addAttribute("roles", roleService.getAllRoles());
-            model.addAttribute("users", userService.getAllUsers());
-            return "admin/userManagement";
+            redirectAttributes.addFlashAttribute("errorMessage", "Email đã tồn tại");
+            return "redirect:/admin/users";
         }
 
-        // Check trùng phone
         if (userService.existsByPhone(user.getPhone())) {
-            model.addAttribute("errorMessage", "Số điện thoại đã tồn tại");
-            model.addAttribute("roles", roleService.getAllRoles());
-            model.addAttribute("users", userService.getAllUsers());
-            return "admin/userManagement";
+            redirectAttributes.addFlashAttribute("errorMessage", "Số điện thoại đã tồn tại");
+            return "redirect:/admin/users";
         }
         // Gán ảnh và địa chỉ
         user.setAvatarUrl(
@@ -209,4 +203,13 @@ public class UserController {
 
         userService.exportUserToExcel(user, response.getOutputStream());
     }
+
+    @GetMapping("/admin/users/{id}/json")
+    @ResponseBody
+    public User getUserJson(@PathVariable Integer id) {
+        return userService.getUserById(id);
+    }
+
+
+
 }
