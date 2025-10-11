@@ -101,7 +101,8 @@ public class Organization {
     public RegStatus getRegStatus() { return regStatus; }
     public void setRegStatus(RegStatus regStatus) { this.regStatus = regStatus; }
 
-
+    public String getRegDocUrl() { return regDocUrl; }
+    public void setRegDocUrl(String regDocUrl) { this.regDocUrl = regDocUrl; }
     public String getRegDocCloudId() { return regDocCloudId; }
     public void setRegDocCloudId(String regDocCloudId) { this.regDocCloudId = regDocCloudId; }
 
