@@ -10,10 +10,4 @@ public class AdminController {
 
 
 
-
-
-    @GetMapping("/reports")
-    public String reportPage() {
-        return "admin/reportManagement";
-    }
 }
