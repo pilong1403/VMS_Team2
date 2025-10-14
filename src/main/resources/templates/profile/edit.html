@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chỉnh sửa hồ sơ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/profile.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="profile-container">
+            <div class="card border-0 shadow-sm overflow-hidden">
+              <!-- Profile Header -->
+              <div class="profile-header">
+                <div class="gradient-bg"></div>
+
+                <!-- Avatar -->
+                <div class="avatar-container">
+                  <img
+                    id="avatarPreview"
+                    th:src="${user.avatarUrl ?: '/images/default-avatar.jpg'}"
+                    th:alt="${user.fullName}"
+                    class="avatar-img"
+                  />
+                  <label for="avatarUpload" class="avatar-upload-btn">
+                    <i class="bi bi-pencil"></i>
+                  </label>
+                  <input
+                    type="file"
+                    id="avatarUpload"
+                    name="avatarFile"
+                    accept="image/*"
+                    class="d-none"
+                    form="editProfileForm"
+                  />
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                  <a th:href="@{/profile}" class="btn btn-outline-light btn-sm">Hủy</a>
+                  <button type="submit" form="editProfileForm" class="btn btn-light btn-sm" id="saveButton">
+                    <span class="spinner-border spinner-border-sm d-none me-2"></span>
+                    <i class="bi bi-check-lg me-1"></i>
+                    Lưu thay đổi
+                  </button>
+                </div>
+              </div>
+
+              <!-- Form Content -->
+              <div class="card-body pt-5">
+                <form
+                  th:action="@{/profile/update-form}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  id="editProfileForm"
+                  th:object="${profileForm}"
+                >
+                  <!-- User Header -->
+                  <div class="user-header">
+                    <div class="user-info">
+                      <input
+                        type="text"
+                        class="name-input"
+                        th:field="*{fullName}"
+                        placeholder="Họ và tên"
+                        th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid' : ''"
+                      />
+                      <div
+                        class="invalid-feedback"
+                        th:if="${#fields.hasErrors('fullName')}"
+                        th:errors="*{fullName}"
+                      ></div>
+
+                      <div class="badges">
+                        <span
+                          class="badge"
+                          th:classappend="${user.role?.roleName == 'ADMIN'} ? 'bg-danger' : 
+                                                         (${user.role?.roleName == 'ORG_OWNER'} ? 'bg-success' : 'bg-primary')"
+                          th:text="${user.role?.roleName == 'ADMIN'} ? 'Administrator' : 
+                                   (${user.role?.roleName == 'ORG_OWNER'} ? 'Organization' : 
+                                   (${user.role?.roleName == 'VOLUNTEER'} ? 'Volunteer' : 'Unknown'))"
+                          >Volunteer</span
+                        >
+                        <span
+                          class="badge"
+                          th:classappend="${user.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'"
+                          th:text="${user.status.name() == 'ACTIVE'} ? 'Hoạt động' : 'Đã khóa'"
+                          >Hoạt động</span
+                        >
+                      </div>
+                    </div>
+
+                    <!-- Rating -->
+                    <div class="rating" th:if="${user.role?.roleName == 'VOLUNTEER' and volunteerRating != null}">
+                      <div class="rating-score">
+                        <span th:text="${#numbers.formatDecimal(volunteerRating.averageStars, 1, 1)}">4.8</span>
+                        <i class="bi bi-star-fill text-warning"></i>
+                      </div>
+                      <p class="rating-count" th:text="${volunteerRating.totalRatings} + ' đánh giá'">25 đánh giá</p>
+                    </div>
+                  </div>
+
+                  <!-- Form Fields -->
+                  <div class="row">
+                    <div class="col-md-6">
+                      <h3 class="section-title">Thông tin cá nhân</h3>
+
+                      <div class="form-group">
+                        <label><i class="bi bi-envelope"></i> Email</label>
+                        <input
+                          type="email"
+                          class="form-control"
+                          th:field="*{email}"
+                          readonly
+                          th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                        />
+                        <small class="form-text text-muted">
+                          <i class="bi bi-info-circle"></i> Email không thể thay đổi vì được sử dụng để đăng nhập
+                        </small>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                      </div>
+
+                      <div class="form-group">
+                        <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                        <input
+                          type="tel"
+                          class="form-control"
+                          th:field="*{phone}"
+                          placeholder="0123456789"
+                          th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                        />
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                      </div>
+
+                      <div class="form-group">
+                        <label><i class="bi bi-geo-alt"></i> Địa chỉ</label>
+                        <textarea
+                          class="form-control"
+                          rows="3"
+                          th:field="*{address}"
+                          placeholder="Nhập địa chỉ..."
+                          th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''"
+                        ></textarea>
+                        <div
+                          class="invalid-feedback"
+                          th:if="${#fields.hasErrors('address')}"
+                          th:errors="*{address}"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <h3 class="section-title">Thông tin tài khoản</h3>
+
+                      <div class="info-item">
+                        <label><i class="bi bi-person"></i> Trạng thái tài khoản</label>
+                        <p th:text="${user.status.name() == 'ACTIVE'} ? 'Hoạt động' : 'Đã khóa'">Hoạt động</p>
+                      </div>
+
+                      <div class="info-item">
+                        <label><i class="bi bi-calendar-plus"></i> Ngày tham gia</label>
+                        <p th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">03/01/2024</p>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/profile-edit.js}"></script>
+    <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+  </body>
+</html>

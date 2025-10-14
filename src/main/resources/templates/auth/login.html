@@ -1,10 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập - Trái Tim Tình Nguyện</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/login.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="login-container">
+      <!-- Logo -->
+      <div class="logo-container">
+        <img th:src="@{/images/alt-logo.png}" alt="Logo Trái Tim Tình Nguyện" class="img-fluid" />
+      </div>
 
-</body>
+      <!-- Login Form -->
+      <form th:action="@{/login}" method="post" class="login-form">
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label"> <i class="bi bi-envelope me-2"></i>Email </label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            placeholder="volunteer123456@fpt.edu.vn"
+            required
+            th:value="${email}"
+          />
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label"> <i class="bi bi-lock me-2"></i>Mật khẩu </label>
+          <div class="input-group">
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              placeholder="••••••••••"
+              required
+            />
+            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+              <i class="bi bi-eye" id="toggleIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me -->
+        <div class="form-group">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="rememberMe" name="remember-me" />
+            <label class="form-check-label" for="rememberMe">Ghi nhớ đăng nhập</label>
+          </div>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="btn btn-login">
+          <i class="bi bi-box-arrow-in-right me-2"></i>
+          Đăng nhập
+        </button>
+
+        <!-- Links -->
+        <div class="text-center">
+          <a href="#" class="forgot-password" th:href="@{/forgot-password}">Quên mật khẩu?</a>
+        </div>
+
+        <div class="register-link text-center">
+          Bạn chưa có tài khoản?
+          <a th:href="@{/register}">Đăng ký ngay</a>
+        </div>
+      </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/login.js}"></script>
+    <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+  </body>
 </html>
