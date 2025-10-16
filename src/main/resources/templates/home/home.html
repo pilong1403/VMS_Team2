@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Trang Chủ')}"></head>
+  <body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Hero Section - Bootstrap Carousel -->
+      <section class="container-fluid px-3 py-4">
+        <div
+          id="heroCarousel"
+          class="carousel slide"
+          data-bs-ride="carousel"
+          data-bs-interval="5000"
+          style="height: 500px; border-radius: 20px; overflow: hidden"
+        >
+          <div class="carousel-inner h-100">
+            <!-- Slide 1 -->
+            <div class="carousel-item active h-100">
+              <div
+                class="d-flex align-items-center justify-content-center h-100 text-center text-white px-4"
+                style="
+                  background: linear-gradient(135deg, rgba(219, 234, 254, 0.9) 0%, rgba(56, 189, 248, 0.9) 100%),
+                    url('https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1200')
+                      center/cover;
+                "
+              >
+                <div>
+                  <h1 class="display-4 fw-bold mb-4">Chung Tay Vì Cộng Đồng</h1>
+                  <p class="lead mb-4">Hãy là người mang lại thay đổi tích cực</p>
+                  <a
+                    th:href="@{/opportunities}"
+                    class="btn btn-light btn-lg px-5 py-3 fw-semibold"
+                    style="border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)"
+                  >
+                    <i class="bi bi-search me-2"></i>Khám Phá Cơ Hội
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item h-100">
+              <div
+                class="d-flex align-items-center justify-content-center h-100 text-center text-white px-4"
+                style="
+                  background: linear-gradient(135deg, rgba(254, 243, 199, 0.9) 0%, rgba(251, 191, 36, 0.9) 100%),
+                    url('https://images.pexels.com/photos/6994982/pexels-photo-6994982.jpeg?auto=compress&cs=tinysrgb&w=1200')
+                      center/cover;
+                "
+              >
+                <div>
+                  <h1 class="display-4 fw-bold mb-4">Tình Nguyện - Lan Tỏa Yêu Thương</h1>
+                  <p class="lead mb-4">Mỗi hành động nhỏ đều tạo nên sự khác biệt</p>
+                  <a
+                    th:href="@{/register}"
+                    class="btn btn-light btn-lg px-5 py-3 fw-semibold"
+                    style="border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)"
+                  >
+                    <i class="bi bi-person-plus me-2"></i>Tham Gia Ngay
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item h-100">
+              <div
+                class="d-flex align-items-center justify-content-center h-100 text-center text-white px-4"
+                style="
+                  background: linear-gradient(135deg, rgba(187, 247, 208, 0.9) 0%, rgba(52, 211, 153, 0.9) 100%),
+                    url('https://images.pexels.com/photos/1072824/pexels-photo-1072824.jpeg?auto=compress&cs=tinysrgb&w=1200')
+                      center/cover;
+                "
+              >
+                <div>
+                  <h1 class="display-4 fw-bold mb-4">Cùng Nhau Xây Dựng Tương Lai</h1>
+                  <p class="lead mb-4">Kết nối đam mê với hành động ý nghĩa</p>
+                  <a
+                    th:href="@{/donate}"
+                    class="btn btn-light btn-lg px-5 py-3 fw-semibold"
+                    style="border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)"
+                  >
+                    <i class="bi bi-heart me-2"></i>Quyên Góp
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carousel Indicators -->
+          <div class="carousel-indicators">
+            <button
+              type="button"
+              data-bs-target="#heroCarousel"
+              data-bs-slide-to="0"
+              class="active"
+              aria-current="true"
+            ></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+          </div>
+
+          <!-- Carousel Controls -->
+          <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section class="container stats-section mb-5">
+        <div class="row g-4">
+          <div class="col-3">
+            <div class="stats-card text-center">
+              <i class="bi bi-people-fill text-primary mb-3" style="font-size: 3rem; color: #38bdf8 !important"></i>
+              <div class="h2 fw-bold text-dark mb-1">1,500+</div>
+              <div class="text-muted small">Tình Nguyện Viên</div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="stats-card text-center">
+              <i class="bi bi-check-circle-fill mb-3" style="font-size: 3rem; color: #34d399"></i>
+              <div class="h2 fw-bold text-dark mb-1">320</div>
+              <div class="text-muted small">Dự Án Hoàn Thành</div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="stats-card text-center">
+              <i class="bi bi-clock-fill mb-3" style="font-size: 3rem; color: #fbbf24"></i>
+              <div class="h2 fw-bold text-dark mb-1">45,000</div>
+              <div class="text-muted small">Giờ Đóng Góp</div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="stats-card text-center">
+              <i class="bi bi-heart-fill mb-3" style="font-size: 3rem; color: #ef4444"></i>
+              <div class="h2 fw-bold text-dark mb-1">2.5 Tỷ</div>
+              <div class="text-muted small">Quyên Góp</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Featured Projects Section -->
+      <section class="container mb-5">
+        <div class="text-center mb-5">
+          <h2 class="display-5 fw-bold text-dark mb-3">Cơ hội đang mở đơn đăng ký</h2>
+          <div class="text-muted lead">Hãy cùng đồng hành với cơ hội mà bạn quan tâm</div>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <!-- Project Card 1 -->
+          <div class="col-4">
+            <div class="project-card">
+              <div class="position-relative">
+                <img
+                  src="https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  class="card-img-top"
+                  alt="Dạy học miễn phí"
+                />
+                <span class="badge position-absolute">Giáo Dục</span>
+              </div>
+              <div class="card-body p-4 d-flex flex-column">
+                <div class="flex-grow-1">
+                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Dạy Học Miễn Phí Cho Trẻ Em Vùng Cao</h5>
+                  <p class="text-muted small mb-3">Quỹ Tấm Lòng Việt</p>
+
+                  <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-geo-alt me-1"></i>
+                      <span>Sapa, Lào Cai</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-calendar me-1"></i>
+                      <span>15/02/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-auto">
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-2">
+                      <span class="text-muted">Tình nguyện viên:</span>
+                      <span class="fw-semibold" style="color: #38bdf8">12 / 25 người</span>
+                    </div>
+                    <div class="progress progress-custom">
+                      <div class="progress-bar" style="width: 48%"></div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex gap-2">
+                    <a th:href="@{/opportunities/1}" class="btn btn-outline-primary-custom flex-fill">
+                      <i class="bi bi-eye me-1"></i>Xem Chi Tiết
+                    </a>
+                    <button class="btn btn-primary-custom flex-fill">
+                      <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Card 2 -->
+          <div class="col-4">
+            <div class="project-card">
+              <div class="position-relative">
+                <img
+                  src="https://images.pexels.com/photos/7551665/pexels-photo-7551665.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  class="card-img-top"
+                  alt="Hỗ trợ y tế"
+                />
+                <span class="badge position-absolute">Y Tế</span>
+              </div>
+              <div class="card-body p-4 d-flex flex-column">
+                <div class="flex-grow-1">
+                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Hỗ Trợ Y Tế Cho Người Cao Tuổi</h5>
+                  <p class="text-muted small mb-3">Hội Chữ Thập Đỏ</p>
+
+                  <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-geo-alt me-1"></i>
+                      <span>Hà Nội</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-calendar me-1"></i>
+                      <span>20/02/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-auto">
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-2">
+                      <span class="text-muted">Tình nguyện viên:</span>
+                      <span class="fw-semibold" style="color: #38bdf8">8 / 20 người</span>
+                    </div>
+                    <div class="progress progress-custom">
+                      <div class="progress-bar" style="width: 40%"></div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex gap-2">
+                    <a th:href="@{/opportunities/2}" class="btn btn-outline-primary-custom flex-fill">
+                      <i class="bi bi-eye me-1"></i>Xem Chi Tiết
+                    </a>
+                    <button class="btn btn-primary-custom flex-fill">
+                      <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Card 3 -->
+          <div class="col-4">
+            <div class="project-card">
+              <div class="position-relative">
+                <img
+                  src="https://images.pexels.com/photos/1072824/pexels-photo-1072824.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  class="card-img-top"
+                  alt="Trồng cây xanh"
+                />
+                <span class="badge position-absolute">Môi Trường</span>
+              </div>
+              <div class="card-body p-4 d-flex flex-column">
+                <div class="flex-grow-1">
+                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Trồng Cây Xanh Bảo Vệ Môi Trường</h5>
+                  <p class="text-muted small mb-3">Green Vietnam</p>
+
+                  <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-geo-alt me-1"></i>
+                      <span>TP. Hồ Chí Minh</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-calendar me-1"></i>
+                      <span>01/03/2025</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-auto">
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-2">
+                      <span class="text-muted">Tình nguyện viên:</span>
+                      <span class="fw-semibold" style="color: #38bdf8">15 / 30 người</span>
+                    </div>
+                    <div class="progress progress-custom">
+                      <div class="progress-bar" style="width: 50%"></div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex gap-2">
+                    <a th:href="@{/opportunities/3}" class="btn btn-outline-primary-custom flex-fill">
+                      <i class="bi bi-eye me-1"></i>Xem Chi Tiết
+                    </a>
+                    <button class="btn btn-primary-custom flex-fill">
+                      <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <a th:href="@{/opportunities}" class="btn btn-outline-primary-custom btn-lg px-5">
+            <i class="bi bi-arrow-right me-2"></i>Xem Tất Cả Cơ Hội
+          </a>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section class="how-it-works py-5">
+        <div class="container">
+          <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-dark mb-3">Cách Thức Hoạt Động</h2>
+            <p class="text-muted lead">
+              Chỉ với 3 bước đơn giản, bạn đã có thể tham gia vào các hoạt động tình nguyện ý nghĩa
+            </p>
+          </div>
+
+          <div class="row g-4 position-relative">
+            <!-- Step 1 -->
+            <div class="col-4">
+              <div class="step-card text-center">
+                <div class="step-number">1</div>
+                <i class="bi bi-person-plus mb-3" style="font-size: 3rem; color: #38bdf8"></i>
+                <h4 class="fw-bold text-dark mb-3">Đăng Ký Tài Khoản</h4>
+                <p class="text-muted">Tạo tài khoản miễn phí và hoàn thiện thông tin cá nhân của bạn</p>
+              </div>
+              <!-- Arrow for desktop -->
+              <i
+                class="bi bi-arrow-right position-absolute"
+                style="
+                  top: 50%;
+                  right: -20px;
+                  transform: translateY(-50%);
+                  font-size: 2rem;
+                  color: #38bdf8;
+                  opacity: 0.3;
+                "
+              ></i>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="col-4">
+              <div class="step-card text-center">
+                <div class="step-number">2</div>
+                <i class="bi bi-heart mb-3" style="font-size: 3rem; color: #38bdf8"></i>
+                <h4 class="fw-bold text-dark mb-3">Chọn Cơ Hội Yêu Thích</h4>
+                <p class="text-muted">Khám phá và tìm kiếm các cơ hội phù hợp với sở thích của bạn</p>
+              </div>
+              <!-- Arrow for desktop -->
+              <i
+                class="bi bi-arrow-right position-absolute"
+                style="
+                  top: 50%;
+                  right: -20px;
+                  transform: translateY(-50%);
+                  font-size: 2rem;
+                  color: #38bdf8;
+                  opacity: 0.3;
+                "
+              ></i>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="col-4">
+              <div class="step-card text-center">
+                <div class="step-number">3</div>
+                <i class="bi bi-check-circle mb-3" style="font-size: 3rem; color: #38bdf8"></i>
+                <h4 class="fw-bold text-dark mb-3">Tham Gia & Đóng Góp</h4>
+                <p class="text-muted">Đăng ký tham gia cơ hội để tạo nên sự khác biệt</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="cta-section py-5">
+        <div class="container text-center py-4">
+          <h2 class="display-5 fw-bold mb-4">Sẵn Sàng Tạo Thay Đổi?</h2>
+          <p class="lead mb-4 opacity-90">
+            Hãy bắt đầu hành trình tình nguyện của bạn ngay hôm nay và trở thành một phần của cộng đồng yêu thương
+          </p>
+          <a
+            th:href="@{/register}"
+            class="btn btn-light btn-lg px-5 py-3 fw-bold"
+            style="border-radius: 12px; color: #38bdf8; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)"
+          >
+            <i class="bi bi-rocket-takeoff me-2"></i>Bắt Đầu Ngay
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Toast Container -->
+    <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script th:src="@{/js/home.js}"></script>
+  </body>
+</html>

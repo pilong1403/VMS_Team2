@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Cơ Hội Tình Nguyện')}"></head>
+  <body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Hero Section -->
+      <section class="cta-section py-5">
+        <div class="container text-center py-4">
+          <h1 class="display-4 fw-bold mb-3">Cơ Hội Tình Nguyện</h1>
+          <p class="lead opacity-90">Khám phá và tham gia các hoạt động ý nghĩa</p>
+        </div>
+      </section>
+
+      <!-- Main Layout -->
+      <div class="container py-5">
+        <div class="row g-4">
+          <!-- Sidebar Filters (25%) -->
+          <div class="col-3">
+            <div class="filter-sidebar bg-white rounded shadow p-4 sticky-top" style="top: 100px">
+              <h5 class="fw-bold mb-4">Bộ Lọc</h5>
+
+              <!-- Search -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Tìm kiếm</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="text" class="form-control" placeholder="Tìm kiếm cơ hội..." />
+                </div>
+              </div>
+
+              <!-- Categories -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Danh mục</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cat1" />
+                  <label class="form-check-label" for="cat1">Giáo Dục</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cat2" />
+                  <label class="form-check-label" for="cat2">Y Tế</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cat3" />
+                  <label class="form-check-label" for="cat3">Môi Trường</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cat4" />
+                  <label class="form-check-label" for="cat4">Cộng Đồng</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cat5" />
+                  <label class="form-check-label" for="cat5">Khác</label>
+                </div>
+              </div>
+
+              <!-- Location -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Địa điểm</label>
+                <select class="form-select">
+                  <option selected>Tất cả địa điểm</option>
+                  <option value="hanoi">Hà Nội</option>
+                  <option value="hcm">TP. Hồ Chí Minh</option>
+                  <option value="danang">Đà Nẵng</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+
+              <!-- Time -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Thời gian</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="time" id="today" />
+                  <label class="form-check-label" for="today">Hôm nay</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="time" id="week" />
+                  <label class="form-check-label" for="week">Tuần này</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="time" id="month" />
+                  <label class="form-check-label" for="month">Tháng này</label>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Trạng thái</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="open" />
+                  <label class="form-check-label" for="open">Đang mở</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="starting" />
+                  <label class="form-check-label" for="starting">Sắp bắt đầu</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="ended" />
+                  <label class="form-check-label" for="ended">Đã kết thúc</label>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="d-grid gap-2">
+                <button class="btn btn-primary-custom">Áp Dụng</button>
+                <a href="#" class="text-muted text-center text-decoration-none">Xóa Bộ Lọc</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content (75%) -->
+          <div class="col-9">
+            <!-- Header with Sort -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="fw-bold">24 Cơ Hội</h4>
+              <select class="form-select" style="width: auto">
+                <option selected>Mới nhất</option>
+                <option value="deadline">Sắp kết thúc</option>
+                <option value="popular">Nhiều người quan tâm</option>
+              </select>
+            </div>
+
+            <!-- Opportunities Grid -->
+            <div class="row g-4 mb-5">
+              <!-- Card 1 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Dạy học miễn phí"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Giáo Dục</span>
+                    <span class="badge bg-success position-absolute" style="top: 12px; right: 12px">Đang mở</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Quỹ Tấm Lòng Việt</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Dạy Học Miễn Phí Cho Trẻ Em Vùng Cao</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Chương trình giảng dạy tiếng Anh và kỹ năng sống cho trẻ em vùng cao, giúp các em có cơ hội tiếp
+                        cận giáo dục chất lượng.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>Sapa, Lào Cai</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>15/02/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">15 / 20 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 75%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/1}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/7551665/pexels-photo-7551665.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Hỗ trợ y tế"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Y Tế</span>
+                    <span class="badge bg-success position-absolute" style="top: 12px; right: 12px">Đang mở</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Hội Chữ Thập Đỏ</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Hỗ Trợ Y Tế Cho Người Cao Tuổi</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Khám sức khỏe định kỳ và tư vấn dinh dưỡng cho người cao tuổi tại các khu vực khó khăn.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>Hà Nội</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>20/02/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">8 / 15 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 53%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/2}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/1072824/pexels-photo-1072824.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Trồng cây xanh"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Môi Trường</span>
+                    <span class="badge bg-success position-absolute" style="top: 12px; right: 12px">Đang mở</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Green Vietnam</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Trồng Cây Xanh Bảo Vệ Môi Trường</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Chiến dịch trồng cây xanh và làm sạch môi trường tại các khu đô thị, góp phần cải thiện chất
+                        lượng không khí.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>TP. Hồ Chí Minh</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>01/03/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">25 / 30 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 83%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/3}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 4 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/8500706/pexels-photo-8500706.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Xây nhà"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Cộng Đồng</span>
+                    <span class="badge bg-warning position-absolute" style="top: 12px; right: 12px">Sắp bắt đầu</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Habitat Vietnam</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Xây Nhà Cho Người Nghèo</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Chương trình xây dựng nhà tình thương cho các gia đình khó khăn, mang lại mái ấm cho những hoàn
+                        cảnh khó khăn.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>Đà Nẵng</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>10/03/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">12 / 25 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 48%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/4}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 5 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/5733153/pexels-photo-5733153.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Chăm sóc động vật"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Động Vật</span>
+                    <span class="badge bg-success position-absolute" style="top: 12px; right: 12px">Đang mở</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Paws Rescue</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Chăm Sóc Động Vật Bị Bỏ Rơi</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Chăm sóc, điều trị và tìm nhà mới cho các chú chó, mèo bị bỏ rơi, mang lại cuộc sống tốt đẹp hơn
+                        cho chúng.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>Hà Nội</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>15/03/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">10 / 15 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 67%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/5}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 6 -->
+              <div class="col-6">
+                <div class="project-card">
+                  <div class="position-relative">
+                    <img
+                      src="https://images.pexels.com/photos/5905857/pexels-photo-5905857.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      class="card-img-top"
+                      alt="Dạy tin học"
+                    />
+                    <span class="badge position-absolute" style="top: 12px; left: 12px">Giáo Dục</span>
+                    <span class="badge bg-success position-absolute" style="top: 12px; right: 12px">Đang mở</span>
+                  </div>
+                  <div class="card-body p-4 d-flex flex-column">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="text-muted small">Tech For Good</span>
+                        <i class="bi bi-patch-check-fill text-primary"></i>
+                      </div>
+                      <h5 class="card-title fw-bold mb-2 line-clamp-2">Dạy Tin Học Cho Người Cao Tuổi</h5>
+                      <p class="text-muted small mb-3 line-clamp-2">
+                        Hướng dẫn sử dụng máy tính, smartphone và internet cơ bản cho người cao tuổi, giúp họ hòa nhập
+                        với thời đại số.
+                      </p>
+
+                      <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-geo-alt me-1"></i>
+                          <span>TP. Hồ Chí Minh</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-calendar me-1"></i>
+                          <span>20/03/2025</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto">
+                      <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                          <span class="text-muted">Tình nguyện viên:</span>
+                          <span class="fw-semibold" style="color: #38bdf8">7 / 12 người</span>
+                        </div>
+                        <div class="progress progress-custom">
+                          <div class="progress-bar" style="width: 58%"></div>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <a th:href="@{/opportunities/6}" class="btn btn-outline-primary-custom flex-fill">
+                          <i class="bi bi-eye me-1"></i>Chi Tiết
+                        </a>
+                        <button class="btn btn-primary-custom flex-fill">
+                          <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Pagination">
+              <ul class="pagination justify-content-center">
+                <li class="page-item">
+                  <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                <li class="page-item active">
+                  <a class="page-link" href="#" style="background-color: #38bdf8; border-color: #38bdf8; color: white"
+                    >1</a
+                  >
+                </li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                  <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script th:src="@{/js/opportunities.js}"></script>
+  </body>
+</html>

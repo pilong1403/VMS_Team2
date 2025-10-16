@@ -30,7 +30,7 @@ public class SecurityConfig {
                                                 // Auth pages
                                                 .requestMatchers("/login", "/register", "/forgot-password").permitAll()
                                                 // Public pages
-                                                .requestMatchers("/", "/home", "/homepage", "/index").permitAll()
+                                                .requestMatchers("/", "/home", "/homepage", "/index","/opportunities").permitAll()
                                                 // Admin only
                                                 .requestMatchers("/admin/**").hasRole("Administrator")
                                                 // Organization staff
@@ -45,7 +45,7 @@ public class SecurityConfig {
                                                 .loginProcessingUrl("/login")
                                                 .usernameParameter("email")
                                                 .passwordParameter("password")
-                                                .defaultSuccessUrl("/profile", true)
+                                                .defaultSuccessUrl("/home", true)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
                                 .logout(logout -> logout
