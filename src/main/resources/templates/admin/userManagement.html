@@ -12,19 +12,19 @@
 </head>
 <body data-page="users">
 <!-- Global Error Popup -->
-<div th:if="${errorMessage}" id="errorPopup" class="error-popup">
-    <div class="error-content">
-        <strong>⚠ Lỗi!</strong>
-        <p th:text="${errorMessage}"></p>
-    </div>
-</div>
-<!-- Popup báo thành công -->
-<div th:if="${successMessage}" id="successPopup" class="success-popup">
-    <div class="success-content">
-        <strong> Thành công!</strong>
-        <p th:text="${successMessage}"></p>
-    </div>
-</div>
+        <div th:if="${errorMessage}" id="errorPopup" class="error-popup">
+            <div class="error-content">
+                <strong>⚠ Lỗi!</strong>
+                <p th:text="${errorMessage}"></p>
+            </div>
+        </div>
+        <!-- Popup báo thành công -->
+        <div th:if="${successMessage}" id="successPopup" class="success-popup">
+            <div class="success-content">
+                <strong> Thành công!</strong>
+                <p th:text="${successMessage}"></p>
+            </div>
+        </div>
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -61,7 +61,7 @@
             <button class="btn btn-primary" id="btnOpenAddUser">+ Thêm Người Dùng</button>
         </div>
 
-        <!-- 🔧 Thanh tìm kiếm & Lọc -->
+        <!--tìm kiếm và lọc -->
         <form class="search-filter-bar" th:action="@{/admin/users}" method="get">
             <div class="search-wrapper">
                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -117,49 +117,49 @@
                     <th style="width:60px">Avatar</th>
                     <th>Họ tên
                         <span class="sort-icons">
-        <a th:href="@{/admin/users(
-        sortField='fullName',
-        sortDir='ASC',
-        keyword=${keyword},
-        roleId=${roleId},
-        status=${status},
-        fromDate=${fromDate},
-        toDate=${toDate},
-        page=0,
-        size=${size}
-    )}" class="sort-icon up" title="Tăng">▲</a>
+                                <a th:href="@{/admin/users(
+                                sortField='fullName',
+                                sortDir='ASC',
+                                keyword=${keyword},
+                                roleId=${roleId},
+                                status=${status},
+                                fromDate=${fromDate},
+                                toDate=${toDate},
+                                page=0,
+                                size=${size}
+                            )}" class="sort-icon up" title="Tăng">▲</a>
 
-<a th:href="@{/admin/users(
-        sortField='fullName',
-        sortDir='DESC',
-        keyword=${keyword},
-        roleId=${roleId},
-        status=${status},
-        fromDate=${fromDate},
-        toDate=${toDate},
-        page=0,
-        size=${size}
-    )}" class="sort-icon down" title="Giảm">▼</a>
+                                <a th:href="@{/admin/users(
+                                        sortField='fullName',
+                                        sortDir='DESC',
+                                        keyword=${keyword},
+                                        roleId=${roleId},
+                                        status=${status},
+                                        fromDate=${fromDate},
+                                        toDate=${toDate},
+                                        page=0,
+                                        size=${size}
+                                    )}" class="sort-icon down" title="Giảm">▼</a>
 
-    </span></th>
+                </span></th>
                     <th>Email</th>
                     <th>Số điện thoại</th>
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
                     <th>Ngày tạo
                         <span class="sort-icons">
-       <a th:href="@{/admin/users(
-        sortField='createdAt', sortDir='ASC',
-        keyword=${keyword}, roleId=${roleId}, status=${status},
-        fromDate=${fromDate}, toDate=${toDate}, page=0, size=${size}
-    )}" class="sort-icon up" title="Cũ nhất">▲</a>
+                                   <a th:href="@{/admin/users(
+                                    sortField='createdAt', sortDir='ASC',
+                                    keyword=${keyword}, roleId=${roleId}, status=${status},
+                                    fromDate=${fromDate}, toDate=${toDate}, page=0, size=${size}
+                                )}" class="sort-icon up" title="Cũ nhất">▲</a>
 
-<a th:href="@{/admin/users(
-        sortField='createdAt', sortDir='DESC',
-        keyword=${keyword}, roleId=${roleId}, status=${status},
-        fromDate=${fromDate}, toDate=${toDate}, page=0, size=${size}
-    )}" class="sort-icon down" title="Mới nhất">▼</a>
-    </span></th>
+                            <a th:href="@{/admin/users(
+                                    sortField='createdAt', sortDir='DESC',
+                                    keyword=${keyword}, roleId=${roleId}, status=${status},
+                                    fromDate=${fromDate}, toDate=${toDate}, page=0, size=${size}
+                                )}" class="sort-icon down" title="Mới nhất">▼</a>
+                    </span></th>
                     <th style="text-align:right">Hành động</th>
                 </tr>
                 </thead>
@@ -196,12 +196,7 @@
                             </button>
                         </form>
 
-                        <!-- Nút xóa -->
-                        <form th:action="@{'/admin/users/' + ${u.userId} + '/delete'}"
-                              method="post"
-                              style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
-                        </form>
+
                     </td>
 
                 </tr>
@@ -221,11 +216,11 @@
                             th:text="${s}"
                             th:selected="${s == size}"
                             th:attr="data-href=@{/admin/users(
-                keyword=${keyword}, roleId=${roleId}, status=${status},
-                fromDate=${fromDate}, toDate=${toDate},
-                sortField=${sortField}, sortDir=${sortDir},
-                page=0, size=${s}
-            )}">
+                                    keyword=${keyword}, roleId=${roleId}, status=${status},
+                                    fromDate=${fromDate}, toDate=${toDate},
+                                    sortField=${sortField}, sortDir=${sortDir},
+                                    page=0, size=${s}
+                                )}">
                     </option>
                 </select>
             </div>
@@ -234,22 +229,22 @@
                 <a class="btn"
                    th:if="${page > 0}"
                    th:href="@{/admin/users(
-    keyword=${keyword}, roleId=${roleId}, status=${status},
-    fromDate=${fromDate}, toDate=${toDate},
-    sortField=${sortField}, sortDir=${sortDir},
-    page=${page > 0 ? page - 1 : 0}, size=${size}
-)}"
+                                    keyword=${keyword}, roleId=${roleId}, status=${status},
+                                    fromDate=${fromDate}, toDate=${toDate},
+                                    sortField=${sortField}, sortDir=${sortDir},
+                                    page=${page > 0 ? page - 1 : 0}, size=${size}
+                                )}"
                 >« </a>
                 <span>Trang <span th:text="${page != null ? page + 1 : 1}"></span></span>
 
                 <a class="btn"
                    th:if="${(page?:0 + 1) * (size?:10) < (filteredUsers?:0)}"
                    th:href="@{/admin/users(
-         keyword=${keyword}, roleId=${roleId}, status=${status},
-         fromDate=${fromDate}, toDate=${toDate},
-         sortField=${sortField}, sortDir=${sortDir},
-         page=${page+1}, size=${size}
-       )}">»</a>
+                     keyword=${keyword}, roleId=${roleId}, status=${status},
+                     fromDate=${fromDate}, toDate=${toDate},
+                     sortField=${sortField}, sortDir=${sortDir},
+                     page=${page+1}, size=${size}
+                   )}">»</a>
             </div>
         </div>
     </main>
@@ -322,7 +317,6 @@
                             <input type="file" id="avatarFile" name="avatarFile" accept="image/*" style="display:none;">
                             <button type="button" class="btn btn-outline" id="btnChooseAvatar">Chọn ảnh</button>
                             <label>Avatar (không bắt buộc)</label>
-                            <!-- Giữ URL ảnh mặc định (hoặc ảnh đã upload) để gửi về backend -->
                             <input type="hidden" id="avatarUrl" name="avatarUrl" value="/images/default-avatar.png">
                         </div>
                     </div>
@@ -376,7 +370,6 @@
     </div>
 </div>
 
-<!-- Modal: Chi tiết người dùng + Đánh giá sao -->
 <!-- Modal Chi tiết người dùng -->
 <div class="modal" id="userDetailModal"
      th:classappend="${showUserDetailModal} ? ' show'">

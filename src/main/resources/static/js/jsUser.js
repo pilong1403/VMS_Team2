@@ -255,8 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 small.classList.remove("active");
             }
             else if (isValid) {
-                // ✅ Nếu hợp lệ
-                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>'; // <-- CHỖ NÀY
+
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
                 icon.style.opacity = 1;
                 input.classList.add("success-border");
                 input.classList.remove("error-border");
@@ -264,8 +264,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 small.className = "error-text success active";
             }
             else {
-                // ❌ Nếu lỗi
-                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>'; // <-- VÀ CHỖ NÀY
+
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
                 icon.style.opacity = 1;
                 input.classList.add("error-border");
                 input.classList.remove("success-border");

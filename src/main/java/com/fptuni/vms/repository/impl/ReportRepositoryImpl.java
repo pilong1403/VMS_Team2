@@ -49,6 +49,37 @@ import java.util.*;
             }
             return result;
         }
+
+        @Override
+        public List<Object[]> countUsersByWeek(LocalDate from, LocalDate to) {
+            try (Session session = sessionFactory.openSession()) {
+                Query<Object[]> query = session.createQuery(
+                        "SELECT FUNCTION('week', u.createdAt), COUNT(u.userId) " +
+                                "FROM User u WHERE CAST(u.createdAt AS date) BETWEEN :from AND :to " +
+                                "GROUP BY FUNCTION('week', u.createdAt) " +
+                                "ORDER BY FUNCTION('week', u.createdAt)",
+                        Object[].class
+                );
+                query.setParameter("from", from);
+                query.setParameter("to", to);
+                return query.list();
+            }
+        }
+
+        @Override
+        public List<Object[]> countUsersByMonth(LocalDate from, LocalDate to) {
+            try (Session session = sessionFactory.openSession()) {
+                Query<Object[]> query = session.createQuery(
+                        "SELECT MONTH(u.createdAt), COUNT(u.userId) " +
+                                "FROM User u WHERE CAST(u.createdAt AS date) BETWEEN :from AND :to " +
+                                "GROUP BY MONTH(u.createdAt) ORDER BY MONTH(u.createdAt)",
+                        Object[].class
+                );
+                query.setParameter("from", from);
+                query.setParameter("to", to);
+                return query.list();
+            }
+        }
     }
 
 

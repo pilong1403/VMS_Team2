@@ -67,14 +67,24 @@
         </form>
 
         <!-- ====== BIỂU ĐỒ ====== -->
-        <div class="card">
-            <div class="card-header"><h3>Biểu đồ người dùng đăng ký</h3></div>
-            <canvas id="userChart" height="180"></canvas>
-        </div>
-
-        <div class="card">
-            <div class="card-header"><h3>Phân bố người dùng theo vai trò</h3></div>
-            <canvas id="roleChart" height="180"></canvas>
+        <div class="chart-row">
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Biểu đồ người dùng đăng ký</h3>
+                    <div>
+                        <button id="btnBack" class="btn btn-outline" style="display:none" onclick="goBackChart()">⬅ Quay lại</button>
+                        <button class="btn-export" onclick="exportChartToExcel('user')">Tải Excel</button>
+                    </div>
+                </div>
+                <canvas id="userChartUser" height="200"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Phân bố theo vai trò</h3>
+                    <button class="btn-export" onclick="exportChartToExcel('role')">Tải Excel</button>
+                </div>
+                <canvas id="roleChart" height="200"></canvas>
+            </div>
         </div>
 
         <!-- ====== BẢNG DỮ LIỆU TỔNG HỢP (nếu cần thêm thống kê chi tiết) ====== -->
@@ -110,36 +120,21 @@
 <!-- ====== BIỂU ĐỒ JS (Thymeleaf inline data) ====== -->
 <script th:inline="javascript">
     /*<![CDATA[*/
+
+    // ===== DỮ LIỆU TỪ BACKEND (Thymeleaf render) =====
     const userLabels = /*[[${userStats.labels}]]*/ [];
     const userCounts = /*[[${userStats.counts}]]*/ [];
     const roleData = /*[[${roleDistribution}]]*/ {};
-    const roleLabels = Object.keys(roleData);
-    const roleCounts = Object.values(roleData);
+    let currentRange = /*[[${rangeType}]]*/ 'month';
 
-    // Biểu đồ người dùng đăng ký (cột)
-    new Chart(document.getElementById('userChart'), {
-        type: 'bar',
-        data: {
-            labels: userLabels,
-            datasets: [{
-                label: 'Số lượng người dùng đăng ký',
-                data: userCounts,
-                backgroundColor: '#007bff'
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    // Biểu đồ vai trò người dùng (tròn)
-    new Chart(document.getElementById('roleChart'), {
+    // ===== VẼ BIỂU ĐỒ TRÒN (ROLE) =====
+    const ctxRole = document.getElementById('roleChart');
+    new Chart(ctxRole, {
         type: 'pie',
         data: {
-            labels: roleLabels,
+            labels: Object.keys(roleData),
             datasets: [{
-                data: roleCounts,
+                data: Object.values(roleData),
                 backgroundColor: ['#007bff','#ffc107','#28a745','#dc3545','#17a2b8']
             }]
         },
@@ -148,8 +143,112 @@
             plugins: { legend: { position: 'right' } }
         }
     });
+
+    // ===== VẼ BIỂU ĐỒ CỘT (USER) =====
+    let userChart;
+    const ctxUser = document.getElementById('userChartUser');
+
+    // Stack để lưu lịch sử drilldown (quay lại)
+    const drillStack = [];
+
+    function renderUserChart(labels, counts) {
+        if (userChart) userChart.destroy();
+        userChart = new Chart(ctxUser, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số lượng người dùng đăng ký',
+                    data: counts,
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                // ======= CLICK TRÊN CỘT ĐỂ DRILLDOWN =======
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = labels[index];
+                        drillDown(label);
+                    }
+                }
+            }
+        });
+    }
+
+    // render chart lần đầu
+    renderUserChart(userLabels, userCounts);
+
+    // ======= DRILLDOWN API CALL =======
+    function drillDown(label) {
+        // lưu trạng thái hiện tại để quay lại
+        drillStack.push({
+            labels: userChart.data.labels.slice(),
+            counts: userChart.data.datasets[0].data.slice(),
+            range: currentRange
+        });
+
+        document.getElementById('btnBack').style.display = 'inline-block';
+
+        fetch(`/admin/reports/drilldown?rangeType=${currentRange}&label=${encodeURIComponent(label)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.labels && data.counts) {
+                    currentRange = data.rangeType;
+                    renderUserChart(data.labels, data.counts);
+                } else {
+                    showToast("Không có dữ liệu chi tiết.", "Thông báo");
+                }
+            })
+            .catch(err => console.error("Drilldown error:", err));
+    }
+
+    // ======= NÚT QUAY LẠI =======
+    function goBackChart() {
+        const prev = drillStack.pop();
+        if (prev) {
+            renderUserChart(prev.labels, prev.counts);
+            currentRange = prev.range;
+        }
+        if (drillStack.length === 0) {
+            document.getElementById('btnBack').style.display = 'none';
+        }
+    }
+
+    // ======= HIỂN THỊ TOAST NGẮN =======
+    function showToast(message, title="Thông báo") {
+        const toast = document.getElementById('toast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        toastTitle.innerText = title;
+        toastMessage.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    // ======= XUẤT EXCEL =======
+        function exportChartToExcel(type) {
+        const params = new URLSearchParams();
+        params.append("type", type);
+        params.append("rangeType", currentRange);
+
+        const from = document.querySelector('input[name="fromDate"]').value;
+        const to = document.querySelector('input[name="toDate"]').value;
+        if (from) params.append("fromDate", from);
+        if (to) params.append("toDate", to);
+
+        // Gọi server backend để tải Excel
+        window.location.href = `/admin/reports/export?${params.toString()}`;
+    }
+
     /*]]>*/
 </script>
+
 
 </body>
 </html>

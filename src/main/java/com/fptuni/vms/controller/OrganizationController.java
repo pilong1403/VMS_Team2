@@ -120,7 +120,7 @@ public class OrganizationController {
 
         try {
             mailService.sendApproveEmail(org.getOwner().getEmail(), org.getName(), reason);
-            redirectAttributes.addFlashAttribute("successMessage", "✅ Duyệt hồ sơ thành công và đã gửi email!");
+            redirectAttributes.addFlashAttribute("successMessage", "Duyệt hồ sơ thành công và đã gửi email!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Duyệt hồ sơ thành công nhưng gửi email thất bại!");
         }
@@ -144,7 +144,7 @@ public class OrganizationController {
 
         try {
             mailService.sendRejectEmail(org.getOwner().getEmail(), org.getName(), reason);
-            redirectAttributes.addFlashAttribute("successMessage", "🚫 Đã từ chối hồ sơ và gửi email thông báo thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", " Đã từ chối hồ sơ và gửi email thông báo thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "⚠ Từ chối hồ sơ thành công, nhưng gửi email thất bại!");
         }

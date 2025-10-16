@@ -107,7 +107,7 @@ public class UserRepositoryImpl implements UserRepository {
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND (LOWER(u.fullName) LIKE LOWER(:kw) " +
                     "OR LOWER(u.email) LIKE LOWER(:kw) " +
-                    "OR LOWER(u.phone) LIKE LOWER(:kw))"); // ✅ đồng nhất với search()
+                    "OR LOWER(u.phone) LIKE LOWER(:kw))");
             params.put("kw", "%" + keyword.trim() + "%");
         }
         if (roleId != null) {

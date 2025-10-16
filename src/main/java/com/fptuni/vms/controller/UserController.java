@@ -42,7 +42,7 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortField", defaultValue = "createdAt") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "DESC") String sortDir,
-            @RequestParam(value = "viewUser", required = false) Integer viewUserId,  // 👈 thêm dòng này
+            @RequestParam(value = "viewUser", required = false) Integer viewUserId,
 
             Model model) {
 
@@ -156,17 +156,7 @@ public class UserController {
         return "redirect:/admin/users";
     }
 
-    // Xóa user
-    @PostMapping("/{id}/delete")
-    public String deleteUser(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
-        try {
-            userService.deleteUser(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Người dùng đã được xóa thành công!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa người dùng: " + e.getMessage());
-        }
-        return "redirect:/admin/users";
-    }
+
 
     @GetMapping("/admin/users/{id}/detail")
     @ResponseBody

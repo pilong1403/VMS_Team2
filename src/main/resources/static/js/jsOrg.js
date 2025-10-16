@@ -1,12 +1,8 @@
-/*************************************************
- *  jsOrg.js — Quản lý Hồ sơ Tổ chức
- *  Chỉ xử lý UI (modal, popup, avatar, toast)
- *  Mọi logic search / filter / approve / reject nằm ở backend
- *************************************************/
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ========== 1️⃣ Hiển thị popup thông báo ========== */
+    /* ========== 1Hiển thị popup thông báo ========== */
     const successPopup = document.getElementById("successPopup");
     const errorPopup = document.getElementById("errorPopup");
 
@@ -19,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    /* ========== 2️⃣ Mở modal duyệt / từ chối ========== */
+    /* ========== 2️Mở modal duyệt / từ chối ========== */
     window.openDecisionModal = function (btn, actionType) {
         const orgId = btn.dataset.id;
         const orgName = btn.dataset.name;
@@ -51,13 +47,13 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add("show");
     };
 
-    /* ========== 3️⃣ Đóng modal quyết định ========== */
+    /* ========== 3️ Đóng modal quyết định ========== */
     window.closeDecisionModal = function () {
         const modal = document.getElementById("decisionModal");
         if (modal) modal.classList.remove("show");
     };
 
-    /* ========== 4️⃣ Xác nhận submit form duyệt/từ chối ========== */
+    /* ========== 4️ Xác nhận submit form duyệt/từ chối ========== */
     const decisionForm = document.getElementById("decisionForm");
     if (decisionForm) {
         decisionForm.addEventListener("submit", e => {
@@ -79,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* ========== 6️⃣ Modal xem chi tiết bằng chứng (server-rendered) ========== */
+    /* ========== 6️ Modal xem chi tiết bằng chứng (server-rendered) ========== */
     const detailModal = document.getElementById("orgDetailModal");
     if (detailModal && detailModal.classList.contains("show")) {
         detailModal.style.display = "flex";
@@ -104,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-/* ========== 8️⃣ Modal quyết định chung ========== */
+/* ========== 8️ Modal quyết định chung ========== */
 window.openRejectModal = function (btn) {
     openDecisionModal(btn, "reject");
 };
