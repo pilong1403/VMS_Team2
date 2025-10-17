@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Admin - Hệ thống Hỗ trợ</title>
+    <link rel="stylesheet" th:href="@{/css/faq/styles.css}" />
+</head>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .admin-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
+</style>
+
+
+
+<body>
+    <div class="admin-container">
+
+        <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+        <main class="main-content">
+
+            <div th:replace="~{admin/fragments/header :: header}"></div>
+
+
+            <div class="content-area">
+                <div id="faqPage" class="page-content active">
+                    <div class="page-header">
+                        <div>
+                            <h1>Quản Lý Hỗ Trợ</h1>
+                            <p class="page-subtitle">Quản lý FAQ</p>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="faq-management">
+                        <div class="content-header">
+
+                            <div class="search-box">
+                                <form th:action="@{/admin/faq/filter}" method="get">
+                                    <input type="hidden" name="status" th:value="${status}">
+                                    <input type="hidden" name="num" th:value="${num}">
+                                    <input type="hidden" name="category" th:value="${category}">
+
+                                    <input class="form-control" type="text" name="keyword"
+                                           placeholder="Tìm kiếm FAQ theo câu hỏi"
+                                           th:value="${keyword != null ? keyword : ''}"
+                                           id="searchInput" style="width: 500px;">
+                                </form>
+                            </div>
+
+                            <!-- Filter by num -->
+                            <div class="header-actions">
+                                <div class="filter-num">
+                                    <form method="get" action="/admin/faq/filter">
+                                        <input type="hidden" name="status" th:value="${status}">
+                                        <input type="hidden" name="keyword" th:value="${keyword}">
+                                        <input type="hidden" name="category" th:value="${category}">
+
+                                        <select class="form-select" name="num" onchange="this.form.submit()">
+                                            <option value="" th:selected="${num == null}" disabled>Hiển thị số bản ghi</option>
+                                            <option value="10" th:selected="${num == 10}">10</option>
+                                            <option value="20" th:selected="${num == 20}">20</option>
+                                            <option value="50" th:selected="${num == 50}">50</option>
+                                        </select>
+
+                                    </form>
+                                </div>
+
+                                <!-- Filter by category -->
+                                <div class="filter-bar">
+                                    <form method = "get" action="/admin/faq/filter">
+                                        <input type="hidden" name="num" th:value="${num}">
+                                        <input type="hidden" name="keyword" th:value="${keyword}">
+                                        <input type="hidden" name="status" th:value="${status}">
+
+                                        <select class="form-select" name="category" onchange="this.form.submit()">
+                                            <option selected disabled>Lọc theo chủ đề</option>
+                                            <option value="account" th:selected="${category == 'account'}" >Tài khoản</option>
+                                            <option value="event" th:selected="${category == 'event'}" >Sự kiện</option>
+                                            <option value="org" th:selected="${category == 'org'}" >Tổ chức</option>
+                                            <option value="donation" th:selected="${category == 'donation'}" >Quyên góp</option>
+                                            <option value="common" th:selected="${category == 'common'}" >Chung</option>
+                                        </select>
+
+                                    </form>
+                                </div>
+
+                                <!-- Filter by status -->
+                                <div class="filter-bar">
+                                    <form method = "get" action="/admin/faq/filter">
+                                        <input type="hidden" name="num" th:value="${num}">
+                                        <input type="hidden" name="keyword" th:value="${keyword}">
+                                        <input type="hidden" name="category" th:value="${category}">
+                                        <select class="form-select" name="status" onchange="this.form.submit()">
+                                            <option selected disabled>Lọc theo trạng thái</option>
+                                            <option value="1" th:selected="${status == '1'}">Công khai</option>
+                                            <option value="0" th:selected="${status == '0'}">Bị ẩn</option>
+                                            <option value="2" th:selected="${status == '2'}">Tất cả</option>
+                                        </select>
+                                    </form>
+                                </div>
+
+
+                                <button class="btn btn-primary" id="addFaqBtn" onclick="openCreateFAQModal()">
+                                    + Tạo FAQ
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div id="error-alert" th:if="${error != null}" th:text="${error}"
+                             style="background-color:#f8d7da; color:#842029; border:1px solid #f5c2c7;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                        </div>
+
+                        <div id="success-alert" th:if="${success != null}" th:text="${success}"
+                             style="background-color:#d1e7dd; color:#0f5132; border:1px solid #badbcc;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                        </div>
+
+
+                        <div class="faq-list" id="faqList">
+
+                            <div th:each="faq : ${listFaqList}" class="faq-item" data-faq-id="1">
+
+                                <div class="faq-header">
+                                    <div class="faq-question-icon" th:text="${faq.getFaqId()}">ID FAQ</div>
+                                    <div class="faq-content">
+                                        <div class="faq-meta">
+
+                                            <span class="faq-category"
+                                                  th:classappend="${#strings.equals(faq.getCategory(), 'Tài khoản')} ? 'faq-category-taikhoan' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Sự kiện')} ? 'faq-category-sukien' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Tổ chức')} ? 'faq-category-tochuc' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Quyên góp')} ? 'faq-category-quyengop' : 'faq-category-chung')))"
+                                                  th:text="${faq.getCategory()}">
+                                                danh mục
+                                            </span>
+
+                                            <span class="status-badge"
+                                                  th:text="${faq.status} ? 'Công khai' : 'Bị ẩn'"
+                                                  th:classappend="${faq.status} ? 'active' : 'hidden'">
+                                            </span>
+                                        </div>
+                                        <h3 class="faq-question" th:text="${faq.getQuestion()}">Câu hỏi</h3>
+                                        <p class="faq-answer" th:text="${faq.getAnswer()}">Câu trả lời</p>
+                                    </div>
+                                </div>
+
+                                <div class="faq-footer">
+                                    <div class="faq-stats">
+                                        <span th:text="'[Thời gian tạo]: '+ ${#temporals.format(faq.getCreatedAt(),'dd/MM/yyyy - HH:mm:ss')}">
+                                            [Thời gian tạo]: 05/09/2024</span> |
+
+                                        <span th:if="${faq.getUpdatedAt() != null}"
+                                              th:text="'[Lần cuối chỉnh sửa]: '+ ${#temporals.format(faq.getUpdatedAt(),'dd/MM/yyyy - HH:mm:ss')}">
+                                            [Lần cuối chỉnh sửa]: 10/09/2024
+                                        </span>
+<!--                                        <span>[Được chỉnh sửa bởi]: DuyNguyen</span>-->
+                                    </div>
+                                    <div class="faq-actions">
+
+                                        <button class="btn btn-sm btn-primary" id="edit" onclick="openEditFAQModal(this)"
+                                        th:data-id = "${faq.getFaqId()}"
+                                        th:data-category = "${faq.getCategory()}"
+                                        th:data-question = "${faq.getQuestion()}"
+                                        th:data-answer = "${faq.getAnswer()}">
+                                            Chỉnh sửa
+                                        </button>
+
+                                        <form th:action="@{/admin/faq/changeStatus}" method="post">
+                                            <input type="hidden" name="faqIdStatus" th:value="${faq.faqId}">
+
+                                            <input type="hidden" name="page" th:value="${currentPage}">
+                                            <input type="hidden" name="num" th:value="${num}">
+                                            <input type="hidden" name="status" th:value="${status}">
+                                            <input type="hidden" name="keyword" th:value="${keyword}">
+                                            <input type="hidden" name="category" th:value="${category}">
+
+
+                                            <button type="submit" class="btn btn-sm"
+                                                    th:classappend="${faq.status} ? 'btn-danger' : 'btn-success'"
+                                                    th:text="${faq.status} ? 'Ẩn' : 'Công khai'">
+                                            </button>
+
+
+                                        </form>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="pagination" th:if="${totalPages >= 1}">
+                            <button class="page-btn prev"
+                                    th:disabled="${currentPage == 1}"
+                                    th:onclick="|window.location.href='@{/admin/faq/filter(page=${currentPage - 1}, num=${num}, category=${category}, status=${status}, keyword=${keyword})}'|">
+                                &laquo;
+                            </button>
+
+                            <th:block th:if="${startPage > 2}">
+                                <button class="page-btn"
+                                        th:onclick="|window.location.href='@{/admin/faq/filter(page=1, num=${num}, category=${category}, status=${status}, keyword=${keyword})}'|">1</button>
+                                <button class="page-btn" disabled>...</button>
+                            </th:block>
+
+                            <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                                <button class="page-btn"
+                                        th:text="${i}"
+                                        th:classappend="${i == currentPage} ? ' active' : ''"
+                                        th:onclick="|window.location.href='@{/admin/faq/filter(page=${i}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                                </button>
+                            </th:block>
+
+                            <th:block th:if="${(endPage + 1) < totalPages}">
+                                <button class="page-btn" disabled>...</button>
+                                <button class="page-btn"
+                                        th:onclick="|window.location.href='@{/admin/faq/filter(page=${totalPages}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                                    [[${totalPages}]]
+                                </button>
+                            </th:block>
+
+                            <button class="page-btn next"
+                                    th:disabled="${currentPage == totalPages}"
+                                    th:onclick="|window.location.href='@{/admin/faq/filter(page=${currentPage + 1}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                                &raquo;
+                            </button>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <div id="faqModalCreate"  class="modal">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2 id="faqModalTitle">Thêm FAQ Mới</h2>
+                <button class="close-btn" onclick="closeCreateFAQModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="faqForm" th:action="@{/admin/faq/add}" method="post">
+                    <input type="hidden" id="faqId">
+                    <div class="form-group">
+
+                        <label for="faqCategory">Danh mục <span class="required">*</span> </label>
+                        <select name="category" id="faqCategory" class="form-control">
+                            <option value="Tài khoản">Tài khoản</option>
+                            <option value="Sự kiện">Sự kiện</option>
+                            <option value="Tổ chức">Tổ chức</option>
+                            <option value="Quyên góp">Quyên góp</option>
+                            <option value="Chung">Chung</option>
+                        </select>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="faqQuestion">Câu hỏi <span class="required">*</span></label>
+                        <input name="question" type="text" id="faqQuestion" class="form-control"
+                               required placeholder="Nhập câu hỏi..."
+                                title="Chỉ được dùng chữ, số và dấu .,?!">
+                    </div>
+                    <div class="form-group">
+                        <label for="faqAnswer">Câu trả lời<span class="required">*</span></label>
+                        <textarea name="answer" id="faqAnswer" class="form-control" rows="4"
+                            placeholder="Nhập câu trả lời..."></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeCreateFAQModal()">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu FAQ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="faqModalEdit" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="faqModalTitle2">Sửa thông tin FAQ </h2>
+                <button class="close-btn" onclick="closeEditFAQModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="faqFormEdit" th:action="@{/admin/faq/edit}" method="post">
+                    <input type="hidden" id="faqIdEdit" name="faqIdEdit">
+
+                    <input type="hidden" name="page" th:value="${currentPage}">
+                    <input type="hidden" name="num" th:value="${num}">
+                    <input type="hidden" name="originalCategory" th:value="${category}">
+                    <input type="hidden" name="status" th:value="${status}">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+
+                    <div class="form-group">
+                        <label for="categoryEdit">Danh mục <span class="required">*</span> </label>
+                        <select name="editedCategory" id="categoryEdit" class="form-control">
+                            <option value="Tài khoản">Tài khoản</option>
+                            <option value="Sự kiện">Sự kiện</option>
+                            <option value="Tổ chức">Tổ chức</option>
+                            <option value="Quyên góp">Quyên góp</option>
+                            <option value="Chung">Chung</option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="faqQuestion">Câu hỏi <span class="required">*</span></label>
+                        <input name="question" type="text" id="questionEdit" class="form-control"
+                               required placeholder="Nhập câu hỏi..."
+                               title="Chỉ được dùng chữ, số và dấu .,?!">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="faqAnswer">Câu trả lời<span class="required">*</span></label>
+                        <textarea name="answer" id="answerEdit" class="form-control" rows="4"
+                                  placeholder="Nhập câu trả lời..."></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditFAQModal()">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu FAQ</button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <script>
+
+        //edit form
+        function openEditFAQModal(btn) {
+            const id = btn.dataset.id;
+            const category = btn.dataset.category;
+            const question = btn.dataset.question;
+            const answer = btn.dataset.answer;
+
+            document.getElementById("faqIdEdit").value = id;
+            document.getElementById("categoryEdit").value = category;
+            document.getElementById("questionEdit").value = question;
+            document.getElementById("answerEdit").value = answer;
+
+            document.getElementById("faqModalEdit").classList.add("show");
+        }
+
+        const autoHideAlert = (elementId, timeout) => {
+            const alertElement = document.getElementById(elementId);
+            if (alertElement) {
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, timeout);
+            }
+        };
+
+        autoHideAlert('error-alert', 5000);
+        autoHideAlert('success-alert', 5000);
+
+    </script>
+
+    <script th:src="@{/js/faq/script.js}"></script>
+
+</body>
+
+</html>
