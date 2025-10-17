@@ -1,0 +1,132 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0;
+    background: #f6f8fb;
+    color: #0f172a;
+}
+
+.container {
+    max-width: 920px;
+    margin: 32px auto;
+    padding: 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(2, 6, 23, 0.06);
+}
+
+h1 {
+    margin: 0 0 16px;
+    font-size: 24px;
+    color: #0b3a82;
+}
+
+.alert {
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin: 8px 0 16px;
+    font-size: 14px;
+}
+
+.alert.info {
+    background: #ecf3ff;
+    color: #0b3a82;
+    border: 1px solid #c8ddff;
+}
+
+.alert.warn {
+    background: #fff4e5;
+    color: #92400e;
+    border: 1px solid #f3c68b;
+}
+
+.form {
+    margin-top: 8px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+label {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="file"],
+textarea {
+    padding: 10px 12px;
+    border: 1px solid #d0d7e2;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: #fff;
+}
+
+input:focus,
+textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.error {
+    color: #b91c1c;
+    font-size: 12px;
+}
+
+.actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid #d0d7e2;
+    background: #fff;
+    color: #0f172a;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #f1f5f9;
+}
+
+.btn.primary {
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+}
+
+.btn.primary:hover {
+    filter: brightness(1.05);
+}

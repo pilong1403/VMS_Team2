@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đơn ứng tuyển</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">Đơn Ứng Tuyển Của Tôi</h2>
+
+        <!-- ========== Search & Filter Form ========== -->
+        <form method="get" class="row g-3 mb-4">
+            <input type="hidden" name="userId" th:value="${param.userId}" />
+
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" th:value="${paramQ}"
+                    placeholder="Tìm kiếm theo tiêu đề cơ hội...">
+            </div>
+
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option th:selected="${paramStatus == 'PENDING'}" value="PENDING">Đang chờ</option>
+                    <option th:selected="${paramStatus == 'APPROVED'}" value="APPROVED">Đã duyệt</option>
+                    <option th:selected="${paramStatus == 'REJECTED'}" value="REJECTED">Bị từ chối</option>
+                    <option th:selected="${paramStatus == 'COMPLETED'}" value="COMPLETED">Đã hoàn thành</option>
+                    <option th:selected="${paramStatus == 'CANCELLED'}" value="CANCELLED">Đã hủy</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select name="sort" class="form-select">
+                    <option th:selected="${paramSort == 'latest'}" value="latest">Mới nhất trước</option>
+                    <option th:selected="${paramSort == 'oldest'}" value="oldest">Cũ nhất trước</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Lọc</button>
+            </div>
+        </form>
+
+        <!-- ========== Application Table ========== -->
+        <div th:if="${#lists.isEmpty(applications)}">
+            <div class="alert alert-info text-center">
+                Không tìm thấy đơn ứng tuyển nào.
+            </div>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(applications)}">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr class="text-center">
+                        <th>#</th>
+                        <th>Tiêu đề Cơ hội</th>
+                        <th>Trạng thái</th>
+                        <th>Lý do</th>
+                        <th>Ngày nộp</th>
+                        <th>Ngày cập nhật</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="app, iterStat : ${applications}">
+                        <td th:text="${iterStat.count}" class="text-center"></td>
+                        <td th:text="${app.opportunity.title}"></td>
+                        <td th:text="${app.status}" class="text-center"></td>
+                        <td th:text="${app.reason} ?: '-'"></td>
+                        <td th:text="${#temporals.format(app.appliedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td th:text="${#temporals.format(app.updatedAt, 'dd/MM/yyyy HH:mm')} ?: '-'"></td>
+                        <td class="text-center">
+                            <a th:href="@{'/applications/detail/' + ${app.appId}}" class="btn btn-info btn-sm">Chi
+                                tiết</a>
+                            <form th:action="@{'/applications/cancel/' + ${app.appId}}" method="post"
+                                style="display:inline">
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    th:if="${app.status.name() != 'CANCELLED'}" onclick="confirmCancel(this.form)">Huỷ
+                                    bỏ</button>
+                            </form>
+                            <script>
+                                function confirmCancel(form) {
+                                    if (confirm('Bạn có chắc chắn muốn huỷ cơ hội này? Việc huỷ sẽ bị đánh giá uy tín thấp.')) {
+                                        form.submit();
+                                    }
+                                }
+                            </script>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+
+</html>
