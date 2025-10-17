@@ -18,4 +18,7 @@ public interface OrganizationRepository {
                        LocalDate fromDate, LocalDate toDate);
 
     long countAll();
+    List<Organization> getOrganizationByAPPROVED();
+    Organization findByOwnerId(Integer ownerId);
+
 }

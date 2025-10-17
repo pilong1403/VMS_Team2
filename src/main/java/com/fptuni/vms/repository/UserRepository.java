@@ -37,4 +37,8 @@ public interface UserRepository {
     long countByStatus(String status);
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
+    List<User> getUsersByRole(Integer roleId);
+    User findByEmail(String email);
+
+
 }

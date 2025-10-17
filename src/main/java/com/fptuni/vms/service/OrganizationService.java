@@ -18,4 +18,7 @@ public interface OrganizationService {
     Organization getOrganizationById(Integer id);
 
     void saveOrganization(Organization organization);
+    List<Organization> getOrganizationByAPPROVED();
+    Organization findByOwnerId(Integer ownerId);
+
 }

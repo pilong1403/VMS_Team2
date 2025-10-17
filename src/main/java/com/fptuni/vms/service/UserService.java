@@ -31,4 +31,7 @@ public interface UserService {
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
     void exportUserToExcel(User user, OutputStream outputStream) throws IOException;
+    List<User> getUsersByRole(Integer roleId);
+    User findByEmail(String email);
+
 }

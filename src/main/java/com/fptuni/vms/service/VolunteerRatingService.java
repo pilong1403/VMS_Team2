@@ -6,16 +6,11 @@ import java.util.List;
 
 public interface VolunteerRatingService {
 
-    // ===== CRUD =====
-    void saveRating(VolunteerRating rating);
-    VolunteerRating getRatingById(Integer id);
-    void deleteRating(Integer id);
-    List<VolunteerRating> getAllRatings();
-
-    // ===== STATISTICS =====
-    long countAllRatings();
-    long countRatingsByStars(short stars);
-
-    // ===== FILTER =====
-    List<VolunteerRating> getRatingsByStars(short stars);
+    List<VolunteerRating> findByOrganization(int orgId, String keyword, Short stars, int page, int size);
+    long countByOrganization(int orgId, String keyword, Short stars);
+    long countPending(int orgId);
+    long countDone(int orgId);
+    VolunteerRating findById(int id);
+    void save(VolunteerRating rating);
+    void update(VolunteerRating rating);
 }

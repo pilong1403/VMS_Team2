@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chỉnh sửa đánh giá</title>
+    <link rel="stylesheet" th:href="@{/css/rate.css}">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="title">Quản lý Đánh giá</div>
+        <nav class="nav">
+            <a th:href="@{/ratings}">Danh sách đánh giá</a>
+            <a class="active" th:href="@{/ratings/edit/{id}(id=${rating.id})}">Chỉnh sửa đánh giá</a>
+        </nav>
+        <div class="user-mini">
+            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
+            <div>
+                <div th:text="${currentUser.fullName}">Nguyễn Văn A</div>
+                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <h2 style="margin-top:0">Chỉnh sửa đánh giá</h2>
+
+        <div class="detail-layout">
+            <div class="panel">
+                <h3>Chi tiết đánh giá</h3>
+                <div class="kv">
+                    <div class="row"><div class="key">Tình nguyện viên:</div>
+                        <div th:text="${rating.rateeUser.fullName}">Tên TNV</div></div>
+                    <div class="row"><div class="key">Hoạt động:</div>
+                        <div th:text="${rating.opportunity.title}">Tên hoạt động</div></div>
+                    <div class="row"><div class="key">Ngày tạo:</div>
+                        <div th:text="${#temporals.format(rating.createdAt, 'dd/MM/yyyy')}">20/09/2025</div></div>
+                </div>
+            </div>
+
+            <form th:action="@{/ratings/update}" th:object="${rating}" method="post" class="panel form" style="grid-column:2/3">
+                <input type="hidden" th:field="*{id}" />
+                <h3>Cập nhật đánh giá</h3>
+
+                <div class="kv">
+                    <div class="key">Đánh giá sao</div>
+                    <div class="stars">
+                        <label th:each="i : ${#numbers.sequence(1,5)}">
+                            <input type="radio" th:field="*{stars}" th:value="${i}" required style="display:none">
+                            <span th:text="${i <= (rating.stars != null ? rating.stars : 0) ? '★':'☆'}"
+                                  style="font-size:24px;cursor:pointer;color:#f59e0b"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="kv">
+                    <div class="key">Nhận xét</div>
+                    <textarea th:field="*{comment}" maxlength="500" placeholder="Cập nhật nhận xét của bạn..."></textarea>
+                    <div class="counter">Tối đa 500 ký tự</div>
+                </div>
+
+                <div class="actions" style="margin-top:16px;">
+                    <button type="submit" class="btn success">Cập nhật</button>
+                    <a th:href="@{/ratings}" class="btn ghost">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/rate.js}">
+
+</script>
+</body>
+</html>

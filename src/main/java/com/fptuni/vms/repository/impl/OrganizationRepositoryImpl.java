@@ -106,4 +106,26 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
     public long countAll() {
         return em.createQuery("SELECT COUNT(o) FROM Organization o", Long.class).getSingleResult();
     }
+
+    @Override
+    public List<Organization> getOrganizationByAPPROVED() {
+        String jpql = "SELECT o FROM Organization o WHERE o.regStatus = :status ORDER BY o.createdAt DESC";
+        return em.createQuery(jpql, Organization.class)
+                .setParameter("status", Organization.RegStatus.APPROVED)
+                .getResultList();
+    }
+
+    @Override
+    public Organization findByOwnerId(Integer ownerId) {
+        List<Organization> list = em.createQuery("""
+                SELECT o FROM Organization o 
+                JOIN FETCH o.owner ow 
+                WHERE ow.userId = :ownerId
+                """, Organization.class)
+                .setParameter("ownerId", ownerId)
+                .setMaxResults(1)
+                .getResultList();
+
+        return list.isEmpty() ? null : list.get(0);
+    }
 }

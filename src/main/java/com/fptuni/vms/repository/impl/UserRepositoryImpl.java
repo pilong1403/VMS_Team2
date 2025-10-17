@@ -160,4 +160,21 @@ public class UserRepositoryImpl implements UserRepository {
                 .getSingleResult();
         return count > 0;
     }
+
+    @Override
+    public List<User> getUsersByRole(Integer roleId) {
+        return em.createQuery("SELECT u FROM User u WHERE u.role.id = :roleId ORDER BY u.fullName ASC", User.class)
+                .setParameter("roleId", roleId)
+                .getResultList();
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        List<User> users = em.createQuery(
+                        "SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)", User.class)
+                .setParameter("email", email)
+                .setMaxResults(1)
+                .getResultList();
+        return users.isEmpty() ? null : users.get(0);
+    }
 }

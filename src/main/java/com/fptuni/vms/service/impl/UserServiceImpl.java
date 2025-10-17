@@ -126,7 +126,15 @@ public class UserServiceImpl implements UserService {
         workbook.close();
     }
 
+    @Override
+    public List<User> getUsersByRole(Integer roleId) {
+        return userRepository.getUsersByRole(roleId);
+    }
 
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 
 
 }

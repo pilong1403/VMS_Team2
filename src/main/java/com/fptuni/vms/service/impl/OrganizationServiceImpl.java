@@ -42,4 +42,15 @@ public class OrganizationServiceImpl implements OrganizationService {
     public void saveOrganization(Organization organization) {
         organizationRepository.save(organization);
     }
+
+    @Override
+    public List<Organization> getOrganizationByAPPROVED() {
+        return organizationRepository.getOrganizationByAPPROVED();
+
+    }
+
+    @Override
+    public Organization findByOwnerId(Integer ownerId) {
+        return organizationRepository.findByOwnerId(ownerId);
+    }
 }
