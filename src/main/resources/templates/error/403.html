@@ -1,0 +1,26 @@
+<!-- src/main/resources/templates/error/403.html -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>403 - Không có quyền truy cập</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tự chuyển về login sau 3 giây -->
+    <meta http-equiv="refresh" content="3;url=/login">
+    <script>
+        setTimeout(function(){ window.location.href = '/login'; }, 5000);
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+<div class="bg-white shadow rounded-2xl p-8 max-w-lg text-center">
+    <h1 class="text-3xl font-bold mb-2">403 – Forbidden</h1>
+    <p class="text-gray-600 mb-6">
+        Bạn không có quyền truy cập trang này. Hệ thống sẽ tự chuyển về trang đăng nhập trong vài giây.
+    </p>
+    <a href="/login" class="inline-block rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700">
+        Về trang đăng nhập ngay
+    </a>
+</div>
+</body>
+</html>

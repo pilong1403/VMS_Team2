@@ -1,3 +1,4 @@
+// src/main/java/com/fptuni/vms/repository/OpportunityRepository.java
 package com.fptuni.vms.repository;
 
 import com.fptuni.vms.model.Opportunity;
@@ -8,7 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OpportunityRepository extends JpaRepository<Opportunity, Integer> {
@@ -61,4 +64,13 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Intege
      */
     @Query("SELECT o FROM Opportunity o JOIN FETCH o.organization JOIN FETCH o.category WHERE o.status = 'OPEN' ORDER BY o.createdAt DESC")
     List<Opportunity> findTop3LatestOpportunities(Pageable pageable);
+
+    List<Opportunity> findByOrgIdPaged(int orgId, int offset, int limit, String q, Integer categoryId, String status);
+    int countByOrgId(int orgId, String q, Integer categoryId, String status);
+    Optional<Opportunity> findByIdAndOrg(int oppId, int orgId);
+    Opportunity save(Opportunity o);
+    boolean deleteByIdAndOrg(int oppId, int orgId);
+
+    // tiện lợi:
+    List<Opportunity> findRecentByOrg(int orgId, LocalDateTime from, LocalDateTime to);
 }

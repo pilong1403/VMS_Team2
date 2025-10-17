@@ -1,59 +1,35 @@
 package com.fptuni.vms.security;
 
+import com.fptuni.vms.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fptuni.vms.model.User;
-
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
-
     private final User user;
-
-    public CustomUserDetails(User user) {
-        this.user = user;
-    }
+    public CustomUserDetails(User u) { this.user = u; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convert role name to Spring Security authority
-        String roleName = user.getRole().getRoleName();
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + roleName));
+        // KHỚP CHÍNH XÁC SecurityConfig.hasAuthority("ORG_OWNER")
+        String roleName = user.getRole().getRoleName(); // "ADMIN" | "ORG_OWNER" | "VOLUNTEER"
+        return List.of(new SimpleGrantedAuthority(roleName));
     }
 
-    @Override
-    public String getPassword() {
-        return user.getPasswordHash();
-    }
+    @Override public String getPassword() { return user.getPasswordHash(); }
+    @Override public String getUsername() { return user.getEmail(); }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return !"LOCKED".equalsIgnoreCase(user.getStatus().name()); }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 
-    @Override
-    public String getUsername() {
+    public User getDomainUser() { return user; }
+    public String getEmail() {
         return user.getEmail();
     }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return user.getStatus() == User.UserStatus.ACTIVE;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return user.getStatus() == User.UserStatus.ACTIVE;
-    }
-
     // Getter to access the underlying User entity
     public User getUser() {
         return user;
@@ -67,7 +43,4 @@ public class CustomUserDetails implements UserDetails {
         return user.getFullName();
     }
 
-    public String getEmail() {
-        return user.getEmail();
-    }
 }

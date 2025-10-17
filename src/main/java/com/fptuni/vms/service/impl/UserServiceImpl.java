@@ -6,13 +6,13 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.UserRepository;
 import com.fptuni.vms.service.CloudinaryService;
 import com.fptuni.vms.service.UserService;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -23,11 +23,37 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserServiceImpl(UserRepository userRepository,
-            CloudinaryService cloudinaryService,
-            PasswordEncoder passwordEncoder) {
+                           CloudinaryService cloudinaryService,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public User save(User user) {
+        // Có thể chuẩn hóa dữ liệu trước khi lưu nếu cần
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        if (email == null) return false;
+        return userRepository.existsByEmail(email.trim().toLowerCase());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findByEmail(String email) {
+        if (email == null) return Optional.empty();
+        return userRepository.findByEmail(email.trim().toLowerCase());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findById(Integer id) {
+        return userRepository.findById(id);
     }
 
     @Override
@@ -93,24 +119,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public User findById(Integer userId) {
-        return userRepository.findById(userId).orElse(null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public User findByIdWithRole(Integer userId) {
         return userRepository.findByIdWithRole(userId).orElse(null);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
-    }
-
-    @Override
-    public User save(User user) {
-        return userRepository.save(user);
-    }
 }
