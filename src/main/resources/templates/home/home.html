@@ -121,7 +121,7 @@
           <div class="col-3">
             <div class="stats-card text-center">
               <i class="bi bi-people-fill text-primary mb-3" style="font-size: 3rem; color: #38bdf8 !important"></i>
-              <div class="h2 fw-bold text-dark mb-1">1,500+</div>
+              <div class="h2 fw-bold text-dark mb-1">150+</div>
               <div class="text-muted small">Tình Nguyện Viên</div>
             </div>
           </div>
@@ -129,21 +129,21 @@
             <div class="stats-card text-center">
               <i class="bi bi-check-circle-fill mb-3" style="font-size: 3rem; color: #34d399"></i>
               <div class="h2 fw-bold text-dark mb-1">320</div>
-              <div class="text-muted small">Dự Án Hoàn Thành</div>
+              <div class="text-muted small">Cơ Hội Được Lan Tỏa</div>
             </div>
           </div>
           <div class="col-3">
             <div class="stats-card text-center">
               <i class="bi bi-clock-fill mb-3" style="font-size: 3rem; color: #fbbf24"></i>
-              <div class="h2 fw-bold text-dark mb-1">45,000</div>
+              <div class="h2 fw-bold text-dark mb-1">400</div>
               <div class="text-muted small">Giờ Đóng Góp</div>
             </div>
           </div>
           <div class="col-3">
             <div class="stats-card text-center">
               <i class="bi bi-heart-fill mb-3" style="font-size: 3rem; color: #ef4444"></i>
-              <div class="h2 fw-bold text-dark mb-1">2.5 Tỷ</div>
-              <div class="text-muted small">Quyên Góp</div>
+              <div class="h2 fw-bold text-dark mb-1">50Tr</div>
+              <div class="text-muted small">VNĐ Được Quyên Góp</div>
             </div>
           </div>
         </div>
@@ -156,31 +156,33 @@
           <div class="text-muted lead">Hãy cùng đồng hành với cơ hội mà bạn quan tâm</div>
         </div>
 
-        <div class="row g-4 mb-5">
-          <!-- Project Card 1 -->
-          <div class="col-4">
+        <div class="row g-4 mb-5" th:if="${latestOpportunities != null and !latestOpportunities.empty}">
+          <!-- Dynamic Project Cards -->
+          <div class="col-4" th:each="opp : ${latestOpportunities}">
             <div class="project-card">
               <div class="position-relative">
                 <img
-                  src="https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  th:src="${@templateUtils.getDefaultThumbnail(opp.thumbnailUrl)}"
                   class="card-img-top"
-                  alt="Dạy học miễn phí"
+                  th:alt="${opp.title}"
                 />
-                <span class="badge position-absolute">Giáo Dục</span>
+                <span class="badge position-absolute" style="top: 12px; left: 12px" th:text="${opp.categoryName}"
+                  >Category</span
+                >
               </div>
               <div class="card-body p-4 d-flex flex-column">
                 <div class="flex-grow-1">
-                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Dạy Học Miễn Phí Cho Trẻ Em Vùng Cao</h5>
-                  <p class="text-muted small mb-3">Quỹ Tấm Lòng Việt</p>
+                  <h5 class="card-title fw-bold mb-2 line-clamp-2" th:text="${opp.title}">Title</h5>
+                  <p class="text-muted small mb-3" th:text="${opp.organizationName}">Organization</p>
 
                   <div class="d-flex align-items-center gap-3 text-muted small mb-4">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center" th:if="${opp.location}">
                       <i class="bi bi-geo-alt me-1"></i>
-                      <span>Sapa, Lào Cai</span>
+                      <span th:text="${opp.location}">Location</span>
                     </div>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center" th:if="${opp.startTime}">
                       <i class="bi bi-calendar me-1"></i>
-                      <span>15/02/2025</span>
+                      <span th:text="${@templateUtils.formatDate(opp.startTime)}">Date</span>
                     </div>
                   </div>
                 </div>
@@ -189,15 +191,23 @@
                   <div class="mb-3">
                     <div class="d-flex justify-content-between small mb-2">
                       <span class="text-muted">Tình nguyện viên:</span>
-                      <span class="fw-semibold" style="color: #38bdf8">12 / 25 người</span>
+                      <span
+                        class="fw-semibold"
+                        style="color: #38bdf8"
+                        th:text="${opp.appliedVolunteers} + ' / ' + ${opp.neededVolunteers} + ' người'"
+                        >0 / 0 người</span
+                      >
                     </div>
                     <div class="progress progress-custom">
-                      <div class="progress-bar" style="width: 48%"></div>
+                      <div class="progress-bar" th:style="'width: ' + ${opp.progressPercentage} + '%'"></div>
                     </div>
                   </div>
 
                   <div class="d-flex gap-2">
-                    <a th:href="@{/opportunities/1}" class="btn btn-outline-primary-custom flex-fill">
+                    <a
+                      th:href="@{/opportunities/{id}(id=${opp.oppId})}"
+                      class="btn btn-outline-primary-custom flex-fill"
+                    >
                       <i class="bi bi-eye me-1"></i>Xem Chi Tiết
                     </a>
                     <button class="btn btn-primary-custom flex-fill">
@@ -208,109 +218,14 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Project Card 2 -->
-          <div class="col-4">
-            <div class="project-card">
-              <div class="position-relative">
-                <img
-                  src="https://images.pexels.com/photos/7551665/pexels-photo-7551665.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  class="card-img-top"
-                  alt="Hỗ trợ y tế"
-                />
-                <span class="badge position-absolute">Y Tế</span>
-              </div>
-              <div class="card-body p-4 d-flex flex-column">
-                <div class="flex-grow-1">
-                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Hỗ Trợ Y Tế Cho Người Cao Tuổi</h5>
-                  <p class="text-muted small mb-3">Hội Chữ Thập Đỏ</p>
-
-                  <div class="d-flex align-items-center gap-3 text-muted small mb-4">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-geo-alt me-1"></i>
-                      <span>Hà Nội</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-calendar me-1"></i>
-                      <span>20/02/2025</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mt-auto">
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-2">
-                      <span class="text-muted">Tình nguyện viên:</span>
-                      <span class="fw-semibold" style="color: #38bdf8">8 / 20 người</span>
-                    </div>
-                    <div class="progress progress-custom">
-                      <div class="progress-bar" style="width: 40%"></div>
-                    </div>
-                  </div>
-
-                  <div class="d-flex gap-2">
-                    <a th:href="@{/opportunities/2}" class="btn btn-outline-primary-custom flex-fill">
-                      <i class="bi bi-eye me-1"></i>Xem Chi Tiết
-                    </a>
-                    <button class="btn btn-primary-custom flex-fill">
-                      <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Card 3 -->
-          <div class="col-4">
-            <div class="project-card">
-              <div class="position-relative">
-                <img
-                  src="https://images.pexels.com/photos/1072824/pexels-photo-1072824.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  class="card-img-top"
-                  alt="Trồng cây xanh"
-                />
-                <span class="badge position-absolute">Môi Trường</span>
-              </div>
-              <div class="card-body p-4 d-flex flex-column">
-                <div class="flex-grow-1">
-                  <h5 class="card-title fw-bold mb-2 line-clamp-2">Trồng Cây Xanh Bảo Vệ Môi Trường</h5>
-                  <p class="text-muted small mb-3">Green Vietnam</p>
-
-                  <div class="d-flex align-items-center gap-3 text-muted small mb-4">
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-geo-alt me-1"></i>
-                      <span>TP. Hồ Chí Minh</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                      <i class="bi bi-calendar me-1"></i>
-                      <span>01/03/2025</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mt-auto">
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-2">
-                      <span class="text-muted">Tình nguyện viên:</span>
-                      <span class="fw-semibold" style="color: #38bdf8">15 / 30 người</span>
-                    </div>
-                    <div class="progress progress-custom">
-                      <div class="progress-bar" style="width: 50%"></div>
-                    </div>
-                  </div>
-
-                  <div class="d-flex gap-2">
-                    <a th:href="@{/opportunities/3}" class="btn btn-outline-primary-custom flex-fill">
-                      <i class="bi bi-eye me-1"></i>Xem Chi Tiết
-                    </a>
-                    <button class="btn btn-primary-custom flex-fill">
-                      <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Fallback when no opportunities -->
+        <div class="row g-4 mb-5" th:if="${latestOpportunities == null or latestOpportunities.empty}">
+          <div class="col-12 text-center py-5">
+            <i class="bi bi-search display-1 text-muted mb-3"></i>
+            <h4 class="text-muted">Chưa có cơ hội nào</h4>
+            <p class="text-muted">Hãy quay lại sau để xem các cơ hội mới</p>
           </div>
         </div>
 

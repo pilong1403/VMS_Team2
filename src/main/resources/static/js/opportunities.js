@@ -1,29 +1,6 @@
-// Opportunities page JavaScript - Minimal
+// Opportunities page JavaScript
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Filter functionality
-  const applyButton = document.querySelector(".btn-primary-custom");
-  const clearButton = document.querySelector('a[href="#"]');
-
-  if (applyButton) {
-    applyButton.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Simulate filter application
-      console.log("Filters applied");
-    });
-  }
-
-  if (clearButton && clearButton.textContent.includes("Xóa Bộ Lọc")) {
-    clearButton.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Clear all form inputs
-      document.querySelectorAll('input[type="checkbox"]').forEach((cb) => (cb.checked = false));
-      document.querySelectorAll('input[type="radio"]').forEach((rb) => (rb.checked = false));
-      document.querySelectorAll('input[type="text"]').forEach((input) => (input.value = ""));
-      document.querySelectorAll("select").forEach((select) => (select.selectedIndex = 0));
-    });
-  }
-
   // Registration button handlers
   document.querySelectorAll(".btn-primary-custom").forEach((button) => {
     if (button.textContent.includes("Đăng Ký")) {
@@ -34,3 +11,45 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+// Apply filters function
+function applyFilters() {
+  const params = new URLSearchParams();
+
+  // Get search term
+  const searchInput = document.querySelector('input[name="search"]');
+  if (searchInput && searchInput.value.trim()) {
+    params.append("search", searchInput.value.trim());
+  }
+
+  // Get selected category
+  const selectedCategory = document.querySelector('input[name="category"]:checked');
+  if (selectedCategory && selectedCategory.value) {
+    params.append("categoryId", selectedCategory.value);
+  }
+
+  // Get selected location
+  const locationSelect = document.querySelector('select[name="location"]');
+  if (locationSelect && locationSelect.value) {
+    params.append("location", locationSelect.value);
+  }
+
+  // Get selected status
+  const selectedStatus = document.querySelector('input[name="status"]:checked');
+  if (selectedStatus && selectedStatus.value) {
+    params.append("status", selectedStatus.value);
+  }
+
+  // Get sort option
+  const sortSelect = document.querySelector('select[name="sort"]');
+  if (sortSelect && sortSelect.value) {
+    params.append("sort", sortSelect.value);
+  }
+
+  // Reset to first page
+  params.append("page", "0");
+  params.append("size", "6");
+
+  // Navigate to filtered URL
+  window.location.href = "/opportunities?" + params.toString();
+}
