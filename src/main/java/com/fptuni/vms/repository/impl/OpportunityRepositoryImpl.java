@@ -1,5 +1,6 @@
 package com.fptuni.vms.repository.impl;
 
+import com.fptuni.vms.model.Application;
 import com.fptuni.vms.model.Category;
 import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.repository.OpportunityRepository;
@@ -19,9 +20,8 @@ import java.util.*;
 public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @PersistenceContext
-    private EntityManager em; // container-managed, transaction-scoped
+    private EntityManager em;
 
-    // ===== 1) OPEN opportunities (fetch joins + phân trang)
     @Override
     public Page<Opportunity> findOpenOpportunities(Pageable pageable) {
         String dataJpql =
@@ -48,19 +48,17 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         return new PageImpl<>(content, pageable, total);
     }
 
-    // ===== 2) Đếm application APPROVED/COMPLETED
     @Override
     public Long countApprovedApplications(Integer oppId) {
         if (oppId == null) return 0L;
 
-        // Chỉnh enum theo entity Application của bạn nếu khác
         return em.createQuery(
                         "SELECT COUNT(a) FROM Application a " +
                                 "WHERE a.opportunity.oppId = :id " +
                                 "AND a.status IN (:s1, :s2)", Long.class)
                 .setParameter("id", oppId)
-                .setParameter("s1", com.fptuni.vms.model.Application.ApplicationStatus.APPROVED)
-                .setParameter("s2", com.fptuni.vms.model.Application.ApplicationStatus.COMPLETED)
+                .setParameter("s1", Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
                 .getSingleResult();
     }
 
@@ -154,84 +152,6 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                 .getResultList();
     }
 
-    // ===== 6) List theo org có filter text/category/status với offset/limit
-    @Override
-    public List<Opportunity> findByOrgIdPaged(int orgId, int offset, int limit, String q, Integer categoryId, String status) {
-        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId ");
-        Map<String, Object> params = new HashMap<>();
-        params.put("orgId", orgId);
-
-        if (q != null && !q.isBlank()) {
-            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
-                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :kw, '%')) " +
-                    "  OR LOWER(o.location) LIKE LOWER(CONCAT('%', :kw, '%'))) ");
-            params.put("kw", q.trim());
-        }
-        if (categoryId != null) {
-            where.append(" AND o.category.categoryId = :catId ");
-            params.put("catId", categoryId);
-        }
-        if (status != null && !status.isBlank()) {
-            Opportunity.OpportunityStatus st = Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase());
-            where.append(" AND o.status = :st ");
-            params.put("st", st);
-        }
-
-        String jpql =
-                "SELECT o FROM Opportunity o " +
-                        where +
-                        " ORDER BY o.createdAt DESC ";
-
-        TypedQuery<Opportunity> query = em.createQuery(jpql, Opportunity.class);
-        params.forEach(query::setParameter);
-        query.setFirstResult(Math.max(0, offset));
-        query.setMaxResults(Math.max(1, limit));
-        return query.getResultList();
-    }
-
-    // ===== 7) Đếm theo org + filter
-    @Override
-    public int countByOrgId(int orgId, String q, Integer categoryId, String status) {
-        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId ");
-        Map<String, Object> params = new HashMap<>();
-        params.put("orgId", orgId);
-
-        if (q != null && !q.isBlank()) {
-            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
-                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :kw, '%')) " +
-                    "  OR LOWER(o.location) LIKE LOWER(CONCAT('%', :kw, '%'))) ");
-            params.put("kw", q.trim());
-        }
-        if (categoryId != null) {
-            where.append(" AND o.category.categoryId = :catId ");
-            params.put("catId", categoryId);
-        }
-        if (status != null && !status.isBlank()) {
-            Opportunity.OpportunityStatus st = Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase());
-            where.append(" AND o.status = :st ");
-            params.put("st", st);
-        }
-
-        String countJpql = "SELECT COUNT(o) FROM Opportunity o " + where;
-
-        TypedQuery<Long> query = em.createQuery(countJpql, Long.class);
-        params.forEach(query::setParameter);
-        Long total = query.getSingleResult();
-        return total == null ? 0 : total.intValue();
-    }
-
-    // ===== 8) Tìm theo id + org
-    @Override
-    public Optional<Opportunity> findByIdAndOrg(int oppId, int orgId) {
-        List<Opportunity> list = em.createQuery(
-                        "SELECT o FROM Opportunity o WHERE o.oppId = :oppId AND o.organization.orgId = :orgId",
-                        Opportunity.class)
-                .setParameter("oppId", oppId)
-                .setParameter("orgId", orgId)
-                .getResultList();
-        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
-    }
-
     // ===== 9) Lưu (insert/update)
     @Override
     public Opportunity save(Opportunity o) {
@@ -242,30 +162,6 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         } else {
             return em.merge(o);
         }
-    }
-
-    // ===== 10) Xoá theo id + org
-    @Override
-    public boolean deleteByIdAndOrg(int oppId, int orgId) {
-        Optional<Opportunity> opt = findByIdAndOrg(oppId, orgId);
-        if (opt.isEmpty()) return false;
-        em.remove(opt.get());
-        return true;
-    }
-
-    // ===== 11) Recent by org + khoảng thời gian
-    @Override
-    public List<Opportunity> findRecentByOrg(int orgId, LocalDateTime from, LocalDateTime to) {
-        return em.createQuery(
-                        "SELECT o FROM Opportunity o " +
-                                "WHERE o.organization.orgId = :orgId " +
-                                "AND o.createdAt BETWEEN :from AND :to " +
-                                "ORDER BY o.createdAt DESC",
-                        Opportunity.class)
-                .setParameter("orgId", orgId)
-                .setParameter("from", from)
-                .setParameter("to", to)
-                .getResultList();
     }
 
     @Override

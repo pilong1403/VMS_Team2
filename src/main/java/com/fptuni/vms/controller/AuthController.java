@@ -6,8 +6,7 @@ import com.fptuni.vms.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +27,18 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login(@RequestParam(value = "e", required = false) String e,
-                        @RequestParam(value = "email", required = false) String email,
-                        Model model) {
+            @RequestParam(value = "email", required = false) String email,
+            Model model) {
         model.addAttribute("error", map(e));
         model.addAttribute("email", email);
         return "auth/login";
     }
+
     @PostMapping("/login")
     public String doLogin(@RequestParam String email,
-                          @RequestParam String password,
-                          HttpServletRequest req,
-                          HttpServletResponse resp) {
+            @RequestParam String password,
+            HttpServletRequest req,
+            HttpServletResponse resp) {
         try {
             // 1) Xác thực
             User u = auth.login(email, password);
@@ -46,8 +46,7 @@ public class AuthController {
             // 2) Tạo Authentication
             var principal = new com.fptuni.vms.security.CustomUserDetails(u);
             var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                    principal, null, principal.getAuthorities()
-            );
+                    principal, null, principal.getAuthorities());
 
             // 3) Tạo SecurityContext và GẮN vào Holder
             var context = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
@@ -67,22 +66,19 @@ public class AuthController {
                 ss.setAttribute("AUTH_USER_ID", u.getUserId());
                 ss.setAttribute("AUTH_USER_NAME", u.getFullName());
                 ss.setAttribute("AUTH_ROLE", u.getRole().getRoleName());
+                ss.setAttribute("AUTH_USER_AVATAR", u.getAvatarUrl()); // Thêm avatar URL
             }
 
-            // 7) Điều hướng: ưu tiên URL đã lưu nếu có
-            var cache = new HttpSessionRequestCache();
-            SavedRequest saved = cache.getRequest(req, resp);
-            if (saved != null) {
-                String targetUrl = saved.getRedirectUrl();
-                cache.removeRequest(req, resp);
-                return "redirect:" + targetUrl;
-            }
+            // 7) Điều hướng theo role (không sử dụng saved request để tránh DevTools
+            // interference)
 
             // 8) Điều hướng theo role
             String r = u.getRole().getRoleName();
-            if ("ADMIN".equals(r))  return "redirect:/admin/file-giu-cho";
-            if ("ORG_OWNER".equals(r)) return "redirect:/ratings";
-            return "redirect:/home/home";
+            if ("ADMIN".equals(r))
+                return "redirect:/admin/file-giu-cho";
+            if ("ORG_OWNER".equals(r))
+                return "redirect:/ratings";
+            return "redirect:/home";
 
         } catch (AuthService.AuthException ex) {
             String code = (ex.getCode() != null && !ex.getCode().isBlank()) ? ex.getCode() : "SYSTEM_ERROR";
@@ -92,9 +88,9 @@ public class AuthController {
         }
     }
 
-
     private String map(String code) {
-        if (code == null) return null;
+        if (code == null)
+            return null;
         return switch (code) {
             case "INVALID_CREDENTIALS" -> "Sai email hoặc mật khẩu.";
             case "ACCOUNT_LOCKED" -> "Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.";
@@ -106,7 +102,10 @@ public class AuthController {
     }
 
     private String url(String s) {
-        try { return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8); }
-        catch (Exception e) { return ""; }
+        try {
+            return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "";
+        }
     }
 }

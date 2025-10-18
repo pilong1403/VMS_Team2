@@ -107,6 +107,15 @@
         /*[# th:if="${info}"]*/
         showInfoToast(/*[[${info}]]*/ "Thông tin!");
         /*[/]*/
+
+        // Handle Spring Security parameter-based messages
+        /*[# th:if="${param.error}"]*/
+        showErrorToast("Email hoặc mật khẩu không đúng.");
+        /*[/]*/
+
+        /*[# th:if="${param.logout}"]*/
+        showInfoToast("Bạn đã đăng xuất thành công.");
+        /*[/]*/
       });
     </script>
 

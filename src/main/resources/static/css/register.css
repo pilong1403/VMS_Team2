@@ -1,4 +1,4 @@
-/* Login Page Styles */
+/* Register Page Styles */
 body {
   margin: 0;
   padding: 0;
@@ -10,14 +10,14 @@ body {
   justify-content: center;
 }
 
-/* Login Container */
-.login-container {
+/* Register Container */
+.register-container {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15);
-  padding: 3rem 2.5rem;
+  padding: 2.5rem 2rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   text-align: center;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(56, 189, 248, 0.3);
@@ -25,18 +25,18 @@ body {
 
 /* Logo */
 .logo-container {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .logo-container img {
-  width: 300px;
+  width: 250px;
   height: auto;
   max-width: 100%;
 }
 
 /* Form Elements */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
   text-align: left;
 }
 
@@ -66,8 +66,22 @@ body {
   color: #94a3b8;
 }
 
+/* Form Text */
+.form-text {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Error Messages */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
 /* Buttons */
-.btn-login {
+.btn-register {
   background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
   border: none;
   border-radius: 12px;
@@ -80,7 +94,7 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.btn-login:hover {
+.btn-register:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
   background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
@@ -111,49 +125,22 @@ body {
   border-color: #38bdf8;
 }
 
-/* Form Check */
-.form-check-input:checked {
-  background-color: #38bdf8;
-  border-color: #38bdf8;
-}
-
-.form-check-input:focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
-}
-
-.form-check-label {
-  color: #475569;
-}
-
 /* Links */
-.forgot-password {
-  color: #38bdf8;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #0ea5e9;
-  text-decoration: underline;
-}
-
-.register-link {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+.login-link {
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #e2e8f0;
   color: #64748b;
   font-size: 0.9rem;
 }
 
-.register-link a {
+.login-link a {
   color: #38bdf8;
   text-decoration: none;
   font-weight: 600;
 }
 
-.register-link a:hover {
+.login-link a:hover {
   color: #0ea5e9;
   text-decoration: underline;
 }

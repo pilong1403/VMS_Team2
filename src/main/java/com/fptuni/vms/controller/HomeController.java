@@ -22,8 +22,7 @@ public class HomeController {
         this.opportunityService = opportunityService;
     }
 
-    /** VOLUNTEER landing (đã cấu hình trong SecurityConfig) */
-    @GetMapping("/home/home")
+    @GetMapping("/home")
     public String volunteerHome(Model model) {
         try {
             List<OpportunityCardDto> latestOpportunities = opportunityService.getTop3LatestOpportunities();
@@ -35,7 +34,7 @@ public class HomeController {
     }
 
     /** Trang chủ công khai (tuỳ ý), trỏ về volunteerHome để dùng chung view */
-    @GetMapping({"/", "/home"})
+    @GetMapping("/")
     public String publicHome(Model model) {
         return volunteerHome(model);
     }

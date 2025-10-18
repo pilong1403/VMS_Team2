@@ -1,4 +1,4 @@
-package com.fptuni.vms.dto;
+package com.fptuni.vms.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

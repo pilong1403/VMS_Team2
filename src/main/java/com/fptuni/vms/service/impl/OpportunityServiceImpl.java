@@ -21,8 +21,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class OpportunityServiceImpl implements OpportunityService {
 
-    @Autowired
-    private OpportunityRepository opportunityRepository;
+    private final OpportunityRepository opportunityRepository;
+
+    public OpportunityServiceImpl(OpportunityRepository opportunityRepository) {
+        this.opportunityRepository = opportunityRepository;
+    }
 
     @Override
     public Page<OpportunityCardDto> getOpportunityCards(Pageable pageable) {
@@ -107,19 +110,16 @@ public class OpportunityServiceImpl implements OpportunityService {
         dto.setNeededVolunteers(opportunity.getNeededVolunteers());
         dto.setCreatedAt(opportunity.getCreatedAt());
 
-        // Organization info
         if (opportunity.getOrganization() != null) {
             dto.setOrganizationName(opportunity.getOrganization().getName());
             dto.setOrganizationVerified(
                     opportunity.getOrganization().getRegStatus() == Organization.RegStatus.APPROVED);
         }
 
-        // Category info
         if (opportunity.getCategory() != null) {
             dto.setCategoryName(opportunity.getCategory().getCategoryName());
         }
 
-        // Count approved applications
         Long appliedCount = opportunityRepository.countApprovedApplications(opportunity.getOppId());
         dto.setAppliedVolunteers(appliedCount != null ? appliedCount.intValue() : 0);
 

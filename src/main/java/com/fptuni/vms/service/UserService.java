@@ -1,7 +1,7 @@
 package com.fptuni.vms.service;
 
-import com.fptuni.vms.dto.ChangePasswordForm;
-import com.fptuni.vms.dto.ProfileForm;
+import com.fptuni.vms.dto.response.ChangePasswordForm;
+import com.fptuni.vms.dto.response.ProfileForm;
 import com.fptuni.vms.model.User;
 import org.springframework.web.multipart.MultipartFile;
 

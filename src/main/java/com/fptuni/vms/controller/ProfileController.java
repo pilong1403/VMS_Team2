@@ -11,8 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fptuni.vms.model.User;
-import com.fptuni.vms.dto.ChangePasswordForm;
-import com.fptuni.vms.dto.ProfileForm;
+import com.fptuni.vms.dto.response.ChangePasswordForm;
+import com.fptuni.vms.dto.response.ProfileForm;
 import com.fptuni.vms.dto.VolunteerRatingDto;
 import com.fptuni.vms.service.UserService;
 

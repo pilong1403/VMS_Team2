@@ -1,7 +1,7 @@
 package com.fptuni.vms.service.impl;
 
-import com.fptuni.vms.dto.ChangePasswordForm;
-import com.fptuni.vms.dto.ProfileForm;
+import com.fptuni.vms.dto.response.ChangePasswordForm;
+import com.fptuni.vms.dto.response.ProfileForm;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.UserRepository;
 import com.fptuni.vms.service.CloudinaryService;
