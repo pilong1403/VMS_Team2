@@ -18,12 +18,11 @@ public interface UserRepository {
 
     Optional<User> findById(Integer id);
 
-//    User save(User user);
-    void save(User user);
+    User save(User user);
+    void save1(User user);
     void deleteById(Integer id);
     List<User> findAll();
 
-    // ✅ backend search đầy đủ
     List<User> search(
             String keyword,
             Integer roleId,

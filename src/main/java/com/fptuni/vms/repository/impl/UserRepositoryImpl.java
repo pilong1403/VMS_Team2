@@ -72,19 +72,19 @@ public class UserRepositoryImpl implements UserRepository {
         return Optional.ofNullable(em.find(User.class, id));
     }
 
-//    @Override
-//    public User save(User user) {
-//        if (user == null) return null;
-//        if (user.getUserId() == null || user.getUserId() == 0) {
-//            em.persist(user);     // INSERT
-//            return user;
-//        } else {
-//            return em.merge(user); // UPDATE
-//        }
-//    }
+    @Override
+    public User save(User user) {
+        if (user == null) return null;
+        if (user.getUserId() == null || user.getUserId() == 0) {
+            em.persist(user);     // INSERT
+            return user;
+        } else {
+            return em.merge(user); // UPDATE
+        }
+    }
 
     @Override
-    public void save(User user) {
+    public void save1(User user) {
         if (user.getUserId() == null) {
             em.persist(user);
         } else {

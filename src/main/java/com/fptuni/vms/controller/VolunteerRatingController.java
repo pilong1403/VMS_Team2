@@ -8,12 +8,12 @@ import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.OrganizationService;
 import com.fptuni.vms.service.UserService;
 import com.fptuni.vms.service.VolunteerRatingService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +30,20 @@ public class VolunteerRatingController {
     @Autowired
     private UserService userService;
 
+    /**
+     * Lấy user đang đăng nhập từ session
+     */
+    private User getCurrentUser(HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (userId == null) return null;
+        return userService.getUserById(userId);
+    }
+
+    private boolean hasRole(HttpSession session, String role) {
+        String r = (String) session.getAttribute("AUTH_ROLE");
+        return role.equals(r);
+    }
+
     // ===== LIST =====
     @GetMapping
     public String listRatings(@RequestParam(defaultValue = "0") int page,
@@ -37,15 +51,16 @@ public class VolunteerRatingController {
                               @RequestParam(required = false) Short stars,
                               @RequestParam(required = false) String keyword,
                               Model model,
-                              Principal principal) {
+                              HttpSession session) {
 
-        String email = (principal != null) ? principal.getName() : "quynhmai@example.vn";
-        User me = userService.findByEmail(email);
-        if (me == null) {
-            model.addAttribute("errorMessage", "Không tìm thấy tài khoản người dùng: " + email);
-            return "error/unauthorized";
-        }
+        // Kiểm tra đăng nhập
+        User me = getCurrentUser(session);
+        if (me == null) return "redirect:/login";
 
+        // Kiểm tra role
+        if (!hasRole(session, "ORG_OWNER")) return "redirect:/403";
+
+        // Lấy tổ chức
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) return "redirect:/access-denied";
 
@@ -68,15 +83,17 @@ public class VolunteerRatingController {
 
     // ===== CREATE =====
     @GetMapping("/create")
-    public String createForm(Model model, Principal principal) {
-        String email = (principal != null) ? principal.getName() : "quynhmai@example.vn";
-        User me = userService.findByEmail(email);
+    public String createForm(Model model, HttpSession session) {
+        User me = getCurrentUser(session);
+        if (me == null) return "redirect:/login";
+        if (!hasRole(session, "ORG_OWNER")) return "redirect:/403";
+
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) return "redirect:/access-denied";
 
         model.addAttribute("rating", new VolunteerRating());
         model.addAttribute("opportunities", opportunityService.findByOrganization(org.getOrgId()));
-        model.addAttribute("volunteers", userService.getUsersByRole(3)); // roleId=3 => VOLUNTEER
+        model.addAttribute("volunteers", userService.getUsersByRole(3)); // Role 3 = VOLUNTEER
         model.addAttribute("currentUser", me);
         model.addAttribute("currentOrg", org);
         return "rating/rateVolunteer";
@@ -84,13 +101,14 @@ public class VolunteerRatingController {
 
     // ===== SAVE =====
     @PostMapping("/save")
-    public String saveRating(@ModelAttribute VolunteerRating rating, Principal principal) {
-        String email = (principal != null) ? principal.getName() : "quynhmai@example.vn";
-        User me = userService.findByEmail(email);
+    public String saveRating(@ModelAttribute VolunteerRating rating, HttpSession session) {
+        User me = getCurrentUser(session);
+        if (me == null) return "redirect:/login";
+        if (!hasRole(session, "ORG_OWNER")) return "redirect:/403";
+
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) return "redirect:/access-denied";
 
-        // lấy entity thật từ id
         Opportunity opp = opportunityService.findById(rating.getOpportunity().getOppId());
         User ratee = userService.getUserById(rating.getRateeUser().getUserId());
 
@@ -105,10 +123,14 @@ public class VolunteerRatingController {
 
     // ===== EDIT =====
     @GetMapping("/edit/{id}")
-    public String editForm(@PathVariable int id, Model model, Principal principal) {
-        String email = (principal != null) ? principal.getName() : "quynhmai@example.vn";
-        User me = userService.findByEmail(email);
+    public String editForm(@PathVariable int id, Model model, HttpSession session) {
+        User me = getCurrentUser(session);
+        if (me == null) return "redirect:/login";
+        if (!hasRole(session, "ORG_OWNER")) return "redirect:/403";
+
         Organization org = organizationService.findByOwnerId(me.getUserId());
+        if (org == null) return "redirect:/access-denied";
+
         VolunteerRating rating = ratingService.findById(id);
         if (rating == null) return "redirect:/ratings";
 
@@ -120,9 +142,11 @@ public class VolunteerRatingController {
 
     // ===== UPDATE =====
     @PostMapping("/update")
-    public String updateRating(@ModelAttribute VolunteerRating rating, Principal principal) {
-        String email = (principal != null) ? principal.getName() : "quynhmai@example.vn";
-        User me = userService.findByEmail(email);
+    public String updateRating(@ModelAttribute VolunteerRating rating, HttpSession session) {
+        User me = getCurrentUser(session);
+        if (me == null) return "redirect:/login";
+        if (!hasRole(session, "ORG_OWNER")) return "redirect:/403";
+
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) return "redirect:/access-denied";
 

@@ -63,6 +63,8 @@ public class SecurityConfig {
 
                         // ADMIN
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/ratings/**").hasAuthority("ORG_OWNER")
+
 
                         // Điều hướng sau đăng nhập theo vai trò (ví dụ)
                         .requestMatchers("/home/home").hasAnyAuthority("VOLUNTEER","ADMIN","ORG_OWNER")

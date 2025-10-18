@@ -6,6 +6,8 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.UserRepository;
 import com.fptuni.vms.service.CloudinaryService;
 import com.fptuni.vms.service.UserService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +36,11 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-//    @Override
-//    public User save(User user) {
-//        // Có thể chuẩn hóa dữ liệu trước khi lưu nếu cần
-////        return userRepository.save(user);
-//
-//    }
+    @Override
+    public User save(User user) {
+            return userRepository.save(user);
+
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -136,10 +137,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-//    @Override
-//    public User getUserById(Integer id) {
-//        return userRepository.findById(id);
-//    }
+
+
+    @Override
+    public User getUserById(Integer id) {
+        return userRepository.findById(id).orElse(null);
+    }
 
     @Override
     public void deleteUser(Integer id) {

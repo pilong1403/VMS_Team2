@@ -45,33 +45,33 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
         return cnt != null && cnt > 0;
     }
 
-//    @Override
-//    public Organization save(Organization o) {
-//        if (o == null) return null;
-//
-//        // Đặt mặc định tương đương SQL: reg_status mặc định PENDING, created_at SYSDATETIME()
-//        if (o.getRegStatus() == null) {
-//            o.setRegStatus(Organization.RegStatus.PENDING);
-//        }
-//        if (o.getCreatedAt() == null) {
-//            o.setCreatedAt(LocalDateTime.now());
-//        }
-//
-//        // Insert nếu chưa có id, ngược lại merge (update)
-//        if (o.getOrgId() == null || o.getOrgId() == 0) {
-//            em.persist(o);         // o sẽ vào managed state, orgId được gán sau flush (với IDENTITY)
-//            // Nếu bạn cần đọc lại giá trị DB default ngay (ví dụ trigger), có thể:
-//            // em.flush(); em.refresh(o);
-//            return o;
-//        } else {
-//            return em.merge(o);    // trả về entity managed đã merge
-//        }
-//    }
+    @Override
+    public Organization save(Organization o) {
+        if (o == null) return null;
+
+        // Đặt mặc định tương đương SQL: reg_status mặc định PENDING, created_at SYSDATETIME()
+        if (o.getRegStatus() == null) {
+            o.setRegStatus(Organization.RegStatus.PENDING);
+        }
+        if (o.getCreatedAt() == null) {
+            o.setCreatedAt(LocalDateTime.now());
+        }
+
+        // Insert nếu chưa có id, ngược lại merge (update)
+        if (o.getOrgId() == null || o.getOrgId() == 0) {
+            em.persist(o);         // o sẽ vào managed state, orgId được gán sau flush (với IDENTITY)
+            // Nếu bạn cần đọc lại giá trị DB default ngay (ví dụ trigger), có thể:
+            // em.flush(); em.refresh(o);
+            return o;
+        } else {
+            return em.merge(o);    // trả về entity managed đã merge
+        }
+    }
 
 
 
     @Override
-    public void save(Organization organization) {
+    public void save1(Organization organization) {
         if (organization.getOrgId() == null) {
             em.persist(organization);
         } else {

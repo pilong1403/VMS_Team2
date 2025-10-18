@@ -24,34 +24,34 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.organizationRepository = orgs;
     }
 
-//    @Override
-//    public Organization submitRegistration(User owner, String name, String description,
-//                                           String regDocUrl, String note) throws OrgException {
-//        if (owner == null) throw new OrgException("NOT_AUTHENTICATED");
-//        Role role = owner.getRole();
-//        if (role == null || !"ORG_OWNER".equalsIgnoreCase(role.getRoleName())) {
-//            throw new OrgException("OWNER_ROLE_REQUIRED");
-//        }
-//        if (organizationRepository.existsByOwner(owner)) {
-//            throw new OrgException("OWNER_ALREADY_HAS_ORG");
-//        }
-//
-//        Organization o = new Organization();
-//        o.setOwner(owner);
-//        o.setName(name);
-//        o.setDescription(description);
-//        o.setRegDocUrl(regDocUrl);
-//        o.setRegNote(note);
-//        o.setRegStatus(Organization.RegStatus.PENDING);
-//        o.setRegSubmittedAt(LocalDateTime.now());
-//
-//        try {
-//            return organizationRepository.save(o);
-//        } catch (DataIntegrityViolationException e) {
-//            // ví dụ: vi phạm UQ_org_owner
-//            throw new OrgException("CONSTRAINT_VIOLATION");
-//        }
-//    }
+    @Override
+    public Organization submitRegistration(User owner, String name, String description,
+                                           String regDocUrl, String note) throws OrgException {
+        if (owner == null) throw new OrgException("NOT_AUTHENTICATED");
+        Role role = owner.getRole();
+        if (role == null || !"ORG_OWNER".equalsIgnoreCase(role.getRoleName())) {
+            throw new OrgException("OWNER_ROLE_REQUIRED");
+        }
+        if (organizationRepository.existsByOwner(owner)) {
+            throw new OrgException("OWNER_ALREADY_HAS_ORG");
+        }
+
+        Organization o = new Organization();
+        o.setOwner(owner);
+        o.setName(name);
+        o.setDescription(description);
+        o.setRegDocUrl(regDocUrl);
+        o.setRegNote(note);
+        o.setRegStatus(Organization.RegStatus.PENDING);
+        o.setRegSubmittedAt(LocalDateTime.now());
+
+        try {
+            return organizationRepository.save(o);
+        } catch (DataIntegrityViolationException e) {
+            // ví dụ: vi phạm UQ_org_owner
+            throw new OrgException("CONSTRAINT_VIOLATION");
+        }
+    }
 
 
     @Override
@@ -90,13 +90,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     }
 
-    @Override
-    public Organization findByOwnerId(Integer ownerId) {
-        return null;
-    }
-
 //    @Override
 //    public Organization findByOwnerId(Integer ownerId) {
-//        return organizationRepository.findByOwnerId(ownerId);
+//        return null;
 //    }
+
+    @Override
+    public Organization findByOwnerId(Integer ownerId) {
+        if (ownerId == null) return null;
+        return organizationRepository.findByOwnerId(ownerId).orElse(null);
+    }
 }

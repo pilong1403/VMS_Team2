@@ -494,7 +494,10 @@
                         <textarea name="reason" id="reason" rows="5" placeholder="Nhập lý do hoặc ghi chú..."></textarea>
                     </div>
                     <div class="modal-footer">
+
                         <button type="button" class="btn btn-outline" onclick="closeDecisionModal()">Hủy</button>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
                         <button type="submit" class="btn btn-primary">Gửi</button>
                     </div>
                 </form>

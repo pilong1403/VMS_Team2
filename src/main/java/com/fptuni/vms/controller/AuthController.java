@@ -81,7 +81,7 @@ public class AuthController {
             // 8) Điều hướng theo role
             String r = u.getRole().getRoleName();
             if ("ADMIN".equals(r))  return "redirect:/admin/file-giu-cho";
-            if ("ORG_OWNER".equals(r)) return "redirect:/home/opportunities";
+            if ("ORG_OWNER".equals(r)) return "redirect:/ratings";
             return "redirect:/home/home";
 
         } catch (AuthService.AuthException ex) {

@@ -64,6 +64,8 @@
                 </div>
 
                 <div class="actions" style="margin-top:16px;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
                     <button type="submit" class="btn success">Cập nhật</button>
                     <a th:href="@{/ratings}" class="btn ghost">Quay lại</a>
                 </div>

@@ -14,8 +14,8 @@ public interface OrganizationRepository {
     boolean existsByOwner(User owner);
 
     /** Lưu tổ chức (chỉ cần INSERT cho ca đăng ký) */
-//    Organization save(Organization org);
-    void save(Organization organization);
+    Organization save(Organization org);
+    void save1(Organization organization);
 
     Organization findById(Integer id);
 
