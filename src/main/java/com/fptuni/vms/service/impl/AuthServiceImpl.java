@@ -1,3 +1,4 @@
+// src/main/java/com/fptuni/vms/service/impl/AuthServiceImpl.java
 package com.fptuni.vms.service.impl;
 
 import com.fptuni.vms.model.Role;
@@ -10,7 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -18,6 +21,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepo;
     private final RoleRepository roleRepo;
     private final PasswordEncoder encoder;
+
+    // Email regex đơn giản, đủ dùng ở mức cơ bản
+    private static final Pattern EMAIL_RE = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     public AuthServiceImpl(UserRepository userRepo,
                            RoleRepository roleRepo,
@@ -31,20 +37,21 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public User login(String email, String rawPassword) throws AuthException {
         if (email == null || email.isBlank() || rawPassword == null || rawPassword.isBlank()) {
-            throw new AuthException("USERNAME_PASSWORD_REQUIRED");
+            throw new AuthException(ErrorCode.USERNAME_PASSWORD_REQUIRED);
         }
 
         String normalized = email.trim().toLowerCase();
 
-        User u = userRepo.findByEmail(normalized)
-                .orElseThrow(() -> new AuthException("INVALID_CREDENTIALS"));
+        // JOIN FETCH role để khi build CustomUserDetails không bị lazy ở ngoài
+        User u = userRepo.findByEmailWithRole(normalized)
+                .orElseThrow(() -> new AuthException(ErrorCode.INVALID_CREDENTIALS));
 
         if (u.getStatus() == UserStatus.LOCKED) {
-            throw new AuthException("ACCOUNT_LOCKED");
+            throw new AuthException(ErrorCode.ACCOUNT_LOCKED);
         }
 
         if (!encoder.matches(rawPassword, u.getPasswordHash())) {
-            throw new AuthException("INVALID_CREDENTIALS");
+            throw new AuthException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         return u;
@@ -53,27 +60,45 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public User registerVolunteer(String fullName, String email, String phone, String rawPassword) throws AuthException {
-        // 1) Kiểm tra trùng email
-        Optional<User> existing = userRepo.findByEmail(email != null ? email.trim().toLowerCase() : null);
-        if (existing.isPresent()) throw new AuthException("EMAIL_EXISTS");
+        // ---- Validate đầu vào cơ bản
+        if (fullName == null || fullName.isBlank()
+                || email == null || email.isBlank()
+                || rawPassword == null || rawPassword.isBlank()) {
+            throw new AuthException(ErrorCode.INVALID_INPUT, "Thiếu họ tên, email hoặc mật khẩu.");
+        }
 
-        // 2) Lấy role VOLUNTEER
+        String normalizedEmail = email.trim().toLowerCase();
+        if (!EMAIL_RE.matcher(normalizedEmail).matches()) {
+            throw new AuthException(ErrorCode.INVALID_EMAIL, "Email không hợp lệ.");
+        }
+
+        // Mật khẩu tối thiểu: 8 ký tự (có thể nâng cấp rule sau)
+        if (rawPassword.length() < 8) {
+            throw new AuthException(ErrorCode.WEAK_PASSWORD, "Mật khẩu quá ngắn (>= 8 ký tự).");
+        }
+
+        // ---- Kiểm tra trùng email
+        if (userRepo.existsByEmail(normalizedEmail)) {
+            throw new AuthException(ErrorCode.EMAIL_EXISTS, "Email đã được sử dụng.");
+        }
+
+        // ---- Lấy role VOLUNTEER
         Role vol = roleRepo.findByRoleName("VOLUNTEER")
-                .orElseThrow(() -> new AuthException("ROLE_NOT_FOUND"));
+                .orElseThrow(() -> new AuthException(ErrorCode.SYSTEM_ERROR, "Không tìm thấy role VOLUNTEER."));
 
-        // 3) Hash mật khẩu
+        // ---- Hash mật khẩu
         String hash = encoder.encode(rawPassword);
 
-        // 4) Tạo user
+        // ---- Tạo user
         User u = new User();
         u.setFullName(fullName);
-        u.setEmail(email);              // normalize() trong @PrePersist sẽ lower-case
-        u.setPhone(phone);
+        u.setEmail(normalizedEmail); // normalize() trong @PrePersist vẫn hoạt động, nhưng set sạch luôn ở đây
+        u.setPhone(phone != null ? phone.trim() : null);
         u.setPasswordHash(hash);
         u.setRole(vol);
-        u.setStatus(UserStatus.ACTIVE); // <-- dùng enum, không phải String
+        u.setStatus(UserStatus.ACTIVE);
 
-        // 5) Lưu
+        // ---- Lưu
         return userRepo.save(u);
     }
 }

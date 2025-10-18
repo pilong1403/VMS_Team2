@@ -1,8 +1,7 @@
-// src/main/java/com/fptuni/vms/controller/AuthController.java
 package com.fptuni.vms.controller;
 
 import com.fptuni.vms.model.User;
-import com.fptuni.vms.repository.OrganizationRepository; // <-- thêm
+import com.fptuni.vms.repository.OrganizationRepository;
 import com.fptuni.vms.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,11 +19,11 @@ import java.nio.charset.StandardCharsets;
 public class AuthController {
 
     private final AuthService auth;
-    private final OrganizationRepository orgRepo; // <-- thêm
+    private final OrganizationRepository orgRepo;
 
     public AuthController(AuthService auth, OrganizationRepository orgRepo) {
         this.auth = auth;
-        this.orgRepo = orgRepo; // <-- thêm
+        this.orgRepo = orgRepo;
     }
 
     @GetMapping("/login")
@@ -35,34 +34,42 @@ public class AuthController {
         model.addAttribute("email", email);
         return "auth/login";
     }
-
     @PostMapping("/login")
     public String doLogin(@RequestParam String email,
                           @RequestParam String password,
                           HttpServletRequest req,
                           HttpServletResponse resp) {
         try {
-            // 1) Business login của bạn
+            // 1) Xác thực
             User u = auth.login(email, password);
 
-            // 2) Đưa user vào SecurityContext
+            // 2) Tạo Authentication
             var principal = new com.fptuni.vms.security.CustomUserDetails(u);
             var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                     principal, null, principal.getAuthorities()
             );
-            org.springframework.security.core.context.SecurityContextHolder.getContext()
-                    .setAuthentication(authentication);
 
-            // 3) Đảm bảo có HttpSession để persist SecurityContext
-            req.getSession(true);
+            // 3) Tạo SecurityContext và GẮN vào Holder
+            var context = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            org.springframework.security.core.context.SecurityContextHolder.setContext(context);
 
-            // 4) (tuỳ chọn) session app-specific
-            HttpSession ss = req.getSession();
-            ss.setAttribute("AUTH_USER_ID", u.getUserId());
-            ss.setAttribute("AUTH_USER_NAME", u.getFullName());
-            ss.setAttribute("AUTH_ROLE", u.getRole().getRoleName());
+            // 4) ĐỔI SESSION ID (chống session fixation)
+            req.changeSessionId();
 
-            // 5) Quay lại URL ban đầu nếu có
+            // 5) LƯU SecurityContext vào session (BẮT BUỘC khi tự login trong controller)
+            var repo = new org.springframework.security.web.context.HttpSessionSecurityContextRepository();
+            repo.saveContext(context, req, resp);
+
+            // 6) (tuỳ chọn) session app-specific
+            HttpSession ss = req.getSession(false); // đã tồn tại sau changeSessionId
+            if (ss != null) {
+                ss.setAttribute("AUTH_USER_ID", u.getUserId());
+                ss.setAttribute("AUTH_USER_NAME", u.getFullName());
+                ss.setAttribute("AUTH_ROLE", u.getRole().getRoleName());
+            }
+
+            // 7) Điều hướng: ưu tiên URL đã lưu nếu có
             var cache = new HttpSessionRequestCache();
             SavedRequest saved = cache.getRequest(req, resp);
             if (saved != null) {
@@ -71,26 +78,20 @@ public class AuthController {
                 return "redirect:" + targetUrl;
             }
 
-            // 6) Fallback theo role
+            // 8) Điều hướng theo role
             String r = u.getRole().getRoleName();
-            if ("ADMIN".equals(r)) {
-                return "redirect:/admin/dashboard?msg=login_ok";
-            }
-            if ("ORG_OWNER".equals(r)) {
-                boolean hasOrg = orgRepo.findByOwnerId(u.getUserId()).isPresent();
-                if (!hasOrg) return "redirect:/auth/org-register?msg=please_register_org";
-                return "redirect:/opportunity/opps-list?msg=login_ok";
-            }
-
-            // VOLUNTEER
-            return "redirect:/vol/dashboard?msg=login_ok";
+            if ("ADMIN".equals(r))  return "redirect:/admin/file-giu-cho";
+            if ("ORG_OWNER".equals(r)) return "redirect:/home/opportunities";
+            return "redirect:/home/home";
 
         } catch (AuthService.AuthException ex) {
-            return "redirect:/login?e=" + url(ex.getMessage()) + "&email=" + url(email);
+            String code = (ex.getCode() != null && !ex.getCode().isBlank()) ? ex.getCode() : "SYSTEM_ERROR";
+            return "redirect:/login?e=" + url(code) + "&email=" + url(email);
         } catch (Exception ex) {
             return "redirect:/login?e=SYSTEM_ERROR&email=" + url(email);
         }
     }
+
 
     private String map(String code) {
         if (code == null) return null;

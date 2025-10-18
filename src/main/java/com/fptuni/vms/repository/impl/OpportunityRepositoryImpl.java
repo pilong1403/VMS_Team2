@@ -1,212 +1,282 @@
-// src/main/java/com/fptuni/vms/repository/impl/OpportunityRepositoryImpl.java
 package com.fptuni.vms.repository.impl;
 
 import com.fptuni.vms.model.Category;
 import com.fptuni.vms.model.Opportunity;
-import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.repository.OpportunityRepository;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class OpportunityRepositoryImpl implements OpportunityRepository {
 
-    private final JdbcTemplate jdbc;
+    @PersistenceContext
+    private EntityManager em; // container-managed, transaction-scoped
 
-    public OpportunityRepositoryImpl(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    // ===== 1) OPEN opportunities (fetch joins + phân trang)
+    @Override
+    public Page<Opportunity> findOpenOpportunities(Pageable pageable) {
+        String dataJpql =
+                "SELECT o FROM Opportunity o " +
+                        "JOIN FETCH o.organization " +
+                        "JOIN FETCH o.category " +
+                        "WHERE o.status = :st " +
+                        "ORDER BY o.createdAt DESC";
 
-    private static Opportunity.OpportunityStatus toStatus(String s) {
-        if (s == null || s.isBlank()) return null;
-        return Opportunity.OpportunityStatus.valueOf(s.trim().toUpperCase());
+        String countJpql =
+                "SELECT COUNT(o) FROM Opportunity o " +
+                        "WHERE o.status = :st";
+
+        TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class)
+                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize());
+        List<Opportunity> content = dataQ.getResultList();
+
+        Long total = em.createQuery(countJpql, Long.class)
+                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .getSingleResult();
+
+        return new PageImpl<>(content, pageable, total);
     }
 
-    private static Timestamp ts(LocalDateTime t) {
-        return t == null ? null : Timestamp.valueOf(t);
+    // ===== 2) Đếm application APPROVED/COMPLETED
+    @Override
+    public Long countApprovedApplications(Integer oppId) {
+        if (oppId == null) return 0L;
+
+        // Chỉnh enum theo entity Application của bạn nếu khác
+        return em.createQuery(
+                        "SELECT COUNT(a) FROM Application a " +
+                                "WHERE a.opportunity.oppId = :id " +
+                                "AND a.status IN (:s1, :s2)", Long.class)
+                .setParameter("id", oppId)
+                .setParameter("s1", com.fptuni.vms.model.Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", com.fptuni.vms.model.Application.ApplicationStatus.COMPLETED)
+                .getSingleResult();
     }
 
-    private static final RowMapper<Opportunity> M = (rs, i) -> {
-        Opportunity o = new Opportunity();
-        o.setOppId(rs.getInt("opp_id"));
+    // ===== 3) Tìm có filter + sort + phân trang (chuỗi JPQL hoàn chỉnh)
+    @Override
+    public Page<Opportunity> findOpportunitiesWithFilters(
+            Integer categoryId,
+            String location,
+            Opportunity.OpportunityStatus status,
+            String searchTerm,
+            String sortBy,
+            Pageable pageable) {
 
-        Organization g = new Organization();
-        g.setOrgId(rs.getInt("org_id"));
-        o.setOrganization(g);
+        StringBuilder where = new StringBuilder(" WHERE 1=1 ");
+        Map<String, Object> params = new HashMap<>();
 
-        Category c = new Category();
-        c.setCategoryId(rs.getInt("category_id"));
-        o.setCategory(c);
+        if (categoryId != null) {
+            where.append(" AND c.categoryId = :catId ");
+            params.put("catId", categoryId);
+        }
+        if (location != null && !location.isBlank()) {
+            where.append(" AND LOWER(o.location) LIKE LOWER(CONCAT('%', :loc, '%')) ");
+            params.put("loc", location.trim());
+        }
+        if (status != null) {
+            where.append(" AND o.status = :st ");
+            params.put("st", status);
+        }
+        if (searchTerm != null && !searchTerm.isBlank()) {
+            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :q, '%'))) ");
+            params.put("q", searchTerm.trim());
+        }
 
-        o.setTitle(rs.getString("title"));
-        o.setSubtitle(rs.getString("subtitle"));
-        o.setLocation(rs.getString("location"));
-        o.setThumbnailUrl(rs.getString("thumbnail_url"));
-        o.setNeededVolunteers(rs.getInt("needed_volunteers"));
+        String orderClause = ("deadline".equalsIgnoreCase(sortBy))
+                ? " ORDER BY o.endTime ASC "
+                : " ORDER BY o.createdAt DESC ";
 
-        o.setStatus(toStatus(rs.getString("status")));
+        // Data JPQL (có fetch join)
+        String dataJpql =
+                "SELECT o FROM Opportunity o " +
+                        "JOIN FETCH o.organization org " +
+                        "JOIN FETCH o.category c " +
+                        where + orderClause;
 
-        Timestamp st = rs.getTimestamp("start_time");
-        o.setStartTime(st != null ? st.toLocalDateTime() : null);
-        Timestamp et = rs.getTimestamp("end_time");
-        o.setEndTime(et != null ? et.toLocalDateTime() : null);
-        Timestamp ct = rs.getTimestamp("created_at");
-        o.setCreatedAt(ct != null ? ct.toLocalDateTime() : null);
-        return o;
-    };
+        // Count JPQL (không fetch join)
+        String countJpql =
+                "SELECT COUNT(o) FROM Opportunity o " +
+                        "JOIN o.organization org " +
+                        "JOIN o.category c " +
+                        where;
 
+        TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class);
+        params.forEach(dataQ::setParameter);
+        dataQ.setFirstResult((int) pageable.getOffset());
+        dataQ.setMaxResults(pageable.getPageSize());
+        List<Opportunity> content = dataQ.getResultList();
+
+        TypedQuery<Long> cntQ = em.createQuery(countJpql, Long.class);
+        params.forEach(cntQ::setParameter);
+        Long total = cntQ.getSingleResult();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    // ===== 4) Category có cơ hội OPEN
+    @Override
+    public List<Category> findCategoriesWithOpportunities() {
+        return em.createQuery(
+                        "SELECT DISTINCT c FROM Category c " +
+                                "JOIN Opportunity o ON o.category = c " +
+                                "WHERE o.status = :st", Category.class)
+                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .getResultList();
+    }
+
+    // ===== 5) Top 3 latest OPEN (fetch joins)
+    @Override
+    public List<Opportunity> findTop3LatestOpportunities(Pageable pageable) {
+        int size = pageable != null ? pageable.getPageSize() : 3;
+        if (size <= 0 || size > 3) size = 3;
+
+        return em.createQuery(
+                        "SELECT o FROM Opportunity o " +
+                                "JOIN FETCH o.organization " +
+                                "JOIN FETCH o.category " +
+                                "WHERE o.status = :st " +
+                                "ORDER BY o.createdAt DESC", Opportunity.class)
+                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .setMaxResults(size)
+                .getResultList();
+    }
+
+    // ===== 6) List theo org có filter text/category/status với offset/limit
     @Override
     public List<Opportunity> findByOrgIdPaged(int orgId, int offset, int limit, String q, Integer categoryId, String status) {
-        StringBuilder sb = new StringBuilder("""
-            SELECT opp_id, org_id, category_id, title, subtitle, location, thumbnail_url,
-                   needed_volunteers, status, start_time, end_time, created_at
-              FROM dbo.opportunities
-             WHERE org_id = ?
-        """);
-        List<Object> args = new ArrayList<>();
-        args.add(orgId);
+        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId ");
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", orgId);
 
         if (q != null && !q.isBlank()) {
-            sb.append(" AND (title LIKE ? OR subtitle LIKE ? OR location LIKE ?) ");
-            String like = "%" + q.trim() + "%";
-            args.add(like); args.add(like); args.add(like);
+            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+                    "  OR LOWER(o.location) LIKE LOWER(CONCAT('%', :kw, '%'))) ");
+            params.put("kw", q.trim());
         }
         if (categoryId != null) {
-            sb.append(" AND category_id = ? ");
-            args.add(categoryId);
+            where.append(" AND o.category.categoryId = :catId ");
+            params.put("catId", categoryId);
         }
         if (status != null && !status.isBlank()) {
-            sb.append(" AND status = ? ");
-            args.add(status.trim().toUpperCase());
+            Opportunity.OpportunityStatus st = Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase());
+            where.append(" AND o.status = :st ");
+            params.put("st", st);
         }
 
-        sb.append(" ORDER BY created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
-        args.add(offset);
-        args.add(limit);
+        String jpql =
+                "SELECT o FROM Opportunity o " +
+                        where +
+                        " ORDER BY o.createdAt DESC ";
 
-        return jdbc.query(sb.toString(), M, args.toArray());
+        TypedQuery<Opportunity> query = em.createQuery(jpql, Opportunity.class);
+        params.forEach(query::setParameter);
+        query.setFirstResult(Math.max(0, offset));
+        query.setMaxResults(Math.max(1, limit));
+        return query.getResultList();
     }
 
+    // ===== 7) Đếm theo org + filter
     @Override
     public int countByOrgId(int orgId, String q, Integer categoryId, String status) {
-        StringBuilder sb = new StringBuilder("SELECT COUNT(*) FROM dbo.opportunities WHERE org_id = ?");
-        List<Object> args = new ArrayList<>();
-        args.add(orgId);
+        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId ");
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", orgId);
 
         if (q != null && !q.isBlank()) {
-            sb.append(" AND (title LIKE ? OR subtitle LIKE ? OR location LIKE ?) ");
-            String like = "%" + q.trim() + "%";
-            args.add(like); args.add(like); args.add(like);
+            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :kw, '%')) " +
+                    "  OR LOWER(o.location) LIKE LOWER(CONCAT('%', :kw, '%'))) ");
+            params.put("kw", q.trim());
         }
         if (categoryId != null) {
-            sb.append(" AND category_id = ? ");
-            args.add(categoryId);
+            where.append(" AND o.category.categoryId = :catId ");
+            params.put("catId", categoryId);
         }
         if (status != null && !status.isBlank()) {
-            sb.append(" AND status = ? ");
-            args.add(status.trim().toUpperCase());
+            Opportunity.OpportunityStatus st = Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase());
+            where.append(" AND o.status = :st ");
+            params.put("st", st);
         }
 
-        Integer c = jdbc.queryForObject(sb.toString(), Integer.class, args.toArray());
-        return c == null ? 0 : c;
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o " + where;
+
+        TypedQuery<Long> query = em.createQuery(countJpql, Long.class);
+        params.forEach(query::setParameter);
+        Long total = query.getSingleResult();
+        return total == null ? 0 : total.intValue();
     }
 
+    // ===== 8) Tìm theo id + org
     @Override
     public Optional<Opportunity> findByIdAndOrg(int oppId, int orgId) {
-        String sql = """
-            SELECT opp_id, org_id, category_id, title, subtitle, location, thumbnail_url,
-                   needed_volunteers, status, start_time, end_time, created_at
-              FROM dbo.opportunities
-             WHERE opp_id = ? AND org_id = ?
-        """;
-        List<Opportunity> list = jdbc.query(sql, M, oppId, orgId);
+        List<Opportunity> list = em.createQuery(
+                        "SELECT o FROM Opportunity o WHERE o.oppId = :oppId AND o.organization.orgId = :orgId",
+                        Opportunity.class)
+                .setParameter("oppId", oppId)
+                .setParameter("orgId", orgId)
+                .getResultList();
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
+    // ===== 9) Lưu (insert/update)
     @Override
     public Opportunity save(Opportunity o) {
+        if (o == null) return null;
         if (o.getOppId() == null || o.getOppId() == 0) {
-            String sql = """
-                INSERT INTO dbo.opportunities
-                  (org_id, category_id, title, subtitle, location, thumbnail_url,
-                   needed_volunteers, status, start_time, end_time, created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,SYSDATETIME())
-            """;
-            KeyHolder kh = new GeneratedKeyHolder();
-            jdbc.update(con -> {
-                PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                ps.setInt(1, o.getOrganization().getOrgId());
-                ps.setInt(2, o.getCategory().getCategoryId());
-                ps.setString(3, o.getTitle());
-                ps.setString(4, o.getSubtitle());
-                ps.setString(5, o.getLocation());
-                ps.setString(6, o.getThumbnailUrl());
-                ps.setInt(7, o.getNeededVolunteers());
-                String status = (o.getStatus() != null ? o.getStatus() : Opportunity.OpportunityStatus.OPEN).name();
-                ps.setString(8, status);
-                ps.setTimestamp(9, ts(o.getStartTime()));
-                ps.setTimestamp(10, ts(o.getEndTime()));
-                return ps;
-            }, kh);
-            if (kh.getKey() != null) {
-                o.setOppId(kh.getKey().intValue());
-            }
+            em.persist(o);
             return o;
         } else {
-            String sql = """
-                UPDATE dbo.opportunities
-                   SET category_id = ?,
-                       title = ?,
-                       subtitle = ?,
-                       location = ?,
-                       thumbnail_url = ?,
-                       needed_volunteers = ?,
-                       status = ?,
-                       start_time = ?,
-                       end_time = ?
-                 WHERE opp_id = ? AND org_id = ?
-            """;
-            jdbc.update(sql,
-                    o.getCategory().getCategoryId(),
-                    o.getTitle(),
-                    o.getSubtitle(),
-                    o.getLocation(),
-                    o.getThumbnailUrl(),
-                    o.getNeededVolunteers(),
-                    (o.getStatus() != null ? o.getStatus() : Opportunity.OpportunityStatus.OPEN).name(),
-                    ts(o.getStartTime()),
-                    ts(o.getEndTime()),
-                    o.getOppId(),
-                    o.getOrganization().getOrgId()
-            );
-            return o;
+            return em.merge(o);
         }
     }
 
+    // ===== 10) Xoá theo id + org
     @Override
     public boolean deleteByIdAndOrg(int oppId, int orgId) {
-        String sql = "DELETE FROM dbo.opportunities WHERE opp_id = ? AND org_id = ?";
-        return jdbc.update(sql, oppId, orgId) > 0;
+        Optional<Opportunity> opt = findByIdAndOrg(oppId, orgId);
+        if (opt.isEmpty()) return false;
+        em.remove(opt.get());
+        return true;
+    }
+
+    // ===== 11) Recent by org + khoảng thời gian
+    @Override
+    public List<Opportunity> findRecentByOrg(int orgId, LocalDateTime from, LocalDateTime to) {
+        return em.createQuery(
+                        "SELECT o FROM Opportunity o " +
+                                "WHERE o.organization.orgId = :orgId " +
+                                "AND o.createdAt BETWEEN :from AND :to " +
+                                "ORDER BY o.createdAt DESC",
+                        Opportunity.class)
+                .setParameter("orgId", orgId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
     }
 
     @Override
-    public List<Opportunity> findRecentByOrg(int orgId, LocalDateTime from, LocalDateTime to) {
-        String sql = """
-            SELECT opp_id, org_id, category_id, title, subtitle, location, thumbnail_url,
-                   needed_volunteers, status, start_time, end_time, created_at
-              FROM dbo.opportunities
-             WHERE org_id = ? AND created_at BETWEEN ? AND ?
-             ORDER BY created_at DESC
-        """;
-        return jdbc.query(sql, M, orgId, ts(from), ts(to));
+    public Optional<Opportunity> findById(Integer id) {
+        if (id == null) return Optional.empty();
+        List<Opportunity> list = em.createQuery(
+                        "SELECT o FROM Opportunity o " +
+                                "LEFT JOIN FETCH o.organization " +
+                                "LEFT JOIN FETCH o.category " +
+                                "WHERE o.oppId = :id", Opportunity.class)
+                .setParameter("id", id)
+                .getResultList();
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 }

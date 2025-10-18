@@ -7,6 +7,8 @@ import com.fptuni.vms.model.OtpVerification;
 import com.fptuni.vms.model.OtpVerification.Purpose;
 import com.fptuni.vms.repository.OtpVerificationRepository;
 import com.fptuni.vms.service.OtpVerificationService;
+import jakarta.transaction.Transactional;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Transactional
 public class OtpVerificationServiceImpl implements OtpVerificationService {
 
     private static final int OTP_LENGTH = 6;
@@ -34,7 +37,15 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
     public void generateAndSendOtp(String email, String purpose) {
         final Purpose p = toPurpose(purpose);
 
-        String code = String.format("%06d", random.nextInt(1_000_000));
+        // A) Nếu đã có OTP còn hiệu lực -> ném lỗi rõ ràng
+        int active = repo.countActiveByEmailAndPurpose(email, p);
+        if (active > 0) throw new ActiveOtpExistsException();
+
+        // B) (Tuỳ chọn) Tự vô hiệu OTP cũ rồi tiếp tục
+        // repo.invalidateActiveByEmailAndPurpose(email, p);
+
+        // Sinh OTP
+        String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt((int) Math.pow(10, OTP_LENGTH)));
         LocalDateTime expiredAt = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(EXPIRE_MINUTES);
 
         OtpVerification v = new OtpVerification();
@@ -45,13 +56,20 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
         v.setPurpose(p);
         repo.save(v);
 
+        // Gửi mail
         Map<String, Object> model = new HashMap<>();
-        model.put("fullName", null); // nếu có tên user, set tại đây
+        model.put("fullName", null);
         model.put("code", code);
         model.put("minutes", EXPIRE_MINUTES);
 
         String subject = "Your VMS verification code";
-        mailComposer.sendTemplateHtml(email, subject, MailTemplates.VERIFY_EMAIL, model);
+        try {
+            mailComposer.sendTemplateHtml(email, subject, MailTemplates.VERIFY_EMAIL, model);
+        } catch (MailException e) { // <-- chỉ bắt MailException
+            // Nếu gửi thất bại, vô hiệu OTP vừa tạo (tránh “OTP tồn tại nhưng user không nhận được”)
+            repo.invalidateActiveByEmailAndPurpose(email, p);
+            throw new MailSendException(e);
+        }
     }
 
     @Override
@@ -62,18 +80,12 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
                 .findTop1ByEmailAndPurposeOrderByCreatedAtDesc(email, p)
                 .orElseThrow(() -> new OtpException("OTP_NOT_FOUND"));
 
-        if (Boolean.TRUE.equals(v.getVerified())) {
-            throw new OtpException("OTP_ALREADY_USED");
-        }
+        if (Boolean.TRUE.equals(v.getVerified())) throw new OtpException("OTP_ALREADY_USED");
 
         LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
-        if (v.getExpiredAt() != null && v.getExpiredAt().isBefore(nowUtc)) {
-            throw new OtpException("OTP_EXPIRED");
-        }
+        if (v.getExpiredAt() != null && v.getExpiredAt().isBefore(nowUtc)) throw new OtpException("OTP_EXPIRED");
 
-        if (!v.getOtpCode().equals(code)) {
-            throw new OtpException("OTP_INVALID");
-        }
+        if (!v.getOtpCode().equals(code)) throw new OtpException("OTP_INVALID");
 
         v.setVerified(true);
         v.setConsumedAt(nowUtc);

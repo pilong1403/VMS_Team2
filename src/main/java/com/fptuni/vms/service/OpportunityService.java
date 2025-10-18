@@ -10,15 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OpportunityService {
-    record Page<T>(List<T> items, int total, int page, int size) {}
-
-    Page<Opportunity> listMyOpps(int ownerUserId, int page, int size, String q, Integer categoryId, String status);
-    Optional<Opportunity> getMyOppById(int ownerUserId, int oppId);
-    Opportunity createMyOpp(int ownerUserId, Opportunity opp);
-    Opportunity updateMyOpp(int ownerUserId, Opportunity opp);
-    boolean deleteMyOpp(int ownerUserId, int oppId);
-
-    org.springframework.data.domain.Page<OpportunityCardDto> getOpportunityCards(Pageable pageable);
 
     /**
      * Lấy danh sách cơ hội với bộ lọc
@@ -45,4 +36,6 @@ public interface OpportunityService {
      * Lấy top 3 cơ hội mới nhất cho trang home
      */
     List<OpportunityCardDto> getTop3LatestOpportunities();
+
+    Page<OpportunityCardDto> getOpportunityCards(Pageable pageable);
 }
