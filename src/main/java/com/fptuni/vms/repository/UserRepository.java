@@ -2,13 +2,24 @@ package com.fptuni.vms.repository;
 
 import com.fptuni.vms.model.User;
 
+import java.util.Optional;
 import java.time.LocalDate;
 import java.util.List;
-
-
 public interface UserRepository {
+
+    Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    Optional<User> findByEmailWithRole(String email);
+
+    Optional<User> findByIdWithRole(Integer userId);
+
+
+    Optional<User> findById(Integer id);
+
+//    User save(User user);
     void save(User user);
-    User findById(Integer id);
     void deleteById(Integer id);
     List<User> findAll();
 
@@ -35,10 +46,8 @@ public interface UserRepository {
 
     long countAll();
     long countByStatus(String status);
-    boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
     List<User> getUsersByRole(Integer roleId);
-    User findByEmail(String email);
 
 
 }

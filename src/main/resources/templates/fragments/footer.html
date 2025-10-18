@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <!-- Footer Fragment -->
+    <footer th:fragment="footer" class="border-top" style="background-color: #f8fafc; border-color: #e0f2fe">
+      <div class="container py-5">
+        <div class="row g-4">
+          <!-- Cột 1: Về Chúng Tôi -->
+          <div class="col-lg-3 col-md-6">
+            <a th:href="@{/}" class="d-flex align-items-center text-decoration-none mb-3">
+              <img
+                th:src="@{/images/main-logo.png}"
+                alt="Trái Tim Tình Nguyện Logo"
+                class="img-fluid me-3"
+                style="height: 50px; width: auto"
+              />
+              <div class="d-flex flex-column">
+                <span class="fw-bold text-dark" style="font-size: 1.125rem; line-height: 1.2">TRÁI TIM</span>
+                <span class="fw-semibold" style="font-size: 0.75rem; color: #38bdf8; line-height: 1.2"
+                  >TÌNH NGUYỆN</span
+                >
+              </div>
+            </a>
+            <p class="text-muted small mb-3">
+              Nền tảng kết nối tình nguyện viên với các dự án ý nghĩa, cùng nhau xây dựng cộng đồng tốt đẹp hơn.
+            </p>
+            <div class="d-flex gap-2">
+              <a
+                href="#"
+                class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 36px; height: 36px; background-color: #1877f2; padding: 0"
+              >
+                <i class="bi bi-facebook" style="font-size: 1rem"></i>
+              </a>
+              <a
+                href="#"
+                class="btn rounded-circle d-flex align-items-center justify-content-center text-white"
+                style="
+                  width: 36px;
+                  height: 36px;
+                  padding: 0;
+                  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+                "
+              >
+                <i class="bi bi-instagram" style="font-size: 1rem"></i>
+              </a>
+              <a
+                href="#"
+                class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 36px; height: 36px; background-color: #ff0000; padding: 0"
+              >
+                <i class="bi bi-youtube" style="font-size: 1rem"></i>
+              </a>
+              <a
+                href="#"
+                class="btn rounded-circle d-flex align-items-center justify-content-center text-white"
+                style="width: 36px; height: 36px; background-color: #0068ff; padding: 0"
+              >
+                <i class="bi bi-chat-dots" style="font-size: 1rem"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Cột 2: Liên Kết Nhanh -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="fw-bold text-dark mb-3">Liên Kết Nhanh</h5>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a th:href="@{/opportunities}" class="text-muted text-decoration-none small">Cơ Hội Tình Nguyện</a>
+              </li>
+              <li class="mb-2">
+                <a th:href="@{/about}" class="text-muted text-decoration-none small">Câu Chuyện</a>
+              </li>
+              <li class="mb-2">
+                <a th:href="@{/faq}" class="text-muted text-decoration-none small">FAQ</a>
+              </li>
+              <li class="mb-2">
+                <a th:href="@{/contact}" class="text-muted text-decoration-none small">Liên Hệ</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Cột 3: Thông Tin -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="fw-bold text-dark mb-3">Thông Tin</h5>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a th:href="@{/terms}" class="text-muted text-decoration-none small">Điều Khoản Sử Dụng</a>
+              </li>
+              <li class="mb-2">
+                <a th:href="@{/privacy}" class="text-muted text-decoration-none small">Chính Sách Bảo Mật</a>
+              </li>
+              <li class="mb-2">
+                <a th:href="@{/regulations}" class="text-muted text-decoration-none small">Quy Chế Hoạt Động</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Cột 4: Liên Hệ -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="fw-bold text-dark mb-3">Liên Hệ</h5>
+            <ul class="list-unstyled">
+              <li class="mb-3 d-flex align-items-center">
+                <i
+                  class="bi bi-envelope me-2"
+                  style="color: #38bdf8; font-size: 1.25rem; width: 20px; text-align: center"
+                ></i>
+                <span class="text-muted small">contact@traitim.vn</span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i
+                  class="bi bi-telephone me-2"
+                  style="color: #38bdf8; font-size: 1.25rem; width: 20px; text-align: center"
+                ></i>
+                <span class="text-muted small">1900 xxxx</span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i
+                  class="bi bi-geo-alt me-2"
+                  style="color: #38bdf8; font-size: 1.25rem; width: 20px; text-align: center"
+                ></i>
+                <span class="text-muted small">Hà Nội, Việt Nam</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="border-top bg-white" style="border-color: #e0f2fe">
+        <div class="container py-3">
+          <p class="text-center text-muted small mb-0">© 2025 Trái Tim Tình Nguyện. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <style>
+      footer a:hover {
+        color: #38bdf8 !important;
+        transition: color 0.3s ease;
+      }
+
+      footer .btn:hover {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+      }
+
+      /* Đảm bảo icon social media căn giữa hoàn hảo */
+      footer .btn.rounded-circle {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        border: none !important;
+      }
+
+      /* Căn chỉnh icon liên hệ */
+      footer .list-unstyled li {
+        display: flex;
+        align-items: center;
+      }
+
+      footer .list-unstyled li i {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </body>
+</html>

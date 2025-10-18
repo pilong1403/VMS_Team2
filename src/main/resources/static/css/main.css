@@ -1,0 +1,253 @@
+/* Desktop-Only CSS - Original Design */
+
+/* Stats Section */
+.stats-section {
+  margin-top: -80px;
+  position: relative;
+  z-index: 10;
+}
+
+.stats-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Project Cards */
+.project-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.project-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+}
+
+.project-card .badge {
+  position: absolute;
+  top: 12px;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: fit-content;
+}
+
+/* Badge category ở góc trái */
+.project-card .badge:not(.bg-success):not(.bg-warning):not(.bg-danger) {
+  left: 12px;
+  background: #38bdf8 !important;
+}
+
+/* Badge trạng thái ở góc phải */
+.project-card .badge.bg-success,
+.project-card .badge.bg-warning,
+.project-card .badge.bg-danger {
+  left: auto !important;
+  right: 12px !important;
+  width: auto !important;
+  max-width: fit-content !important;
+}
+
+/* Giữ màu background cho các badge trạng thái */
+.project-card .badge.bg-success {
+  background-color: #198754 !important;
+}
+
+.project-card .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.project-card .badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.progress-custom {
+  height: 8px;
+  border-radius: 10px;
+  background-color: #e0f2fe;
+  overflow: hidden;
+}
+
+.progress-custom .progress-bar {
+  background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 100%);
+  border-radius: 10px;
+}
+
+/* How It Works Section */
+.how-it-works {
+  background-color: #f8fafc;
+}
+
+.step-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+  height: 100%;
+}
+
+.step-card:hover {
+  transform: translateY(-5px);
+}
+
+.step-number {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto 1rem;
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="90" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.cta-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Buttons */
+.btn-primary-custom {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+  color: white;
+}
+
+.btn-outline-primary-custom {
+  border: 2px solid #38bdf8;
+  color: #38bdf8;
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-weight: 600;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary-custom:hover {
+  background: #38bdf8;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Text Utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Opportunities Page Styles */
+.filter-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.filter-sidebar .form-label {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.filter-sidebar .form-control,
+.filter-sidebar .form-select {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.filter-sidebar .form-control:focus,
+.filter-sidebar .form-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
+}
+
+.filter-sidebar .form-check-input:checked {
+  background-color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.filter-sidebar .input-group-text {
+  background-color: #f8fafc;
+  border-color: #e5e7eb;
+  color: #6b7280;
+}
+
+/* Pagination Custom Colors */
+.pagination .page-link {
+  color: #38bdf8;
+  border-color: #e5e7eb;
+}
+
+.pagination .page-link:hover {
+  color: #0ea5e9;
+  background-color: #f0f9ff;
+  border-color: #38bdf8;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+/* Line Clamp for Descriptions */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

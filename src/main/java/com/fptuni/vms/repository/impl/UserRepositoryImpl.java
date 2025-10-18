@@ -9,16 +9,79 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.HashMap;
 import java.util.Map;
 
 @Repository
 @Transactional
+
 public class UserRepositoryImpl implements UserRepository {
 
     @PersistenceContext
-    private EntityManager em;
+    private EntityManager em; // container-managed, transaction-scoped
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        if (email == null) return Optional.empty();
+        String normalized = email.trim().toLowerCase();
+        TypedQuery<User> q = em.createQuery(
+                "SELECT u FROM User u WHERE u.email = :email", User.class);
+        q.setParameter("email", normalized);
+        List<User> list = q.getResultList();
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        if (email == null) return false;
+        String normalized = email.trim().toLowerCase();
+        Long cnt = em.createQuery(
+                        "SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
+                .setParameter("email", normalized)
+                .getSingleResult();
+        return cnt != null && cnt > 0;
+    }
+
+    @Override
+    public Optional<User> findByEmailWithRole(String email) {
+        if (email == null) return Optional.empty();
+        String normalized = email.trim().toLowerCase();
+        TypedQuery<User> q = em.createQuery(
+                "SELECT u FROM User u JOIN FETCH u.role WHERE u.email = :email", User.class);
+        q.setParameter("email", normalized);
+        List<User> list = q.getResultList();
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
+    @Override
+    public Optional<User> findByIdWithRole(Integer userId) {
+        if (userId == null) return Optional.empty();
+        TypedQuery<User> q = em.createQuery(
+                "SELECT u FROM User u JOIN FETCH u.role WHERE u.userId = :id", User.class);
+        q.setParameter("id", userId);
+        List<User> list = q.getResultList();
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
+
+    /** THÊM: dùng ở UserServiceImpl.findById(...) */
+    @Override
+    public Optional<User> findById(Integer id) {
+        if (id == null) return Optional.empty();
+        return Optional.ofNullable(em.find(User.class, id));
+    }
+
+//    @Override
+//    public User save(User user) {
+//        if (user == null) return null;
+//        if (user.getUserId() == null || user.getUserId() == 0) {
+//            em.persist(user);     // INSERT
+//            return user;
+//        } else {
+//            return em.merge(user); // UPDATE
+//        }
+//    }
 
     @Override
     public void save(User user) {
@@ -29,10 +92,7 @@ public class UserRepositoryImpl implements UserRepository {
         }
     }
 
-    @Override
-    public User findById(Integer id) {
-        return em.find(User.class, id);
-    }
+
 
     @Override
     public void deleteById(Integer id) {
@@ -45,6 +105,7 @@ public class UserRepositoryImpl implements UserRepository {
         return em.createQuery("SELECT u FROM User u ORDER BY u.createdAt DESC", User.class)
                 .getResultList();
     }
+
 
     @Override
     public List<User> search(
@@ -145,13 +206,13 @@ public class UserRepositoryImpl implements UserRepository {
                 .getSingleResult();
     }
 
-    @Override
-    public boolean existsByEmail(String email) {
-        Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
-                .setParameter("email", email)
-                .getSingleResult();
-        return count > 0;
-    }
+//    @Override
+//    public boolean existsByEmail(String email) {
+//        Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
+//                .setParameter("email", email)
+//                .getSingleResult();
+//        return count > 0;
+//    }
 
     @Override
     public boolean existsByPhone(String phone) {
@@ -168,13 +229,13 @@ public class UserRepositoryImpl implements UserRepository {
                 .getResultList();
     }
 
-    @Override
-    public User findByEmail(String email) {
-        List<User> users = em.createQuery(
-                        "SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)", User.class)
-                .setParameter("email", email)
-                .setMaxResults(1)
-                .getResultList();
-        return users.isEmpty() ? null : users.get(0);
-    }
+//    @Override
+//    public User findByEmail(String email) {
+//        List<User> users = em.createQuery(
+//                        "SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)", User.class)
+//                .setParameter("email", email)
+//                .setMaxResults(1)
+//                .getResultList();
+//        return users.isEmpty() ? null : users.get(0);
+//    }
 }
