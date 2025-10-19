@@ -1,4 +1,3 @@
-// src/main/java/com/fptuni/vms/config/WebThymeleafConfig.java
 package com.fptuni.vms.config;
 
 import org.springframework.context.annotation.Bean;
@@ -25,7 +24,7 @@ public class WebThymeleafConfig {
     }
 
     @Bean(name = "webTemplateEngine")
-    @Primary // <-- QUAN TRỌNG: để auto-config chọn engine này cho ViewResolver
+    @Primary // Engine chính cho ViewResolver
     public SpringTemplateEngine webTemplateEngine(SpringResourceTemplateResolver webTemplateResolver) {
         SpringTemplateEngine te = new SpringTemplateEngine();
         te.addTemplateResolver(webTemplateResolver);

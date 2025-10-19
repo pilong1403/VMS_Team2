@@ -1,13 +1,15 @@
-// src/main/java/com/fptuni/vms/integrations/mail/MailService.java
 package com.fptuni.vms.integrations.mail;
 
+import org.thymeleaf.context.Context;
+
 public interface MailService {
-    // Đang có
+
+    /** Gửi mail text thuần */
     void send(String to, String subject, String textBody);
 
-    // Thêm mới: gửi HTML thuần
+    /** Gửi mail HTML */
     void sendHtml(String to, String subject, String htmlBody);
 
-    // (tuỳ chọn) Gửi template theo tên + biến
-    void sendTemplate(String to, String subject, String templateName, org.thymeleaf.context.Context ctx);
+    /** Gửi mail template (Thymeleaf) */
+    void sendTemplate(String to, String subject, String templateName, Context ctx);
 }

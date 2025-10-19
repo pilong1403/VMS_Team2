@@ -1,9 +1,9 @@
-// src/main/java/com/fptuni/vms/integrations/mail/MailServiceImpl.java
 package com.fptuni.vms.integrations.mail;
 
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -14,53 +14,51 @@ import org.thymeleaf.context.Context;
 public class MailServiceImpl implements MailService {
 
     private final JavaMailSender mailSender;
-    private final TemplateEngine mailTemplateEngine;
+    private final TemplateEngine templateEngine;
 
-    // TODO: đổi thành email thật + cùng domain SMTP của bạn
-    private static final String DEFAULT_FROM_EMAIL = "youraccount@gmail.com";
-    private static final String DEFAULT_FROM_NAME  = "VMS";
+    // Đọc từ application.properties (nếu không có thì fallback mặc định)
+    @Value("${app.mail.from:no-reply@vms.local}")
+    private String fromEmail;
+
+    @Value("${app.mail.from-name:VMS}")
+    private String fromName;
 
     public MailServiceImpl(JavaMailSender mailSender,
-                           @Qualifier("mailTemplateEngine") TemplateEngine mailTemplateEngine) {
+                           @Qualifier("mailTemplateEngine") TemplateEngine templateEngine) {
         this.mailSender = mailSender;
-        this.mailTemplateEngine = mailTemplateEngine;
+        this.templateEngine = templateEngine;
     }
 
     @Override
     public void send(String to, String subject, String textBody) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper h = new MimeMessageHelper(msg, "UTF-8");
-            h.setFrom(new InternetAddress(DEFAULT_FROM_EMAIL, DEFAULT_FROM_NAME, "UTF-8"));
-            h.setTo(to);
-            h.setSubject(subject);
-            h.setText(textBody, false);
-            mailSender.send(msg);
-        } catch (Exception e) {
-            throw new RuntimeException("MAIL_SEND_ERROR", e);
-        }
+        sendInternal(to, subject, textBody, false);
     }
 
     @Override
     public void sendHtml(String to, String subject, String htmlBody) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper h = new MimeMessageHelper(msg, "UTF-8");
-            h.setFrom(new InternetAddress(DEFAULT_FROM_EMAIL, DEFAULT_FROM_NAME, "UTF-8"));
-            h.setTo(to);
-            h.setSubject(subject);
-            h.setText(htmlBody, true);
-            mailSender.send(msg);
-        } catch (Exception e) {
-            throw new RuntimeException("MAIL_SEND_ERROR", e);
-        }
+        sendInternal(to, subject, htmlBody, true);
     }
 
     @Override
     public void sendTemplate(String to, String subject, String templateName, Context ctx) {
         try {
-            String html = mailTemplateEngine.process(templateName, ctx);
+            String html = templateEngine.process(templateName, ctx);
             sendHtml(to, subject, html);
+        } catch (Exception e) {
+            throw new RuntimeException("MAIL_TEMPLATE_ERROR", e);
+        }
+    }
+
+    /** Hàm tiện ích chung cho text & html */
+    private void sendInternal(String to, String subject, String content, boolean isHtml) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper h = new MimeMessageHelper(msg, "UTF-8");
+            h.setFrom(new InternetAddress(fromEmail, fromName, "UTF-8"));
+            h.setTo(to);
+            h.setSubject(subject);
+            h.setText(content, isHtml);
+            mailSender.send(msg);
         } catch (Exception e) {
             throw new RuntimeException("MAIL_SEND_ERROR", e);
         }

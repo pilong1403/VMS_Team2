@@ -1,4 +1,3 @@
-// src/main/java/com/fptuni/vms/integrations/mail/MailTemplates.java
 package com.fptuni.vms.integrations.mail;
 
 public enum MailTemplates {

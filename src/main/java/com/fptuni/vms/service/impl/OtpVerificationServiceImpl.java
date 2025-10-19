@@ -1,7 +1,6 @@
-// src/main/java/com/fptuni/vms/service/impl/OtpVerificationServiceImpl.java
 package com.fptuni.vms.service.impl;
 
-import com.fptuni.vms.integrations.mail.MailComposer;
+import com.fptuni.vms.integrations.mail.MailService;
 import com.fptuni.vms.integrations.mail.MailTemplates;
 import com.fptuni.vms.model.OtpVerification;
 import com.fptuni.vms.model.OtpVerification.Purpose;
@@ -10,12 +9,11 @@ import com.fptuni.vms.service.OtpVerificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @Transactional
@@ -25,12 +23,12 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
     private static final int EXPIRE_MINUTES = 10;
 
     private final OtpVerificationRepository repo;
-    private final MailComposer mailComposer;
+    private final MailService mailService;
     private final SecureRandom random = new SecureRandom();
 
-    public OtpVerificationServiceImpl(OtpVerificationRepository repo, MailComposer mailComposer) {
+    public OtpVerificationServiceImpl(OtpVerificationRepository repo, MailService mailService) {
         this.repo = repo;
-        this.mailComposer = mailComposer;
+        this.mailService = mailService;
     }
 
     @Override
@@ -41,10 +39,7 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
         int active = repo.countActiveByEmailAndPurpose(email, p);
         if (active > 0) throw new ActiveOtpExistsException();
 
-        // B) (Tuỳ chọn) Tự vô hiệu OTP cũ rồi tiếp tục
-        // repo.invalidateActiveByEmailAndPurpose(email, p);
-
-        // Sinh OTP
+        // Sinh mã OTP
         String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt((int) Math.pow(10, OTP_LENGTH)));
         LocalDateTime expiredAt = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(EXPIRE_MINUTES);
 
@@ -56,17 +51,17 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
         v.setPurpose(p);
         repo.save(v);
 
-        // Gửi mail
-        Map<String, Object> model = new HashMap<>();
-        model.put("fullName", null);
-        model.put("code", code);
-        model.put("minutes", EXPIRE_MINUTES);
+        // Chuẩn bị context cho mail template
+        Context ctx = new Context();
+        ctx.setVariable("fullName", null);
+        ctx.setVariable("code", code);
+        ctx.setVariable("minutes", EXPIRE_MINUTES);
 
         String subject = "Your VMS verification code";
         try {
-            mailComposer.sendTemplateHtml(email, subject, MailTemplates.VERIFY_EMAIL, model);
-        } catch (MailException e) { // <-- chỉ bắt MailException
-            // Nếu gửi thất bại, vô hiệu OTP vừa tạo (tránh “OTP tồn tại nhưng user không nhận được”)
+            mailService.sendTemplate(email, subject, MailTemplates.VERIFY_EMAIL.getName(), ctx);
+        } catch (MailException e) {
+            // Nếu gửi thất bại, vô hiệu OTP vừa tạo
             repo.invalidateActiveByEmailAndPurpose(email, p);
             throw new MailSendException(e);
         }
@@ -80,12 +75,15 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
                 .findTop1ByEmailAndPurposeOrderByCreatedAtDesc(email, p)
                 .orElseThrow(() -> new OtpException("OTP_NOT_FOUND"));
 
-        if (Boolean.TRUE.equals(v.getVerified())) throw new OtpException("OTP_ALREADY_USED");
+        if (Boolean.TRUE.equals(v.getVerified()))
+            throw new OtpException("OTP_ALREADY_USED");
 
         LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
-        if (v.getExpiredAt() != null && v.getExpiredAt().isBefore(nowUtc)) throw new OtpException("OTP_EXPIRED");
+        if (v.getExpiredAt() != null && v.getExpiredAt().isBefore(nowUtc))
+            throw new OtpException("OTP_EXPIRED");
 
-        if (!v.getOtpCode().equals(code)) throw new OtpException("OTP_INVALID");
+        if (!v.getOtpCode().equals(code))
+            throw new OtpException("OTP_INVALID");
 
         v.setVerified(true);
         v.setConsumedAt(nowUtc);

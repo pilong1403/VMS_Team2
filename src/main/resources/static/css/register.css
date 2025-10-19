@@ -5,10 +5,18 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #fef3c7 0%, #dbeafe 30%, #bfdbfe 70%, #e0f2fe 100%);
   min-height: 100vh;
+  display: block;
+}
+
+/* Center the form area */
+main {
+  min-height: calc(100vh - 180px); /* trừ header + footer */
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 60px 0;
 }
+
 
 /* Register Container */
 .register-container {
