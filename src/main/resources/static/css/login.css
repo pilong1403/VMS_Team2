@@ -1,0 +1,172 @@
+/* Login Page Styles */
+/* Login Page Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #fef3c7 0%, #dbeafe 30%, #bfdbfe 70%, #e0f2fe 100%);
+  min-height: 100vh;
+  display: block; /* bỏ flex khỏi body */
+}
+
+/* Căn giữa nội dung */
+main {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+/* Login Container */
+.login-container {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15);
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+/* Logo */
+.logo-container {
+  margin-bottom: 2rem;
+}
+
+.logo-container img {
+  width: 300px;
+  height: auto;
+  max-width: 100%;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.form-group label {
+  color: #334155;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form-control {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
+  background: #fff;
+}
+
+.form-control::placeholder {
+  color: #94a3b8;
+}
+
+/* Buttons */
+.btn-login {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  width: 100%;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+.btn-outline-secondary {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f1f5f9;
+  border-color: #38bdf8;
+  color: #0ea5e9;
+}
+
+/* Input Groups */
+.input-group .form-control {
+  border-right: none;
+}
+
+.input-group .btn-outline-secondary {
+  border-left: none;
+  border-color: #e2e8f0;
+}
+
+.input-group .form-control:focus + .btn-outline-secondary {
+  border-color: #38bdf8;
+}
+
+/* Form Check */
+.form-check-input:checked {
+  background-color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.form-check-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
+}
+
+.form-check-label {
+  color: #475569;
+}
+
+/* Links */
+.forgot-password {
+  color: #38bdf8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+  color: #0ea5e9;
+  text-decoration: underline;
+}
+
+.register-link {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.register-link a {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link a:hover {
+  color: #0ea5e9;
+  text-decoration: underline;
+}
+
+/* Toast System Integration */
+.toast-container {
+  z-index: 9999 !important;
+}

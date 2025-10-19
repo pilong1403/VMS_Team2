@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hồ sơ cá nhân</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/profile.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="profile-container">
+            <div class="card border-0 shadow-sm overflow-hidden">
+              <!-- Profile Header -->
+              <div class="profile-header">
+                <div class="gradient-bg"></div>
+
+                <!-- Avatar -->
+                <div class="avatar-container">
+                  <img
+                    th:src="${user.avatarUrl ?: '/images/default-avatar.jpg'}"
+                    th:alt="${user.fullName}"
+                    class="avatar-img"
+                  />
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                  <a th:href="@{/profile/edit}" class="btn btn-light btn-sm">
+                    <i class="bi bi-pencil me-1"></i>
+                    Chỉnh sửa
+                  </a>
+                  <button
+                    type="button"
+                    class="btn btn-outline-light btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changePasswordModal"
+                  >
+                    <i class="bi bi-lock me-1"></i>
+                    Đổi mật khẩu
+                  </button>
+                </div>
+              </div>
+
+              <!-- Profile Content -->
+              <div class="card-body pt-5">
+                <!-- User Header -->
+                <div class="user-header">
+                  <div class="user-info">
+                    <h1 class="user-name" th:text="${user.fullName}">Phạm Minh Tuấn</h1>
+                    <div class="badges">
+                      <span
+                        class="badge"
+                        th:classappend="${user.role?.roleName == 'ADMIN'} ? 'bg-danger' : 
+                                                       (${user.role?.roleName == 'ORG_OWNER'} ? 'bg-success' : 'bg-primary')"
+                        th:text="${user.role?.roleName == 'ADMIN'} ? 'Administrator' : 
+                                 (${user.role?.roleName == 'ORG_OWNER'} ? 'Organization' : 
+                                 (${user.role?.roleName == 'VOLUNTEER'} ? 'Volunteer' : 'Unknown'))"
+                        >Volunteer</span
+                      >
+                      <span
+                        class="badge"
+                        th:classappend="${user.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'"
+                        th:text="${user.status.name() == 'ACTIVE'} ? 'Hoạt động' : 'Đã khóa'"
+                        >Hoạt động</span
+                      >
+                    </div>
+                  </div>
+
+                  <!-- Rating -->
+                  <div class="rating" th:if="${user.role?.roleName == 'VOLUNTEER' and volunteerRating != null}">
+                    <div class="rating-score">
+                      <span th:text="${#numbers.formatDecimal(volunteerRating.averageStars, 1, 1)}">4.8</span>
+                      <i class="bi bi-star-fill text-warning"></i>
+                    </div>
+                    <p class="rating-count" th:text="${volunteerRating.totalRatings} + ' đánh giá'">25 đánh giá</p>
+                  </div>
+                </div>
+
+                <!-- Profile Details -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <h3 class="section-title">Thông tin cá nhân</h3>
+
+                    <div class="info-item">
+                      <label><i class="bi bi-envelope"></i> Email</label>
+                      <p th:text="${user.email}">tuan@volunteer.com</p>
+                    </div>
+
+                    <div class="info-item">
+                      <label><i class="bi bi-telephone"></i> Số điện thoại</label>
+                      <p th:text="${user.phone ?: 'Chưa cập nhật'}">0901234567</p>
+                    </div>
+
+                    <div class="info-item">
+                      <label><i class="bi bi-geo-alt"></i> Địa chỉ</label>
+                      <p th:text="${user.address ?: 'Chưa cập nhật'}">Đà Nẵng</p>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h3 class="section-title">Thông tin tài khoản</h3>
+
+                    <div class="info-item">
+                      <label><i class="bi bi-person"></i> Trạng thái tài khoản</label>
+                      <p th:text="${user.status.name() == 'ACTIVE'} ? 'Hoạt động' : 'Đã khóa'">Hoạt động</p>
+                    </div>
+
+                    <div class="info-item">
+                      <label><i class="bi bi-calendar-plus"></i> Ngày tham gia</label>
+                      <p th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">03/01/2024</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Đổi mật khẩu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form th:action="@{/profile/change-password}" method="post" id="changePasswordForm">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="currentPassword">Mật khẩu hiện tại</label>
+                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required />
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Mật khẩu mới</label>
+                <input type="password" class="form-control" id="newPassword" name="newPassword" required />
+                <div class="password-strength mt-2 d-none">
+                  <div class="progress" style="height: 4px">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                  </div>
+                  <small class="strength-text text-muted"></small>
+                </div>
+                <small class="form-text text-muted"
+                  >Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số</small
+                >
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-primary">
+                <span class="spinner-border spinner-border-sm d-none me-2"></span>
+                Đổi mật khẩu
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/profile.js}"></script>
+    <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Báo cáo</title>
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
+</head>
+<body data-page="reports">
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">📊</div>
+            <div class="logo-text">
+                <h2>Quản Lý Admin</h2>
+                <p>Hệ thống quản trị</p>
+            </div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">MENU CHÍNH</div>
+        <ul class="nav-menu">
+            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>
+            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>
+            <li><a th:href="@{/admin/reports}" class="nav-item active">Báo cáo</a></li>
+        </ul>
+    </nav>
+</aside>
+
+<div class="main-wrapper">
+    <header class="header">
+        <div class="header-title">Báo cáo & Thống kê</div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1>Báo cáo</h1>
+            <p>Thống kê hệ thống theo thời gian</p>
+        </div>
+
+        <!-- ====== FORM LỌC BÁO CÁO ====== -->
+        <form th:action="@{/admin/reports}" method="get" class="search-filter-bar">
+            <div class="filter-group">
+                <select name="rangeType">
+                    <option value="week" th:selected="${rangeType == 'week'}">Tuần</option>
+                    <option value="month" th:selected="${rangeType == 'month'}">Tháng</option>
+                    <option value="year" th:selected="${rangeType == 'year'}">Năm</option>
+                </select>
+
+                <input type="date" name="fromDate" th:value="${fromDate}" />
+                <input type="date" name="toDate" th:value="${toDate}" />
+
+                <select name="sort">
+                    <option value="desc" th:selected="${sort == 'desc'}">Mới nhất</option>
+                    <option value="asc" th:selected="${sort == 'asc'}">Cũ nhất</option>
+                </select>
+
+                <button type="submit" class="btn btn-outline">Lọc</button>
+            </div>
+
+            <div class="search-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="search" placeholder="Tìm theo tên/email..." />
+            </div>
+        </form>
+
+        <!-- ====== BIỂU ĐỒ ====== -->
+        <div class="chart-row">
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Biểu đồ người dùng đăng ký</h3>
+                    <div>
+                        <button id="btnBack" class="btn btn-outline" style="display:none" onclick="goBackChart()">⬅ Quay lại</button>
+                        <button class="btn-export" onclick="exportChartToExcel('user')">Tải Excel</button>
+                    </div>
+                </div>
+                <canvas id="userChartUser" height="200"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Phân bố theo vai trò</h3>
+                    <button class="btn-export" onclick="exportChartToExcel('role')">Tải Excel</button>
+                </div>
+                <canvas id="roleChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- ====== BẢNG DỮ LIỆU TỔNG HỢP (nếu cần thêm thống kê chi tiết) ====== -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tên</th>
+                    <th>Email</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                <tr th:if="${userStats.labels == null or userStats.labels.size() == 0}">
+                    <td colspan="4" class="muted">Không có dữ liệu trong khoảng thời gian này.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <strong id="toastTitle"></strong>
+        <p id="toastMessage"></p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+<!-- ====== BIỂU ĐỒ JS (Thymeleaf inline data) ====== -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    // ===== DỮ LIỆU TỪ BACKEND (Thymeleaf render) =====
+    const userLabels = /*[[${userStats.labels}]]*/ [];
+    const userCounts = /*[[${userStats.counts}]]*/ [];
+    const roleData = /*[[${roleDistribution}]]*/ {};
+    let currentRange = /*[[${rangeType}]]*/ 'month';
+
+    // ===== VẼ BIỂU ĐỒ TRÒN (ROLE) =====
+    const ctxRole = document.getElementById('roleChart');
+    new Chart(ctxRole, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(roleData),
+            datasets: [{
+                data: Object.values(roleData),
+                backgroundColor: ['#007bff','#ffc107','#28a745','#dc3545','#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    // ===== VẼ BIỂU ĐỒ CỘT (USER) =====
+    let userChart;
+    const ctxUser = document.getElementById('userChartUser');
+
+    // Stack để lưu lịch sử drilldown (quay lại)
+    const drillStack = [];
+
+    function renderUserChart(labels, counts) {
+        if (userChart) userChart.destroy();
+        userChart = new Chart(ctxUser, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số lượng người dùng đăng ký',
+                    data: counts,
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                // ======= CLICK TRÊN CỘT ĐỂ DRILLDOWN =======
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = labels[index];
+                        drillDown(label);
+                    }
+                }
+            }
+        });
+    }
+
+    // render chart lần đầu
+    renderUserChart(userLabels, userCounts);
+
+    // ======= DRILLDOWN API CALL =======
+    function drillDown(label) {
+        // lưu trạng thái hiện tại để quay lại
+        drillStack.push({
+            labels: userChart.data.labels.slice(),
+            counts: userChart.data.datasets[0].data.slice(),
+            range: currentRange
+        });
+
+        document.getElementById('btnBack').style.display = 'inline-block';
+
+        fetch(`/admin/reports/drilldown?rangeType=${currentRange}&label=${encodeURIComponent(label)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.labels && data.counts) {
+                    currentRange = data.rangeType;
+                    renderUserChart(data.labels, data.counts);
+                } else {
+                    showToast("Không có dữ liệu chi tiết.", "Thông báo");
+                }
+            })
+            .catch(err => console.error("Drilldown error:", err));
+    }
+
+    // ======= NÚT QUAY LẠI =======
+    function goBackChart() {
+        const prev = drillStack.pop();
+        if (prev) {
+            renderUserChart(prev.labels, prev.counts);
+            currentRange = prev.range;
+        }
+        if (drillStack.length === 0) {
+            document.getElementById('btnBack').style.display = 'none';
+        }
+    }
+
+    // ======= HIỂN THỊ TOAST NGẮN =======
+    function showToast(message, title="Thông báo") {
+        const toast = document.getElementById('toast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        toastTitle.innerText = title;
+        toastMessage.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    // ======= XUẤT EXCEL =======
+        function exportChartToExcel(type) {
+        const params = new URLSearchParams();
+        params.append("type", type);
+        params.append("rangeType", currentRange);
+
+        const from = document.querySelector('input[name="fromDate"]').value;
+        const to = document.querySelector('input[name="toDate"]').value;
+        if (from) params.append("fromDate", from);
+        if (to) params.append("toDate", to);
+
+        // Gọi server backend để tải Excel
+        window.location.href = `/admin/reports/export?${params.toString()}`;
+    }
+
+    /*]]>*/
+</script>
+
+
+</body>
+</html>

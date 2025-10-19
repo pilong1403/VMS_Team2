@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Danh sách Đánh giá Tình nguyện viên</title>
+    <link rel="stylesheet" th:href="@{/css/rate.css}">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="title">Quản lý Đánh giá</div>
+        <nav class="nav">
+            <a class="active" th:href="@{/ratings}">Danh sách đánh giá</a>
+            <a th:href="@{/ratings/create}">Đánh giá tình nguyện viên</a>
+        </nav>
+        <div class="user-mini">
+            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
+            <div>
+                <div th:text="${currentUser.fullName}">Nguyễn Văn A</div>
+                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header">
+            <div>
+                <h2 style="margin:0">Danh sách Đánh giá Tình nguyện viên</h2>
+                <div class="muted">
+                    Quản lý và theo dõi đánh giá của các tình nguyện viên thuộc
+                    <b th:text="${currentOrg.name}">Tên tổ chức</b>
+                </div>
+            </div>
+            <div class="badges">
+                <span class="badge warning" th:text="${pendingCount + ' chờ đánh giá'}">0 chờ đánh giá</span>
+                <span class="badge success" th:text="${doneCount + ' đã đánh giá'}">0 đã đánh giá</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <form th:action="@{/ratings}" method="get" style="display:flex;gap:10px;align-items:center;">
+                <div class="search">
+                    <span class="icon">🔎</span>
+                    <input id="search" type="text" name="keyword" th:value="${keyword}" placeholder="Tìm kiếm...">
+                </div>
+
+                <select id="statusSelect" name="stars" class="select">
+                    <option th:value="''" th:selected="${filteredStars == null}">Tất cả sao</option>
+                    <option th:each="i : ${#numbers.sequence(1,5)}"
+                            th:value="${i}"
+                            th:text="${i + ' sao'}"
+                            th:selected="${filteredStars == i}"></option>
+                </select>
+
+                <button type="submit" class="btn primary">Lọc</button>
+            </form>
+        </div>
+
+        <section class="list">
+            <div th:if="${#lists.isEmpty(ratings)}" style="padding:20px;text-align:center;color:#6b7280">
+                Không có đánh giá nào.
+            </div>
+
+            <div class="card" th:each="r : ${ratings}">
+                <div class="card-head">
+                    <img class="avatar"
+                         th:src="${r.rateeUser.avatarUrl != null ? r.rateeUser.avatarUrl : 'https://i.pravatar.cc/100'}" alt="avatar">
+                    <div class="info">
+                        <div class="name" th:text="${r.rateeUser.fullName}">Tên TNV</div>
+                        <div class="muted"
+                             th:text="${#temporals.format(r.opportunity.startTime, 'dd/MM/yyyy')} + ' - ' + r.opportunity.title">
+                            Ngày - Hoạt động
+                        </div>
+                    </div>
+                    <span class="pill"
+                          th:classappend="${r.stars == null} ? ' gray' : ''"
+                          th:text="${r.stars == null ? 'Chờ đánh giá' : 'Đã đánh giá'}">
+                        Đã đánh giá
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <div>
+                        <div class="meta">
+                            <span th:text="${r.opportunity.title}">Hoạt động</span>
+                            <span class="dot"></span>
+                            <span th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy') : 'Chưa tạo'}">Ngày tạo</span>
+                        </div>
+                        <div class="quote"
+                             th:text="${r.comment != null ? '“' + r.comment + '”' : 'Chưa có nhận xét.'}">
+                            “Cảm ơn vì sự đóng góp!”
+                        </div>
+                    </div>
+                    <div class="org">
+                        <div class="rating">
+                            <span th:each="i : ${#numbers.sequence(1,5)}"
+                                  th:text="${i <= (r.stars != null ? r.stars : 0) ? '★' : '☆'}"></span>
+                        </div>
+                        <div class="org-name" th:text="${currentOrg.name}">Tên tổ chức</div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a class="btn ghost" th:href="@{'/ratings/edit/' + ${r.id}}">Chỉnh sửa</a>
+                </div>
+            </div>
+        </section>
+
+        <div style="margin-top:20px;display:flex;justify-content:center;gap:6px;" th:if="${totalPages > 1}">
+            <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+               th:href="@{/ratings(page=${i}, keyword=${keyword}, stars=${filteredStars}, size=${pageSize})}"
+               th:text="${i + 1}"
+               th:classappend="${i == currentPage} ? ' btn primary' : ' btn ghost'">1</a>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/rate.js}">
+
+</script>
+</body>
+</html>
