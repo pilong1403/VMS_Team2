@@ -40,6 +40,10 @@ public class Organization {
     @Column(name = "description", columnDefinition="NVARCHAR(MAX)")
     private String description;
 
+
+
+
+
     // DB default SYSDATETIME()
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -99,7 +103,6 @@ public class Organization {
 
     public String getRegDocUrl() { return regDocUrl; }
     public void setRegDocUrl(String regDocUrl) { this.regDocUrl = regDocUrl; }
-
     public String getRegDocCloudId() { return regDocCloudId; }
     public void setRegDocCloudId(String regDocCloudId) { this.regDocCloudId = regDocCloudId; }
 

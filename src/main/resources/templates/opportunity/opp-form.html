@@ -1,0 +1,100 @@
+<!-- src/main/resources/templates/org/opportunity/opp-form.html -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${mode == 'EDIT' ? 'Edit Opportunity' : 'Create Opportunity'}">Opportunity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50">
+<div class="max-w-3xl mx-auto py-8">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold"
+        th:text="${mode == 'EDIT' ? 'Edit Opportunity' : 'Create Opportunity'}">Form</h1>
+    <a href="/org/opps" class="rounded border px-3 py-2 hover:bg-gray-50">Back</a>
+  </div>
+
+  <div th:if="${error}" class="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700" th:text="${error}"></div>
+
+  <form th:action="${mode == 'EDIT' ? '/org/opps/' + ${opp.oppId} : '/org/opps'}" method="post"
+        class="bg-white rounded-lg shadow p-6 grid gap-4">
+
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <input type="hidden" name="id" th:value="${opp.oppId}" />
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm mb-1">Category</label>
+        <select name="categoryId" class="w-full rounded border px-3 py-2" required>
+          <option value="" disabled th:selected="${opp.category == null}">Select category</option>
+          <option th:each="c : ${categories}"
+                  th:value="${c.categoryId}"
+                  th:selected="${opp.category != null and opp.category.categoryId == c.categoryId}"
+                  th:text="${c.categoryName}">Category</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm mb-1">Needed volunteers</label>
+        <input type="number" min="1" name="neededVolunteers"
+               th:value="${opp.neededVolunteers}" class="w-full rounded border px-3 py-2" required>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Title</label>
+      <input type="text" name="title" th:value="${opp.title}" class="w-full rounded border px-3 py-2" required>
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Subtitle</label>
+      <input type="text" name="subtitle" th:value="${opp.subtitle}" class="w-full rounded border px-3 py-2">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Location</label>
+      <input type="text" name="location" th:value="${opp.location}" class="w-full rounded border px-3 py-2">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">Thumbnail URL</label>
+      <input type="url" name="thumbnailUrl" th:value="${opp.thumbnailUrl}" class="w-full rounded border px-3 py-2">
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm mb-1">Start time</label>
+        <!-- datetime-local cần format: yyyy-MM-dd'T'HH:mm -->
+        <input type="datetime-local" name="startTime"
+               th:value="${opp.startTime != null ? #temporals.format(opp.startTime,'yyyy-MM-dd''T''HH:mm') : ''}"
+               class="w-full rounded border px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm mb-1">End time</label>
+        <input type="datetime-local" name="endTime"
+               th:value="${opp.endTime != null ? #temporals.format(opp.endTime,'yyyy-MM-dd''T''HH:mm') : ''}"
+               class="w-full rounded border px-3 py-2" required>
+      </div>
+    </div>
+
+    <div th:if="${mode == 'EDIT'}">
+      <label class="block text-sm mb-1">Status</label>
+      <select name="status" class="w-full rounded border px-3 py-2">
+        <option value="OPEN" th:selected="${opp.status?.name() == 'OPEN'}">OPEN</option>
+        <option value="CLOSED" th:selected="${opp.status?.name() == 'CLOSED'}">CLOSED</option>
+        <option value="CANCELLED" th:selected="${opp.status?.name() == 'CANCELLED'}">CANCELLED</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit"
+              class="rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+              th:text="${mode == 'EDIT' ? 'Save changes' : 'Create'}">Save</button>
+
+      <a href="/org/opps" class="rounded border px-4 py-2 hover:bg-gray-50">Cancel</a>
+    </div>
+  </form>
+</div>
+</body>
+</html>

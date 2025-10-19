@@ -9,7 +9,7 @@ body {
 
 /* Hero Section */
 .hero-image {
-    height: 220px;
+    width: 30%;
     object-fit: cover;
     border-radius: 14px;
 }

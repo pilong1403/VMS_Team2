@@ -1,12 +1,55 @@
 package com.fptuni.vms.repository;
 
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.fptuni.vms.model.User;
 
-public interface UserRepository extends JpaRepository<User, Integer> {
+import java.util.Optional;
+import java.time.LocalDate;
+import java.util.List;
+
+public interface UserRepository {
+
     Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    Optional<User> findByEmailWithRole(String email);
+
+    Optional<User> findByIdWithRole(Integer userId);
+
+    Optional<User> findById(Integer id);
+
+    User save(User user);
+
+    void save1(User user);
+
+    void deleteById(Integer id);
+
+    List<User> findAll();
+
+    List<User> search(
+            String keyword,
+            Integer roleId,
+            User.UserStatus status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            int page,
+            int size,
+            String sortField,
+            String sortDir);
+
+    long countFiltered(
+            String keyword,
+            Integer roleId,
+            User.UserStatus status,
+            LocalDate fromDate,
+            LocalDate toDate);
+
+    long countAll();
+
+    long countByStatus(String status);
+
+    boolean existsByPhone(String phone);
+
+    List<User> getUsersByRole(Integer roleId);
 
 }

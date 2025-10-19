@@ -2,15 +2,16 @@ package com.fptuni.vms.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 
-public class AdminController {
-    @GetMapping("/homepage")
-    public String homepage() {
-        // Trả về file homepage.html trong thư mục templates
-        return "homepage";
-    }
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-    @GetMapping("/index")
-    public String index() {
-        return "index";
+@Controller
+@RequestMapping("/admin")
+public class AdminController {
+
+    /** Trang placeholder đúng với redirect sau đăng nhập ADMIN */
+    @GetMapping("/file-giu-cho")
+    public String adminPlaceholder() {
+        return "admin/file-giu-cho"; // templates/admin/file-giu-cho.html
     }
 }
