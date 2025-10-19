@@ -1,7 +1,10 @@
 package com.fptuni.vms.controller;
 
 import com.fptuni.vms.model.FAQ;
+import com.fptuni.vms.model.User;
+import com.fptuni.vms.security.CustomUserDetails;
 import com.fptuni.vms.service.FAQService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,6 +81,7 @@ public class FAQController {
                           @RequestParam(required = false) String status,
                           @RequestParam(required = false) String keyword,
                           @RequestParam(name = "originalCategory", required = false) String originalCategory,
+                          @AuthenticationPrincipal CustomUserDetails loggedInUser,
                           RedirectAttributes redirectAttributes) {
 
         if(!faqService.existsById(faqId)) {
@@ -88,7 +92,13 @@ public class FAQController {
             existingFAQ.setQuestion(question);
             existingFAQ.setAnswer(answer);
             existingFAQ.setUpdatedAt(java.time.LocalDateTime.now());
-            existingFAQ.setUpdatedBy(null); //sau này login bằng acc rồi sẽ thêm sau
+
+            if (loggedInUser != null) {
+                User user = loggedInUser.getUser();
+                existingFAQ.setUpdatedBy(user);
+            } else{
+                existingFAQ.setUpdatedBy(null);
+            }
 
             if(faqService.updateFAQ(existingFAQ) == null) {
                 redirectAttributes.addFlashAttribute("error", "FAQ updated failed !! This question already exists");
@@ -125,6 +135,7 @@ public class FAQController {
                                   @RequestParam(required = false) Integer num,
                                   @RequestParam(required = false) String status,
                                   @RequestParam(required = false) String keyword,
+                                  @AuthenticationPrincipal CustomUserDetails loggedInUser,
                                   RedirectAttributes redirectAttributes) {
         if (!faqService.existsById(faqId)) {
             redirectAttributes.addFlashAttribute("error", "FAQ not found !!");
@@ -132,7 +143,14 @@ public class FAQController {
             FAQ existingFAQ = faqService.getFAQById(faqId);
             existingFAQ.setStatus(!existingFAQ.getStatus());
             existingFAQ.setUpdatedAt(java.time.LocalDateTime.now());
-            existingFAQ.setUpdatedBy(null); //sau này login bằng acc rồi sẽ thêm sau
+
+            if (loggedInUser != null) {
+                User user = loggedInUser.getUser();
+                existingFAQ.setUpdatedBy(user);
+            } else{
+                existingFAQ.setUpdatedBy(null);
+            }
+
             faqService.updateFAQ(existingFAQ);
             redirectAttributes.addFlashAttribute("success", "Thay đổi trạng thái FAQ thành công !!");
         }
@@ -176,10 +194,13 @@ public class FAQController {
 
         if (listFaqList == null || listFaqList.isEmpty()) {
             model.addAttribute("listFaqList", java.util.Collections.emptyList());
-            model.addAttribute("totalPages", 1);
+            model.addAttribute("totalPages", 0);
             model.addAttribute("currentPage", 1);
-            model.addAttribute("status", null);
-            model.addAttribute("num", null);
+            model.addAttribute("startPage", 1);
+            model.addAttribute("endPage", 0);
+            model.addAttribute("status", status);
+            model.addAttribute("num", num);
+            model.addAttribute("category", category);
             model.addAttribute("keyword", keyword);
             model.addAttribute("error", "There are no FAQs found !!");
             return "admin/FAQ";
