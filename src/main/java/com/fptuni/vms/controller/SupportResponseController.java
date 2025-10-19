@@ -5,8 +5,10 @@ import com.fptuni.vms.model.Role;
 import com.fptuni.vms.model.SupportResponse;
 import com.fptuni.vms.model.SupportTicket;
 import com.fptuni.vms.model.User;
+import com.fptuni.vms.security.CustomUserDetails;
 import com.fptuni.vms.service.SupportResponseService;
 import com.fptuni.vms.service.SupportTicketService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -96,28 +98,11 @@ public class SupportResponseController {
                                      @RequestParam(defaultValue = "1") int page,
                                      @RequestParam(defaultValue = "5") int size,
                                      @RequestParam("attachment") MultipartFile attachment,
+                                     @AuthenticationPrincipal CustomUserDetails loggedInUser,
                                      RedirectAttributes redirectAttributes
                                      ) {
 
-        // FAKE DATA ( đợi có login làm lại phần responder)
-        User admin = new User();
-        admin.setUserId(1);
-        admin.setFullName("Nguyễn Minh Duy");
-        admin.setEmail("duy.nguyen@example.com");
-        admin.setPhone("0987654321");
-        admin.setAvatarUrl("https://res.cloudinary.com/demo/image/upload/v1728700000/avatar_duy.png");
-        admin.setPasswordHash("$2a$10$examplehashforpassword123456789");
-        admin.setStatus(User.UserStatus.ACTIVE);
-        admin.setAddress("123 Đường Lê Lợi, Quận 1, TP.HCM");
-        admin.setCreatedAt(LocalDateTime.now().minusDays(10));
-        admin.setUpdatedAt(LocalDateTime.now());
-
-        Role adminRole = new Role();
-        adminRole.setRoleId(1);
-        adminRole.setRoleName("ADMIN");
-        admin.setRole(adminRole);
-        // END FAKE DATA
-
+        User admin = loggedInUser.getUser();
         boolean isSuccess = supportResponseService.addAdminResponse(ticketId, message, admin, attachment);
 
         if (isSuccess) {
