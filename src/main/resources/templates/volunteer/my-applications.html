@@ -1,188 +1,87 @@
-<!-- File: src/main/resources/templates/volunteer/my-applications.html -->
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Đơn đăng ký của tôi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <style>
-        .shadow-soft {
-            box-shadow: 0 8px 20px rgba(0, 0, 0, .06);
-        }
-
-        .badge-rounded {
-            border-radius: 999px;
-            padding: .45rem .7rem;
-            font-weight: 600;
-        }
-
-        .table thead th {
-            white-space: nowrap;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <title>Đơn ứng tuyển của tôi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/application-list.css}">
 </head>
 
 <body class="bg-light">
-    <div class="container py-4">
 
-        <!-- Flash messages -->
+    <div class="container py-4">
+        <!-- Flash -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-1"></i> <span th:text="${success}">Thành công</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <span th:text="${success}">Thành công</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${error}">Có lỗi</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <span th:text="${error}">Có lỗi</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- Header -->
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">Đơn đăng ký của tôi</h3>
-            <a class="btn btn-outline-secondary btn-sm" th:href="@{/}"><i class="bi bi-house"></i> Trang chủ</a>
-        </div>
+        <h4 class="mb-3">Danh sách đơn ứng tuyển của tôi</h4>
 
-        <!-- Filter/Search card -->
-        <div class="card border-0 shadow-soft mb-3">
-            <div class="card-body">
-                <form class="row g-3 align-items-end" th:action="@{/volunteer/applications}" method="get">
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Tổ chức</label>
-                        <input type="text" name="qOrg" class="form-control" placeholder="Nhập tên tổ chức"
-                            th:value="${param.qOrg}">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Cơ hội</label>
-                        <input type="text" name="qOpp" class="form-control" placeholder="Nhập tên cơ hội"
-                            th:value="${param.qOpp}">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold">Trạng thái</label>
-                        <select name="status" class="form-select">
-                            <option th:value="" th:selected="${#strings.isEmpty(param.status)}">Tất cả</option>
-                            <option th:value="PENDING" th:selected="${param.status == 'PENDING'}">Đang chờ</option>
-                            <option th:value="APPROVED" th:selected="${param.status == 'APPROVED'}">Đã duyệt</option>
-                            <option th:value="REJECTED" th:selected="${param.status == 'REJECTED'}">Từ chối</option>
-                            <option th:value="COMPLETED" th:selected="${param.status == 'COMPLETED'}">Hoàn thành
-                            </option>
-                            <option th:value="CANCELLED" th:selected="${param.status == 'CANCELLED'}">Đã huỷ</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-1">
-                        <label class="form-label fw-semibold">Từ ngày</label>
-                        <input type="date" name="fromDate" class="form-control" th:value="${param.fromDate}">
-                    </div>
-                    <div class="col-6 col-md-1">
-                        <label class="form-label fw-semibold">Đến ngày</label>
-                        <input type="date" name="toDate" class="form-control" th:value="${param.toDate}">
-                    </div>
-                    <div class="col-12 col-md-1 d-grid">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Lọc</button>
-                    </div>
-                    <div class="col-12 col-md-1 d-grid">
-                        <a class="btn btn-outline-secondary" th:href="@{/volunteer/applications}"><i
-                                class="bi bi-x-circle"></i> Xoá</a>
-                    </div>
-                </form>
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:20%">Tổ chức</th>
+                            <th style="width:22%">Cơ hội</th>
+                            <th style="width:33%">Mô tả ngắn</th>
+                            <th style="width:12%">Trạng thái</th>
+                            <th style="width:13%">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(items)}">
+                            <td colspan="5" class="text-center text-secondary py-4">Bạn chưa có đơn ứng tuyển nào.</td>
+                        </tr>
+
+                        <tr th:each="a : ${items}">
+                            <td th:text="${a.opportunity.organization.name}">Tên tổ chức</td>
+                            <td>
+                                <div class="fw-semibold" th:text="${a.opportunity.title}">Tiêu đề</div>
+                                <div class="text-secondary small">
+                                    Nộp ngày
+                                    <span th:text="${#temporals.format(a.appliedAt,'dd/MM/yyyy HH:mm')}">01/01/2025
+                                        10:00</span>
+                                </div>
+                            </td>
+                            <td th:text="${a.opportunity.subtitle}">Mô tả ngắn...</td>
+                            <td>
+                                <span class="badge" th:classappend="${a.status.name()=='PENDING'   ? ' bg-secondary'
+                                 : a.status.name()=='APPROVED'  ? ' bg-primary'
+                                 : a.status.name()=='REJECTED'  ? ' bg-danger'
+                                 : a.status.name()=='COMPLETED' ? ' bg-success'
+                                 : a.status.name()=='CANCELLED' ? ' bg-dark'
+                                 : ' bg-light text-dark'}" th:text="${a.status.name()=='PENDING'   ? 'Đang chờ'
+                           : a.status.name()=='APPROVED'  ? 'Đã duyệt'
+                           : a.status.name()=='REJECTED'  ? 'Từ chối'
+                           : a.status.name()=='COMPLETED' ? 'Hoàn thành'
+                           : a.status.name()=='CANCELLED' ? 'Đã hủy'
+                           : a.status}">Đang chờ</span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                        th:href="@{/opportunities/{id}(id=${a.opportunity.oppId})}">Chi tiết</a>
+                                    <button class="btn btn-sm btn-danger" th:disabled="${a.status.name()!='PENDING'}"
+                                        type="button">
+                                        Hủy bỏ
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <!-- Result table -->
-        <div class="card border-0 shadow-soft">
-            <div class="card-body p-0">
-                <div th:if="${#lists.isEmpty(items)}" class="p-4 text-secondary">
-                    Không có đơn phù hợp bộ lọc.
-                </div>
-
-                <div th:if="${!#lists.isEmpty(items)}" class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:32px;"></th>
-                                <th>Cơ hội</th>
-                                <th>Tổ chức</th>
-                                <th>Ngày nộp</th>
-                                <th>Trạng thái</th>
-                                <th style="width:120px;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="app : ${items}">
-                                <td>
-                                    <img th:src="${app.opportunity.thumbnailUrl != null && !#strings.isEmpty(app.opportunity.thumbnailUrl)} ? ${app.opportunity.thumbnailUrl} : @{/images/placeholders/opportunity-thumb.jpg}"
-                                        alt="thumb" class="rounded" style="width:42px;height:42px;object-fit:cover;">
-                                </td>
-
-                                <td>
-                                    <a th:href="@{/opportunities/{id}(id=${app.opportunity.oppId})}"
-                                        th:text="${app.opportunity.title}">Tên cơ hội</a>
-                                    <div class="small text-secondary" th:text="${app.opportunity.location}">Địa điểm
-                                    </div>
-                                </td>
-
-                                <td
-                                    th:text="${app.opportunity.organization != null ? app.opportunity.organization.name : '—'}">
-                                    Tổ chức</td>
-
-                                <td>
-                                    <span th:text="${#temporals.format(app.appliedAt, 'dd/MM/yyyy HH:mm')}">01/01/2025
-                                        09:00</span>
-                                </td>
-
-                                <!-- Status badge + nhãn tiếng Việt -->
-                                <td>
-                                    <span th:switch="${app.status}">
-                                        <span th:case="T(com.fptuni.vms.model.Application$ApplicationStatus).PENDING"
-                                            class="badge bg-secondary badge-rounded">Đang chờ</span>
-                                        <span th:case="T(com.fptuni.vms.model.Application$ApplicationStatus).APPROVED"
-                                            class="badge bg-success badge-rounded">Đã duyệt</span>
-                                        <span th:case="T(com.fptuni.vms.model.Application$ApplicationStatus).REJECTED"
-                                            class="badge bg-danger badge-rounded">Từ chối</span>
-                                        <span th:case="T(com.fptuni.vms.model.Application$ApplicationStatus).COMPLETED"
-                                            class="badge bg-primary badge-rounded">Hoàn thành</span>
-                                        <span th:case="T(com.fptuni.vms.model.Application$ApplicationStatus).CANCELLED"
-                                            class="badge bg-dark badge-rounded">Đã huỷ</span>
-                                        <span th:case="*" class="badge bg-secondary badge-rounded"
-                                            th:text="${app.status}">Khác</span>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a class="btn btn-sm btn-outline-primary"
-                                            th:href="@{/opportunities/{id}(id=${app.opportunity.oppId})}">
-                                            <i class="bi bi-box-arrow-up-right"></i> Xem
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-        </div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Optional: đảm bảo fromDate <= toDate ở client
-        (function () {
-            const from = document.querySelector('input[name="fromDate"]');
-            const to = document.querySelector('input[name="toDate"]');
-            if (!from || !to) return;
-            function clamp() {
-                if (from.value && to.value && from.value > to.value) {
-                    to.value = from.value;
-                }
-            }
-            from.addEventListener('change', clamp);
-            to.addEventListener('change', clamp);
-        })();
-    </script>
 </body>
 
 </html>

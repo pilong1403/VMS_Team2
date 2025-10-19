@@ -37,7 +37,7 @@ public class ApplicationController {
         model.addAttribute("opp", opp);
 
         // tạm hardcode user đang test (thống nhất = 10)
-        Integer currentUserId = 10;
+        Integer currentUserId = 11;
         model.addAttribute("currentUserId", currentUserId);
 
         // Prefill profile cho popup
@@ -88,16 +88,9 @@ public class ApplicationController {
 
     // Danh sách đơn của volunteer
     @GetMapping("/volunteer/applications")
-    public String myApplications(
-            @RequestParam(required = false) String qOrg,
-            @RequestParam(required = false) String qOpp,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-            Model model) {
-        Integer currentUserId = 10; // TODO: lấy từ session/auth
-        model.addAttribute("items",
-                applicationService.listMyApplicationsFiltered(currentUserId, qOrg, qOpp, status, fromDate, toDate));
+    public String myApplications(Model model) {
+        Integer currentUserId = 11; // TODO: thay bằng ID từ session/auth
+        model.addAttribute("items", service.listMyApplications(currentUserId));
         return "volunteer/my-applications";
     }
 
