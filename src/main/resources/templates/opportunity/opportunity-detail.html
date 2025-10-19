@@ -51,9 +51,12 @@
                             <form th:action="@{/applications/apply}" method="post" class="d-inline" th:if="${canApply}">
                                 <input type="hidden" name="oppId" th:value="${opp.oppId}" />
                                 <input type="hidden" name="userId" th:value="${currentUserId}" />
-                                <button type="submit" class="btn btn-primary btn-rounded px-4">
+                                <!-- Button mở modal -->
+                                <button type="button" class="btn btn-primary btn-rounded px-4" th:if="${canApply}"
+                                    data-bs-toggle="modal" data-bs-target="#applyModal">
                                     <i class="bi bi-person-plus"></i> Đăng ký tham gia
                                 </button>
+
                             </form>
 
 
@@ -217,6 +220,58 @@
                         <p class="mb-0" th:text="${rv.comment}">Nội dung đánh giá...</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Đăng ký tham gia</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="oppId" th:value="${opp.oppId}">
+                        <input type="hidden" name="userId" th:value="${currentUserId}">
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Họ tên</label>
+                                <input type="text" class="form-control" name="fullName"
+                                    th:value="${currentUser != null ? currentUser.fullName : ''}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control"
+                                    th:value="${currentUser != null ? currentUser.email : ''}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" name="phone"
+                                    th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^[0-9+]{9,11}$"
+                                    required>
+                                <div class="form-text">Chỉ điền chữ số ,gồm 10 ký tự.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" name="address"
+                                    th:value="${currentUser != null ? currentUser.address : ''}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Lý do tham gia</label>
+                                <textarea class="form-control" name="reason" maxlength="500"
+                                    placeholder="Vì sao bạn muốn tham gia?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Gửi đăng ký</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
