@@ -42,4 +42,9 @@ public interface ApplicationRepository {
                         LocalDateTime to);
 
         Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId);
+
+        // ======PhiLong iter2 :lấy 1 application thuộc orgId (kèm fetch
+        // volunteer/opportunity) phê duyệt đơn======
+        Application findByIdAndOrgId(Integer appId, Integer orgId);
+        // ========================================
 }

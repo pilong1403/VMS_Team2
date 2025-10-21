@@ -215,4 +215,51 @@ public class ApplicationServiceImpl implements ApplicationService {
                 out.put("rejected", (int) rejected);
                 return out;
         }
+
+        // ================= Phi Long iter 2: duyệt / từ chối đơn =================
+        @Override
+        public void approveApplication(Integer orgId, Integer appId, Integer processedById, String note) {
+                var app = repo.findByIdAndOrgId(appId, orgId);
+                if (app == null)
+                        throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc tổ chức.");
+                if (app.getStatus() != Application.ApplicationStatus.PENDING)
+                        throw new IllegalStateException("Chỉ có thể duyệt đơn đang chờ.");
+
+                if (processedById != null) {
+                        var user = repo.findUserById(processedById);
+                        if (user != null)
+                                app.setProcessedBy(user);
+                }
+                // Tạm dùng cancelReason để lưu ghi chú xử lý
+                if (note != null && !note.isBlank())
+                        app.setCancelReason(note.trim());
+
+                app.setStatus(Application.ApplicationStatus.APPROVED);
+                app.setUpdatedAt(LocalDateTime.now());
+                repo.save(app);
+        }
+
+        @Override
+        public void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note) {
+                var app = repo.findByIdAndOrgId(appId, orgId);
+                if (app == null)
+                        throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc tổ chức.");
+                if (app.getStatus() != Application.ApplicationStatus.PENDING)
+                        throw new IllegalStateException("Chỉ có thể từ chối đơn đang chờ.");
+
+                if (processedById != null) {
+                        var user = repo.findUserById(processedById);
+                        if (user != null)
+                                app.setProcessedBy(user);
+                }
+                // Lưu lý do từ chối
+                if (note != null && !note.isBlank())
+                        app.setCancelReason(note.trim());
+
+                app.setStatus(Application.ApplicationStatus.REJECTED);
+                app.setUpdatedAt(LocalDateTime.now());
+                repo.save(app);
+        }
+        // ===========================================================
+
 }

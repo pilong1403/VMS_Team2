@@ -210,4 +210,27 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         }
         return m;
     }
+
+    // ======PhiLong iter2 :lấy 1 application thuộc orgId (kèm fetch
+    // volunteer/opportunity) phê duyệt đơn======
+    @Override
+    public Application findByIdAndOrgId(Integer appId, Integer orgId) {
+        try {
+            return em.createQuery("""
+                    SELECT a
+                      FROM Application a
+                      JOIN FETCH a.volunteer v
+                      JOIN FETCH a.opportunity o
+                      JOIN FETCH o.organization org
+                     WHERE a.appId = :appId
+                       AND org.orgId = :orgId
+                    """, Application.class)
+                    .setParameter("appId", appId)
+                    .setParameter("orgId", orgId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+    // ==========================================
 }

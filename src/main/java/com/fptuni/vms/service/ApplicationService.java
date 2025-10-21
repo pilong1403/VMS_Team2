@@ -38,4 +38,10 @@ public interface ApplicationService {
             int size);
 
     Map<String, Integer> computeOrgAppStats(Integer orgId);
+
+    // ====== PhiLong iter2 duyệt / từ chối ======
+    void approveApplication(Integer orgId, Integer appId, Integer processedById, String note);
+
+    void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note);
+    // ================
 }
