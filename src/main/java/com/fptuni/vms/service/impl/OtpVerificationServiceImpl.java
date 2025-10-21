@@ -90,12 +90,22 @@ public class OtpVerificationServiceImpl implements OtpVerificationService {
         repo.save(v);
     }
 
+    // src/main/java/com/fptuni/vms/service/impl/OtpVerificationServiceImpl.java
     private Purpose toPurpose(String purpose) {
+        if (purpose == null || purpose.isBlank()) {
+            throw new OtpException("OTP_PURPOSE_INVALID");
+        }
+        String key = purpose.trim().toUpperCase();
+
+        if ("ORG_REGISTER_VERIFY".equals(key)) {
+            key = "ORG_REGISTER";
+        }
+
         try {
-            if (purpose == null || purpose.isBlank()) throw new IllegalArgumentException();
-            return Purpose.valueOf(purpose);
+            return Purpose.valueOf(key);   // tên phải trùng với enum Purpose
         } catch (IllegalArgumentException ex) {
             throw new OtpException("OTP_PURPOSE_INVALID");
         }
     }
+
 }

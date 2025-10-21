@@ -61,8 +61,9 @@ public class SecurityConfig {
                                                                 "/assets/**", "/css/**", "/js/**", "/images/**",
                                                                 "/forgot-password", "/forgot-password/**",
                                                                 "/webjars/**", "/favicon.ico")
-                                                .permitAll()
 
+                                                .permitAll()
+                                                .requestMatchers("/org/register", "/org/register/**").anonymous()
                                                 // ADMIN
                                                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                                                 .requestMatchers("/ratings/**").hasAuthority("ORG_OWNER")

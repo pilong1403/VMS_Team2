@@ -48,7 +48,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         try {
             return organizationRepository.save(o);
         } catch (DataIntegrityViolationException e) {
-            // ví dụ: vi phạm UQ_org_owner
             throw new OrgException("CONSTRAINT_VIOLATION");
         }
     }
@@ -89,11 +88,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.getOrganizationByAPPROVED();
 
     }
-
-//    @Override
-//    public Organization findByOwnerId(Integer ownerId) {
-//        return null;
-//    }
 
     @Override
     public Organization findByOwnerId(Integer ownerId) {
