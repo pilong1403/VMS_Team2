@@ -19,20 +19,5 @@ import java.util.Objects;
 @RequestMapping("/opportunity") // <— ĐỔI: dùng /opportunity làm base
 public class OpportunityController {
 
-    private final OpportunityService oppService;
-    private final CategoryService categoryService;
-
-    public OpportunityController(OpportunityService oppService, CategoryService categoryService) {
-        this.oppService = oppService;
-        this.categoryService = categoryService;
-    }
-
-    private int currentOwnerId(HttpServletRequest req) {
-        var ss = req.getSession(false);
-        Object v = (ss != null) ? ss.getAttribute("AUTH_USER_ID") : null;
-        if (v == null)
-            throw new IllegalStateException("NOT_LOGGED_IN");
-        return (int) v;
-    }
 
 }
