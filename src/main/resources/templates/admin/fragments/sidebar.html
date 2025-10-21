@@ -22,7 +22,7 @@
 
         /* === PHẦN HEADER & LOGO ĐÃ TINH CHỈNH === */
         .sidebar-header {
-            padding: 1.5rem; /* Giảm padding để cân đối hơn */
+            padding: 1.1rem; /* Giảm padding để cân đối hơn */
             border-bottom: 1px solid #f0f0f0;
         }
 
@@ -216,17 +216,24 @@
         <div class="nav-label">MENU CHÍNH</div>
         <ul class="nav-menu">
             <li>
-                <a th:href="@{/}"
+                <a th:href="@{/admin/users}"
                    class="nav-item"
                    th:classappend="${activePage == 'users'} ? 'active' : ''">
                     Quản lý Người dùng
                 </a>
             </li>
             <li>
-                <a th:href="@{/}"
+                <a th:href="@{/admin/organizations}"
                    class="nav-item"
                    th:classappend="${activePage == 'organizations'} ? 'active' : ''">
                     Hồ sơ tổ chức
+                </a>
+            </li>
+            <li>
+                <a th:href="@{/admin/reports}"
+                   class="nav-item"
+                   th:classappend="${activePage == 'reports'} ? 'active' : ''">
+                    Quản lý báo cáo
                 </a>
             </li>
             <li>
@@ -248,17 +255,21 @@
 
     <div class="sidebar-footer">
         <div class="sidebar-dropdown-menu" id="sidebarDropdownMenu">
-            <a href="#" class="sidebar-dropdown-item">Về trang chủ</a>
-            <a href="#" class="sidebar-dropdown-item">Đăng xuất</a>
+            <a th:href="@{/}" class="dropdown-item">Về trang chủ</a>
+            <a th:href="@{/logout}" class="dropdown-item">Đăng xuất</a>
+            <a th:href="@{/profile}" class="dropdown-item">Xem thông tin cá nhân</a>
         </div>
 
         <div class="sidebar-profile" id="sidebarProfile">
-            <div class="sidebar-profile-avatar">
-                <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Admin Avatar">
+            <div class="profile-avatar">
+                <img th:src="${session.AUTH_USER_AVATAR != null ? session.AUTH_USER_AVATAR :
+                                 'https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg'}"
+                     alt="Avatar người dùng">
             </div>
-            <div class="sidebar-profile-info">
-                <p class="profile-name">Admin Name</p>
-                <p class="profile-role">ADMIN</p>
+
+            <div class="profile-info">
+                <p class="profile-name" th:text="${session.AUTH_USER_NAME}">Tên Admin</p>
+                <p class="profile-role" th:text="${session.AUTH_ROLE}">ADMIN</p>
             </div>
         </div>
     </div>

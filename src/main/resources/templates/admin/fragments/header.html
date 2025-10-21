@@ -110,16 +110,22 @@
     <div class="header-profile-dropdown" id="profileDropdown">
         <div class="profile-container">
             <div class="profile-avatar">
-                <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Admin Avatar">
+                <img th:src="${session.AUTH_USER_AVATAR != null ? session.AUTH_USER_AVATAR :
+                                 'https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg'}"
+                     alt="Avatar người dùng">
             </div>
+
             <div class="profile-info">
-                <p class="profile-name">Admin Name</p>
-                <p class="profile-role">ADMIN</p>
+                <p class="profile-name" th:text="${session.AUTH_USER_NAME}">Tên Admin</p>
+                <p class="profile-role" th:text="${session.AUTH_ROLE}">ADMIN</p>
             </div>
+
         </div>
         <div class="dropdown-menu" id="dropdownMenu">
-            <a href="#" class="dropdown-item">Về trang chủ</a>
-            <a href="#" class="dropdown-item">Đăng xuất</a>
+            <a th:href="@{/}" class="dropdown-item">Về trang chủ</a>
+            <a th:href="@{/logout}" class="dropdown-item">Đăng xuất</a>
+            <a th:href="@{/profile}" class="dropdown-item">Xem thông tin cá nhân</a>
+
         </div>
     </div>
 

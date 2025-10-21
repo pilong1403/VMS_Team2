@@ -26,30 +26,31 @@
             </div>
         </div>
 <!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <div class="logo-icon">👥</div>
-            <div class="logo-text">
-                <h2>Quản Lý Admin</h2>
-                <p>Hệ thống quản trị</p>
-            </div>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <div class="nav-label">MENU CHÍNH</div>
-        <ul class="nav-menu">
-            <li><a th:href="@{/admin/users}" class="nav-item active">Quản lý Người dùng</a></li>
-            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>
-            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>
-        </ul>
-    </nav>
-</aside>
+<!--<aside class="sidebar" id="sidebar">-->
+<!--    <div class="sidebar-header">-->
+<!--        <div class="sidebar-logo">-->
+<!--            <div class="logo-icon">👥</div>-->
+<!--            <div class="logo-text">-->
+<!--                <h2>Quản Lý Admin</h2>-->
+<!--                <p>Hệ thống quản trị</p>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <nav class="sidebar-nav">-->
+<!--        <div class="nav-label">MENU CHÍNH</div>-->
+<!--        <ul class="nav-menu">-->
+<!--            <li><a th:href="@{/admin/users}" class="nav-item active">Quản lý Người dùng</a></li>-->
+<!--            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>-->
+<!--            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>-->
+<!--        </ul>-->
+<!--    </nav>-->
+<!--</aside>-->
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
 
 <div class="main-wrapper">
-    <header class="header">
-        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-        <div class="header-title">Hệ thống Quản lý Tình nguyện</div>
+    <header >
+        <div th:replace="~{admin/fragments/header :: header}"></div>
     </header>
 
     <main class="content">
@@ -266,7 +267,7 @@
             </div>
 
             <!-- Nhập tay -->
-            <form th:action="@{/admin/users/create}" method="post" id="addUserForm" data-tab-panel="manual">
+            <form th:action="@{/admin/users/create}" method="post" enctype="multipart/form-data" id="addUserForm" data-tab-panel="manual">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Họ tên *</label>
@@ -311,13 +312,13 @@
 
                         <div class="avatar-upload">
                             <!-- Ảnh preview -->
-                            <img id="avatarPreview" src="/images/default.png" alt="Avatar mặc định">
+                            <img id="avatarPreview" src="https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg" alt="Avatar mặc định">
 
                             <!-- Input upload ảnh -->
                             <input type="file" id="avatarFile" name="avatarFile" accept="image/*" style="display:none;">
                             <button type="button" class="btn btn-outline" id="btnChooseAvatar">Chọn ảnh</button>
                             <label>Avatar (không bắt buộc)</label>
-                            <input type="hidden" id="avatarUrl" name="avatarUrl" value="/images/default-avatar.png">
+
                         </div>
                     </div>
                     <div class="form-group full-width">
