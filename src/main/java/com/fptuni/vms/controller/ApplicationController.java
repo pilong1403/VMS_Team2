@@ -5,6 +5,7 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Controller
 public class ApplicationController {
@@ -37,7 +39,7 @@ public class ApplicationController {
         model.addAttribute("opp", opp);
 
         // tạm hardcode user đang test (thống nhất = 10)
-        Integer currentUserId = 11;
+        Integer currentUserId = 20;
         model.addAttribute("currentUserId", currentUserId);
 
         // Prefill profile cho popup
@@ -89,9 +91,48 @@ public class ApplicationController {
     // Danh sách đơn của volunteer
     @GetMapping("/volunteer/applications")
     public String myApplications(Model model) {
-        Integer currentUserId = 11; // TODO: thay bằng ID từ session/auth
+        Integer currentUserId = 20; // TODO: thay bằng ID từ session/auth
         model.addAttribute("items", service.listMyApplications(currentUserId));
         return "volunteer/my-applications";
+    }
+
+    // Danh sách đơn theo tổ chức (với filter, paging) - Phi Long iter 2
+    @GetMapping("/organization/{orgId}/applications")
+    public String listApplicationsByOrganization(
+            @PathVariable Integer orgId,
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "4") int size,
+            Model model) {
+
+        // chuẩn hoá input
+        if (q != null && q.isBlank())
+            q = null;
+        if (status != null && status.isBlank())
+            status = null;
+        if (from != null && to != null && from.isAfter(to)) {
+            var t = from;
+            from = to;
+            to = t;
+        }
+
+        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to, Math.max(page, 0),
+                Math.max(size, 1));
+        var stats = service.computeOrgAppStats(orgId);
+
+        var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
+        model.addAttribute("toStr", to != null ? to.format(fmt) : "");
+
+        model.addAttribute("page", result);
+        model.addAttribute("stats", stats);
+        model.addAttribute("orgId", orgId);
+        model.addAttribute("q", q);
+        model.addAttribute("status", status);
+        return "organization/application-list";
     }
 
 }

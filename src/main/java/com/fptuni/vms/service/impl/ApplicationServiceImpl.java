@@ -6,10 +6,19 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 import jakarta.persistence.PersistenceException;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -138,4 +147,72 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return repo.findAllByVolunteerId(volunteerId);
         }
 
+        // ================= Phi Long iter 2: list theo orgId =================
+        @Override
+        public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
+                        String q,
+                        String status,
+                        LocalDate from,
+                        LocalDate to,
+                        int page,
+                        int size) {
+                var pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+
+                // map filter
+                Application.ApplicationStatus st = null;
+                if (status != null && !status.isBlank()) {
+                        try {
+                                st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                        } catch (IllegalArgumentException ignored) {
+                                /* giữ null để coi như "all" */ }
+                }
+                LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
+
+                // query
+                List<Application> rows = repo.findOrgApplications(
+                                orgId, q, st, fromDT, toDT,
+                                pageable.getPageNumber() * pageable.getPageSize(),
+                                pageable.getPageSize());
+                long total = repo.countOrgApplications(orgId, q, st, fromDT, toDT);
+
+                // map -> VM
+                List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
+                for (Application a : rows) {
+                        var volunteer = a.getVolunteer();
+                        var opp = a.getOpportunity();
+                        vms.add(new ApplicationRowVM(
+                                        a.getAppId(),
+                                        volunteer != null ? volunteer.getFullName() : "—",
+                                        volunteer != null ? volunteer.getAvatarUrl() : null,
+                                        opp != null ? opp.getTitle() : "—",
+                                        a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
+                                        a.getStatus() != null ? a.getStatus().name() : "PENDING"));
+                }
+
+                return new PageImpl<>(vms, pageable, total);
+        }
+
+        @Override
+        public Map<String, Integer> computeOrgAppStats(Integer orgId) {
+                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId);
+                // ép về key như template đang dùng: total/pending/approved/rejected
+                long total = 0, pending = 0, approved = 0, rejected = 0;
+                for (var e : m.entrySet()) {
+                        total += e.getValue();
+                        switch (e.getKey()) {
+                                case PENDING -> pending = e.getValue();
+                                case APPROVED -> approved = e.getValue();
+                                case REJECTED -> rejected = e.getValue();
+                                default -> {
+                                }
+                        }
+                }
+                Map<String, Integer> out = new LinkedHashMap<>();
+                out.put("total", (int) total);
+                out.put("pending", (int) pending);
+                out.put("approved", (int) approved);
+                out.put("rejected", (int) rejected);
+                return out;
+        }
 }
