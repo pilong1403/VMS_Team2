@@ -68,17 +68,6 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
         }
     }
 
-
-
-    @Override
-    public void save1(Organization organization) {
-        if (organization.getOrgId() == null) {
-            em.persist(organization);
-        } else {
-            em.merge(organization);
-        }
-    }
-
     @Override
     public Organization findById(Integer id) {
         return em.find(Organization.class, id);
@@ -170,18 +159,4 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
                 .setParameter("status", Organization.RegStatus.APPROVED)
                 .getResultList();
     }
-
-//    @Override
-//    public Organization findByOwnerId(Integer ownerId) {
-//        List<Organization> list = em.createQuery("""
-//                SELECT o FROM Organization o
-//                JOIN FETCH o.owner ow
-//                WHERE ow.userId = :ownerId
-//                """, Organization.class)
-//                .setParameter("ownerId", ownerId)
-//                .setMaxResults(1)
-//                .getResultList();
-//
-//        return list.isEmpty() ? null : list.get(0);
-//    }
 }

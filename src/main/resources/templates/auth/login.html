@@ -11,6 +11,23 @@
 
   <!-- Custom CSS -->
   <link th:href="@{/css/login.css}" rel="stylesheet" />
+  <style>
+    /* Optional: đường kẻ "hoặc" đẹp hơn */
+    .or-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #6c757d; }
+    .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: #e9ecef; }
+    /* Nút Google nhất quán với UI hiện tại */
+    .btn-google {
+      border: 1px solid #dee2e6;
+      background: #fff;
+      width: 100%;
+      font-weight: 600;
+    }
+    .btn-google:hover { background: #f8f9fa; }
+    .btn-login { width: 100%; }
+    .login-container { max-width: 420px; width: 100%; }
+    .logo-container img { max-height: 72px; }
+    .form-group { margin-bottom: 16px; }
+  </style>
 </head>
 
 <body>
@@ -21,7 +38,7 @@
 <main class="d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 200px); padding: 60px 0;">
   <div class="login-container">
     <!-- Logo -->
-    <div class="logo-container">
+    <div class="logo-container text-center mb-3">
       <a th:href="@{/}">
         <img th:src="@{/images/alt-logo.png}" alt="Logo Trái Tim Tình Nguyện" />
       </a>
@@ -57,23 +74,43 @@
                   placeholder="••••••••••"
                   required
           />
-          <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+          <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Hiện/ẩn mật khẩu">
             <i class="bi bi-eye" id="toggleIcon"></i>
           </button>
         </div>
       </div>
 
       <!-- Login Button -->
-      <button type="submit" class="btn-login">
+      <button type="submit" class="btn btn-primary btn-login">
         <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
       </button>
 
+      <!-- Or divider -->
+      <div class="or-divider text-uppercase small text-center">hoặc</div>
+
+      <!-- Social login -->
+      <!-- Lưu ý: /oauth2/authorization/google là endpoint mặc định của Spring Security -->
+      <a class="btn-google d-flex align-items-center justify-content-center"
+         th:href="@{/oauth2/authorization/google}" id="btnGoogle">
+  <span class="g-icon" aria-hidden="true">
+    <!-- SVG logo G chuẩn -->
+    <svg viewBox="0 0 18 18" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EA4335" d="M9 3.48c1.69 0 3.2.58 4.39 1.71l2.93-2.93C14.6.83 11.99 0 9 0 5.48 0 2.44 1.99.96 4.9l3.45 2.68C5.03 5.4 6.86 3.48 9 3.48z"/>
+      <path fill="#34A853" d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.48h4.84c-.21 1.12-.84 2.07-1.79 2.71v2.25h2.89c1.69-1.56 2.7-3.86 2.7-6.6z"/>
+      <path fill="#4285F4" d="M3.41 10.58A5.52 5.52 0 0 1 3.1 9c0-.55.09-1.07.25-1.58V5.17H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.03l2.45-2.45z"/>
+      <path fill="#FBBC05" d="M9 18c2.43 0 4.47-.8 5.96-2.19l-2.89-2.25c-.8.54-1.82.86-3.07.86-2.14 0-3.96-1.44-4.59-3.39H.96l-2.45 2.45C2.44 16.01 5.48 18 9 18z"/>
+    </svg>
+  </span>
+        <span>Đăng nhập với Google</span>
+      </a>
+
+
       <!-- Links -->
-      <div class="text-center">
+      <div class="text-center mt-3">
         <a th:href="@{/forgot-password}" class="forgot-password">Quên mật khẩu?</a>
       </div>
 
-      <div class="register-link">
+      <div class="register-link mt-2 text-center">
         Bạn chưa có tài khoản?
         <a th:href="@{/register}">Đăng ký ngay</a>
       </div>

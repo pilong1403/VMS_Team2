@@ -26,3 +26,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+  document.addEventListener("DOMContentLoaded", function () {
+  const gBtn = document.getElementById("btnGoogle");
+  if (!gBtn) return;
+  gBtn.addEventListener("click", function () {
+  gBtn.setAttribute("aria-disabled", "true");
+  gBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        Đang chuyển hướng...
+      `;
+});
+});

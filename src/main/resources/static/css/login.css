@@ -170,3 +170,80 @@ main {
 .toast-container {
   z-index: 9999 !important;
 }
+
+/* ===== Google Button Base ===== */
+.btn-google {
+  --g-bg: #ffffff;
+  --g-text: #3c4043;
+  --g-border: #dadce0;
+  --g-bg-hover: #f7f8f9;
+  --g-border-hover: #c6cbd1;
+  --g-shadow: 0 8px 20px rgba(2, 132, 199, 0.08); /* nhẹ, cùng tông xanh site */
+  --g-shadow-hover: 0 10px 24px rgba(2, 132, 199, 0.14);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  width: 100%;
+  height: 46px;
+  padding: 0 .9rem;
+  border: 1px solid var(--g-border);
+  background: var(--g-bg);
+  color: var(--g-text);
+  font-weight: 600;
+  border-radius: 12px;                /* khớp UI hiện tại */
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .08s ease;
+  box-shadow: var(--g-shadow);
+  text-decoration: none;
+}
+
+.btn-google:hover {
+  background: var(--g-bg-hover);
+  border-color: var(--g-border-hover);
+  box-shadow: var(--g-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.btn-google:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.10);
+}
+
+.btn-google:focus-visible {
+  outline: none;
+  box-shadow:
+          0 0 0 3px rgba(56, 189, 248, 0.25),    /* vòng ngoài theo tông xanh site */
+          var(--g-shadow);
+}
+
+.btn-google[aria-disabled="true"],
+.btn-google.disabled {
+  opacity: .7;
+  pointer-events: none;
+}
+
+/* Icon "G" chuẩn, cố định kích thước và không co méo */
+.btn-google .g-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+}
+
+/* ===== Dark Variant (nếu muốn) ===== */
+.btn-google--dark {
+  --g-bg: #000000;
+  --g-text: #ffffff;
+  --g-border: #000000;
+  --g-bg-hover: #111111;
+  --g-border-hover: #111111;
+  --g-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  --g-shadow-hover: 0 10px 24px rgba(0, 0, 0, 0.30);
+}
+
+/* Đặt nút sát hệ sinh thái UI hiện tại */
+.login-container .btn-google { margin-top: .25rem; }
+
+/* Dải "hoặc" cho cân xứng */
+.or-divider { letter-spacing: .06em; }
+
