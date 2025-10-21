@@ -1,10 +1,380 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments/head :: head('Về Chúng Tôi')}"></head>
+  <body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
 
-</body>
+    <!-- Main Content -->
+    <main>
+      <!-- Hero Section -->
+      <section class="relative" style="height: 400px; overflow: hidden">
+        <div
+          class="position-absolute w-100 h-50"
+          style="
+            background: linear-gradient(rgba(56, 189, 248, 0.8), rgba(14, 165, 233, 0.8)),
+              url('https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1600')
+                center/cover;
+          "
+        ></div>
+        <div
+          class="container position-relative h-100 d-flex align-items-center justify-content-center text-center text-white"
+          style="z-index: 10"
+        >
+          <div>
+            <!-- Breadcrumb -->
+            <nav class="mb-3" style="font-size: 0.9rem">
+              <span class="opacity-75">Trang Chủ</span>
+              <span class="mx-2">›</span>
+              <span class="fw-semibold">Giới Thiệu</span>
+            </nav>
+            <h1 class="display-3 fw-bold">Về Chúng Tôi</h1>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Us Section -->
+      <section class="container py-5" style="padding-top: 5rem; padding-bottom: 5rem">
+        <div class="row g-5 align-items-center">
+          <div class="col-md-6">
+            <h2 class="display-5 fw-bold text-dark mb-4">Về Trái Tim Tình Nguyện</h2>
+            <p class="text-muted mb-4 lh-lg">
+              <strong>Trái Tim Tình Nguyện</strong> là nền tảng kết nối tình nguyện viên với các tổ chức, dự án xã hội ý
+              nghĩa trên khắp Việt Nam. Chúng tôi tin rằng mỗi người đều có thể tạo nên sự thay đổi tích cực cho cộng
+              đồng, dù là hành động nhỏ hay lớn.
+            </p>
+            <p class="text-muted mb-4 lh-lg">
+              Được thành lập vào năm 2020, nền tảng của chúng tôi đã giúp hàng nghìn tình nguyện viên tìm thấy cơ hội
+              phù hợp để đóng góp thời gian, công sức và tài năng của mình. Từ giáo dục, y tế, môi trường đến phát triển
+              cộng đồng, chúng tôi cam kết mang đến những trải nghiệm tình nguyện ý nghĩa và đáng nhớ.
+            </p>
+            <p class="text-muted lh-lg">
+              Sứ mệnh của chúng tôi không chỉ là kết nối, mà còn là xây dựng một cộng đồng yêu thương, nơi mọi người
+              cùng nhau lan tỏa giá trị nhân văn và trách nhiệm xã hội.
+            </p>
+          </div>
+          <div class="col-md-6 position-relative">
+            <img
+              src="https://images.pexels.com/photos/6646917/pexels-photo-6646917.jpeg?auto=compress&cs=tinysrgb&w=800"
+              alt="Volunteer Community"
+              class="img-fluid rounded-4 shadow-lg"
+            />
+            <div
+              class="position-absolute bg-white rounded-3 shadow-lg p-4"
+              style="bottom: -2rem; left: -2rem; max-width: 200px"
+            >
+              <div class="h2 fw-bold mb-1" style="color: #38bdf8">1,500+</div>
+              <div class="text-muted small">Tình nguyện viên đã tham gia</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mission & Vision Section -->
+      <section class="py-5" style="background-color: #f8fafc; padding-top: 5rem; padding-bottom: 5rem">
+        <div class="container">
+          <div class="row g-4 justify-content-center">
+            <div class="col-md-5">
+              <div class="bg-white rounded-4 p-5 shadow-sm h-100">
+                <i class="bi bi-bullseye text-primary mb-4" style="font-size: 3rem; color: #38bdf8 !important"></i>
+                <h3 class="h2 fw-bold text-dark mb-4">Sứ Mệnh</h3>
+                <p class="text-muted lh-lg">
+                  Kết nối và trao quyền cho mọi người tham gia các hoạt động tình nguyện, tạo ra tác động tích cực và
+                  bền vững cho cộng đồng. Chúng tôi tin rằng mỗi hành động nhỏ đều có thể tạo nên sự thay đổi lớn.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="bg-white rounded-4 p-5 shadow-sm h-100">
+                <i class="bi bi-eye text-primary mb-4" style="font-size: 3rem; color: #38bdf8 !important"></i>
+                <h3 class="h2 fw-bold text-dark mb-4">Tầm Nhìn</h3>
+                <p class="text-muted lh-lg">
+                  Trở thành nền tảng tình nguyện hàng đầu tại Việt Nam, nơi mọi người có thể dễ dàng tìm thấy cơ hội
+                  đóng góp cho xã hội và cùng nhau xây dựng một tương lai tốt đẹp hơn cho thế hệ mai sau.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Core Values Section -->
+      <section class="container py-5" style="padding-top: 5rem; padding-bottom: 5rem">
+        <div class="text-center mb-5">
+          <h2 class="display-5 fw-bold text-dark mb-3">Giá Trị Cốt Lõi</h2>
+          <p class="text-muted lead">Những giá trị định hướng mọi hoạt động của chúng tôi</p>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3">
+            <div class="bg-white rounded-4 p-4 shadow-sm text-center h-100 hover-card">
+              <div
+                class="d-flex align-items-center justify-content-center mx-auto mb-4 rounded-circle"
+                style="width: 80px; height: 80px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
+              >
+                <i class="bi bi-heart-fill" style="font-size: 2rem; color: #38bdf8"></i>
+              </div>
+              <h3 class="h5 fw-bold text-dark mb-3">Tận Tâm</h3>
+              <p class="text-muted small lh-lg">
+                Chúng tôi đặt trái tim vào mọi hoạt động, luôn quan tâm đến lợi ích của cộng đồng.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="bg-white rounded-4 p-4 shadow-sm text-center h-100 hover-card">
+              <div
+                class="d-flex align-items-center justify-content-center mx-auto mb-4 rounded-circle"
+                style="width: 80px; height: 80px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
+              >
+                <i class="bi bi-people-fill" style="font-size: 2rem; color: #38bdf8"></i>
+              </div>
+              <h3 class="h5 fw-bold text-dark mb-3">Đoàn Kết</h3>
+              <p class="text-muted small lh-lg">Kết nối mọi người cùng chung tay xây dựng một xã hội tốt đẹp hơn.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="bg-white rounded-4 p-4 shadow-sm text-center h-100 hover-card">
+              <div
+                class="d-flex align-items-center justify-content-center mx-auto mb-4 rounded-circle"
+                style="width: 80px; height: 80px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
+              >
+                <i class="bi bi-lightbulb-fill" style="font-size: 2rem; color: #38bdf8"></i>
+              </div>
+              <h3 class="h5 fw-bold text-dark mb-3">Sáng Tạo</h3>
+              <p class="text-muted small lh-lg">Tìm kiếm những giải pháp mới, hiệu quả để tạo ra tác động tích cực.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="bg-white rounded-4 p-4 shadow-sm text-center h-100 hover-card">
+              <div
+                class="d-flex align-items-center justify-content-center mx-auto mb-4 rounded-circle"
+                style="width: 80px; height: 80px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
+              >
+                <i class="bi bi-shield-fill-check" style="font-size: 2rem; color: #38bdf8"></i>
+              </div>
+              <h3 class="h5 fw-bold text-dark mb-3">Minh Bạch</h3>
+              <p class="text-muted small lh-lg">
+                Cam kết công khai, minh bạch trong mọi hoạt động và quản lý tài chính.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timeline Section -->
+      <section class="py-5" style="background-color: #f8fafc; padding-top: 5rem; padding-bottom: 5rem">
+        <div class="container">
+          <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-dark mb-3">Hành Trình Phát Triển</h2>
+            <p class="text-muted lead">Những cột mốc quan trọng trong quá trình xây dựng và phát triển nền tảng</p>
+          </div>
+          <div class="row justify-content-center">
+            <div class="col-lg-8">
+              <div class="position-relative">
+                <!-- Timeline line -->
+                <div
+                  class="position-absolute start-50 translate-middle-x h-100"
+                  style="width: 2px; background-color: #bfdbfe; top: 0"
+                ></div>
+
+                <!-- Timeline items -->
+                <div class="timeline-item mb-5 position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Thành lập nền tảng Trái Tim Tình Nguyện</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-start justify-content-md-end">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2020
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item mb-5 position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6 order-md-2">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Đạt mốc 500 tình nguyện viên đăng ký</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2021
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item mb-5 position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Hoàn thành 100 dự án tình nguyện đầu tiên</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-start justify-content-md-end">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2022
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item mb-5 position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6 order-md-2">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Mở rộng ra 20 tỉnh thành trên cả nước</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2023
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item mb-5 position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Gây quỹ thành công 2 tỷ đồng cho cộng đồng</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-start justify-content-md-end">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2024
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item position-relative">
+                  <div class="row align-items-center">
+                    <div class="col-md-6 order-md-2">
+                      <div class="bg-white rounded-3 p-4 shadow-sm">
+                        <p class="text-muted mb-0 fw-medium">Vượt mốc 1,500 tình nguyện viên tích cực</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">
+                      <div
+                        class="position-absolute start-50 translate-middle rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-lg"
+                        style="
+                          width: 60px;
+                          height: 60px;
+                          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+                          z-index: 10;
+                        "
+                      >
+                        2025
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="cta-section py-5">
+        <div class="container text-center py-4">
+          <h2 class="display-5 fw-bold mb-4">Tham Gia Cùng Chúng Tôi</h2>
+          <p class="lead mb-4 opacity-90">
+            Hãy trở thành một phần của cộng đồng tình nguyện và cùng nhau tạo nên những thay đổi tích cực
+          </p>
+          <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+            <a
+              th:href="@{/register}"
+              class="btn btn-light btn-lg px-5 py-3 fw-bold"
+              style="border-radius: 12px; color: #38bdf8; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15)"
+            >
+              <i class="bi bi-person-plus me-2"></i>Đăng Ký Ngay
+            </a>
+            <a
+              th:href="@{/opportunities}"
+              class="btn btn-outline-light btn-lg px-5 py-3 fw-bold"
+              style="border-radius: 12px; border-color: white; color: white"
+            >
+              <i class="bi bi-search me-2"></i>Khám Phá Dự Án
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Toast Container -->
+    <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom CSS for hover effects -->
+    <style>
+      .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+      }
+      .timeline-item {
+        margin-bottom: 3rem;
+      }
+      @media (max-width: 768px) {
+        .timeline-item .position-absolute {
+          position: relative !important;
+          transform: none !important;
+          margin: 1rem auto;
+        }
+      }
+    </style>
+  </body>
 </html>

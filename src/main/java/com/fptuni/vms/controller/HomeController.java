@@ -33,13 +33,11 @@ public class HomeController {
         return "home/home"; // templates/home/home.html
     }
 
-    /** Trang chủ công khai (tuỳ ý), trỏ về volunteerHome để dùng chung view */
     @GetMapping("/")
     public String publicHome(Model model) {
         return volunteerHome(model);
     }
 
-    /** ORG_OWNER landing (đã cấu hình trong SecurityConfig) */
     @GetMapping("/home/opportunities")
     public String orgOwnerLanding(
             @RequestParam(defaultValue = "0") int page,
@@ -48,13 +46,12 @@ public class HomeController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(required = false) String time,
             Model model) {
 
-        return opportunities(page, size, categoryId, location, status, search, sort, model);
+        return opportunities(page, size, categoryId, location, status, search, time, model);
     }
 
-    /** Route công khai liệt kê cơ hội (giữ lại để tương thích liên kết cũ) */
     @GetMapping("/opportunities")
     public String opportunities(
             @RequestParam(defaultValue = "0") int page,
@@ -63,16 +60,16 @@ public class HomeController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(required = false) String time,
             Model model) {
 
         try {
             Pageable pageable = PageRequest.of(page, size);
 
             Page<OpportunityCardDto> opportunityPage;
-            if (categoryId != null || location != null || status != null || search != null) {
+            if (categoryId != null || location != null || status != null || search != null || time != null) {
                 opportunityPage = opportunityService.getOpportunityCardsWithFilters(
-                        categoryId, location, status, search, sort, pageable);
+                        categoryId, location, status, search, time, "newest", pageable);
             } else {
                 opportunityPage = opportunityService.getOpportunityCards(pageable);
             }
@@ -91,7 +88,7 @@ public class HomeController {
             model.addAttribute("selectedLocation", location);
             model.addAttribute("selectedStatus", status);
             model.addAttribute("searchTerm", search);
-            model.addAttribute("sortBy", sort);
+            model.addAttribute("selectedTime", time);
 
         } catch (Exception e) {
             model.addAttribute("error", "Có lỗi xảy ra khi tải dữ liệu: " + e.getMessage());
@@ -107,7 +104,6 @@ public class HomeController {
         return "home/opportunities"; // templates/home/opportunities.html
     }
 
-    // (Tuỳ chọn) giữ các route cũ nếu bạn đã link từ đâu đó:
     @GetMapping("/homepage")
     public String homepage(Model model) {
         return volunteerHome(model);
@@ -120,8 +116,9 @@ public class HomeController {
 
     @GetMapping("/about")
     public String about(Model model) {
-        model.addAttribute("message", "Trang Giới Thiệu - Coming Soon");
-        return "home/home";
+        // Add any additional data needed for the about page
+        model.addAttribute("pageTitle", "Về Chúng Tôi");
+        return "public/about"; // templates/public/about.html
     }
 
     @GetMapping("/faq")
