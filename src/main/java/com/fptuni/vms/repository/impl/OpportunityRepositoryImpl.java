@@ -24,16 +24,14 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Page<Opportunity> findOpenOpportunities(Pageable pageable) {
-        String dataJpql =
-                "SELECT o FROM Opportunity o " +
-                        "JOIN FETCH o.organization " +
-                        "JOIN FETCH o.category " +
-                        "WHERE o.status = :st " +
-                        "ORDER BY o.createdAt DESC";
+        String dataJpql = "SELECT o FROM Opportunity o " +
+                "JOIN FETCH o.organization " +
+                "JOIN FETCH o.category " +
+                "WHERE o.status = :st " +
+                "ORDER BY o.createdAt DESC";
 
-        String countJpql =
-                "SELECT COUNT(o) FROM Opportunity o " +
-                        "WHERE o.status = :st";
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o " +
+                "WHERE o.status = :st";
 
         TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class)
                 .setParameter("st", Opportunity.OpportunityStatus.OPEN)
@@ -50,12 +48,14 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Long countApprovedApplications(Integer oppId) {
-        if (oppId == null) return 0L;
+        if (oppId == null)
+            return 0L;
 
         return em.createQuery(
-                        "SELECT COUNT(a) FROM Application a " +
-                                "WHERE a.opportunity.oppId = :id " +
-                                "AND a.status IN (:s1, :s2)", Long.class)
+                "SELECT COUNT(a) FROM Application a " +
+                        "WHERE a.opportunity.oppId = :id " +
+                        "AND a.status IN (:s1, :s2)",
+                Long.class)
                 .setParameter("id", oppId)
                 .setParameter("s1", Application.ApplicationStatus.APPROVED)
                 .setParameter("s2", Application.ApplicationStatus.COMPLETED)
@@ -69,6 +69,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             String location,
             Opportunity.OpportunityStatus status,
             String searchTerm,
+            String time,
             String sortBy,
             Pageable pageable) {
 
@@ -93,23 +94,57 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             params.put("q", searchTerm.trim());
         }
 
+        // Time filter logic
+        if (time != null && !time.isBlank()) {
+            LocalDateTime now = LocalDateTime.now();
+            switch (time.toLowerCase()) {
+                case "today":
+                    LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+                    LocalDateTime endOfDay = now.toLocalDate().atTime(23, 59, 59);
+                    where.append(" AND ((o.startTime >= :startOfDay AND o.startTime <= :endOfDay) " +
+                            "OR (o.endTime >= :startOfDay AND o.endTime <= :endOfDay) " +
+                            "OR (o.startTime <= :startOfDay AND o.endTime >= :endOfDay)) ");
+                    params.put("startOfDay", startOfDay);
+                    params.put("endOfDay", endOfDay);
+                    break;
+                case "week":
+                    LocalDateTime startOfWeek = now.toLocalDate().atStartOfDay()
+                            .minusDays(now.getDayOfWeek().getValue() - 1);
+                    LocalDateTime endOfWeek = startOfWeek.plusDays(6).withHour(23).withMinute(59).withSecond(59);
+                    where.append(" AND ((o.startTime >= :startOfWeek AND o.startTime <= :endOfWeek) " +
+                            "OR (o.endTime >= :startOfWeek AND o.endTime <= :endOfWeek) " +
+                            "OR (o.startTime <= :startOfWeek AND o.endTime >= :endOfWeek)) ");
+                    params.put("startOfWeek", startOfWeek);
+                    params.put("endOfWeek", endOfWeek);
+                    break;
+                case "month":
+                    LocalDateTime startOfMonth = now.toLocalDate().withDayOfMonth(1).atStartOfDay();
+                    LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusDays(1).withHour(23).withMinute(59)
+                            .withSecond(59);
+                    where.append(" AND ((o.startTime >= :startOfMonth AND o.startTime <= :endOfMonth) " +
+                            "OR (o.endTime >= :startOfMonth AND o.endTime <= :endOfMonth) " +
+                            "OR (o.startTime <= :startOfMonth AND o.endTime >= :endOfMonth)) ");
+                    params.put("startOfMonth", startOfMonth);
+                    params.put("endOfMonth", endOfMonth);
+                    break;
+            }
+        }
+
         String orderClause = ("deadline".equalsIgnoreCase(sortBy))
                 ? " ORDER BY o.endTime ASC "
                 : " ORDER BY o.createdAt DESC ";
 
         // Data JPQL (có fetch join)
-        String dataJpql =
-                "SELECT o FROM Opportunity o " +
-                        "JOIN FETCH o.organization org " +
-                        "JOIN FETCH o.category c " +
-                        where + orderClause;
+        String dataJpql = "SELECT o FROM Opportunity o " +
+                "JOIN FETCH o.organization org " +
+                "JOIN FETCH o.category c " +
+                where + orderClause;
 
         // Count JPQL (không fetch join)
-        String countJpql =
-                "SELECT COUNT(o) FROM Opportunity o " +
-                        "JOIN o.organization org " +
-                        "JOIN o.category c " +
-                        where;
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o " +
+                "JOIN o.organization org " +
+                "JOIN o.category c " +
+                where;
 
         TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class);
         params.forEach(dataQ::setParameter);
@@ -128,9 +163,10 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
     @Override
     public List<Category> findCategoriesWithOpportunities() {
         return em.createQuery(
-                        "SELECT DISTINCT c FROM Category c " +
-                                "JOIN Opportunity o ON o.category = c " +
-                                "WHERE o.status = :st", Category.class)
+                "SELECT DISTINCT c FROM Category c " +
+                        "JOIN Opportunity o ON o.category = c " +
+                        "WHERE o.status = :st",
+                Category.class)
                 .setParameter("st", Opportunity.OpportunityStatus.OPEN)
                 .getResultList();
     }
@@ -139,14 +175,16 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
     @Override
     public List<Opportunity> findTop3LatestOpportunities(Pageable pageable) {
         int size = pageable != null ? pageable.getPageSize() : 3;
-        if (size <= 0 || size > 3) size = 3;
+        if (size <= 0 || size > 3)
+            size = 3;
 
         return em.createQuery(
-                        "SELECT o FROM Opportunity o " +
-                                "JOIN FETCH o.organization " +
-                                "JOIN FETCH o.category " +
-                                "WHERE o.status = :st " +
-                                "ORDER BY o.createdAt DESC", Opportunity.class)
+                "SELECT o FROM Opportunity o " +
+                        "JOIN FETCH o.organization " +
+                        "JOIN FETCH o.category " +
+                        "WHERE o.status = :st " +
+                        "ORDER BY o.createdAt DESC",
+                Opportunity.class)
                 .setParameter("st", Opportunity.OpportunityStatus.OPEN)
                 .setMaxResults(size)
                 .getResultList();
@@ -155,7 +193,8 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
     // ===== 9) Lưu (insert/update)
     @Override
     public Opportunity save(Opportunity o) {
-        if (o == null) return null;
+        if (o == null)
+            return null;
         if (o.getOppId() == null || o.getOppId() == 0) {
             em.persist(o);
             return o;
@@ -166,37 +205,37 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Optional<Opportunity> findById(Integer id) {
-        if (id == null) return Optional.empty();
+        if (id == null)
+            return Optional.empty();
         List<Opportunity> list = em.createQuery(
-                        "SELECT o FROM Opportunity o " +
-                                "LEFT JOIN FETCH o.organization " +
-                                "LEFT JOIN FETCH o.category " +
-                                "WHERE o.oppId = :id", Opportunity.class)
+                "SELECT o FROM Opportunity o " +
+                        "LEFT JOIN FETCH o.organization " +
+                        "LEFT JOIN FETCH o.category " +
+                        "WHERE o.oppId = :id",
+                Opportunity.class)
                 .setParameter("id", id)
                 .getResultList();
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
-
     @Override
     public List<Opportunity> getAll() {
         return em.createQuery("""
-                SELECT o 
-                FROM Opportunity o 
-                JOIN FETCH o.organization org 
+                SELECT o
+                FROM Opportunity o
+                JOIN FETCH o.organization org
                 LEFT JOIN FETCH o.category c
                 ORDER BY o.createdAt DESC
                 """, Opportunity.class)
                 .getResultList();
     }
 
-
     @Override
     public List<Opportunity> findByOrganization(int orgId) {
         return em.createQuery("""
-                SELECT o 
-                FROM Opportunity o 
-                JOIN FETCH o.organization org 
+                SELECT o
+                FROM Opportunity o
+                JOIN FETCH o.organization org
                 LEFT JOIN FETCH o.category c
                 WHERE org.orgId = :orgId
                 ORDER BY o.createdAt DESC

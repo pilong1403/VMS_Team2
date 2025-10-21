@@ -11,9 +11,6 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    /**
-     * Gửi email khi hồ sơ bị từ chối
-     */
     public void sendRejectEmail(String to, String orgName, String reason) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
@@ -24,9 +21,6 @@ public class MailService {
         mailSender.send(message);
     }
 
-    /**
-     * Gửi email khi hồ sơ được duyệt
-     */
     public void sendApproveEmail(String to, String orgName, String note) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
