@@ -12,4 +12,9 @@ public interface MailService {
 
     /** Gửi mail template (Thymeleaf) */
     void sendTemplate(String to, String subject, String templateName, Context ctx);
+    /** Gửi email khi hồ sơ bị từ chối */
+    void sendRejectEmail(String to, String orgName, String reason);
+
+    /** Gửi email khi hồ sơ được duyệt */
+    void sendApproveEmail(String to, String orgName, String note);
 }

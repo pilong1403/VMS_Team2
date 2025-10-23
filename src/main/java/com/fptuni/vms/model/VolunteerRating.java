@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Table(
@@ -82,8 +83,9 @@ public class VolunteerRating {
     public void setRaterOrg(Organization raterOrg) { this.raterOrg = raterOrg; }
 
     public User getRateeUser() { return rateeUser; }
-    public void setRateeUser(User rateeUser) { this.rateeUser = rateeUser; }
-
+    public void setRateeUser(User rateeUser) {
+        this.rateeUser = rateeUser;
+    }
     public Short getStars() { return stars; }
     public void setStars(Short stars) { this.stars = stars; }
 

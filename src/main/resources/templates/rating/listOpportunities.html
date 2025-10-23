@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách Hoạt động</title>
+    <link rel="stylesheet" th:href="@{/css/rate.css}">
+</head>
+<body>
+<div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="title">Quản lý Đánh giá</div>
+        <nav class="nav">
+            <a class="active" th:href="@{/organization/ratings/opportunities}">Danh sách hoạt động</a>
+
+        </nav>
+        <div class="user-mini">
+            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100'}">
+            <div>
+                <div th:text="${currentUser.fullName}">Tên người dùng</div>
+                <div class="role" th:text="${currentUser.role.roleName}">ORG_OWNER</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+        <!-- Header -->
+        <div class="header">
+            <h2>Hoạt động thuộc tổ chức <span th:text="${currentOrg.name}">Tên tổ chức</span></h2>
+        </div>
+
+        <!-- Toolbar -->
+        <form method="get" class="toolbar">
+            <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên hoạt động..." class="search-input"/>
+
+            <select name="eventStatus" class="select">
+                <option value="all" th:selected="${eventStatus == 'all'}">Tất cả trạng thái</option>
+                <option value="upcoming" th:selected="${eventStatus == 'upcoming'}">Sắp diễn ra</option>
+                <option value="ongoing" th:selected="${eventStatus == 'ongoing'}">Đang diễn ra</option>
+                <option value="finished" th:selected="${eventStatus == 'finished'}">Đã kết thúc</option>
+            </select>
+
+            <select name="sort" class="select">
+                <option value="recent" th:selected="${sort == 'recent'}">Gần nhất</option>
+                <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
+                <option value="name" th:selected="${sort == 'name'}">Tên (A → Z)</option>
+                <option value="participants" th:selected="${sort == 'participants'}">Số TNV nhiều nhất</option>
+            </select>
+
+            <button type="submit" class="btn primary">Lọc</button>
+        </form>
+
+        <!-- List -->
+        <section class="list">
+            <div th:if="${#lists.isEmpty(opportunities)}" class="empty">
+                Không có hoạt động nào phù hợp.
+            </div>
+
+            <div class="card" th:each="o : ${opportunities}">
+                <div class="card-head">
+                    <div class="info">
+                        <div class="name" th:text="${o.opportunityTitle}">Tên hoạt động</div>
+
+                        <div class="muted">
+                            <span th:text="${#temporals.format(o.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+                            <span> - </span>
+                            <span th:text="${#temporals.format(o.endTime, 'dd/MM/yyyy HH:mm')}"></span>
+                        </div>
+
+                        <div class="meta">
+                            <span>📍</span>
+                            <span th:text="${o.location}">Địa điểm</span>
+                            <span class="dot"></span>
+                            <span th:text="${o.participantCount + ' TNV'}">0 TNV</span>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="status-pill"
+                         th:classappend="${o.endTime.isBefore(#temporals.createNow()) ? 'success' :
+                                          (o.startTime.isAfter(#temporals.createNow()) ? 'warning' : 'primary')}"
+                         th:text="${o.endTime.isBefore(#temporals.createNow()) ? 'Đã kết thúc' :
+                                  (o.startTime.isAfter(#temporals.createNow()) ? 'Sắp diễn ra' : 'Đang diễn ra')}">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a class="btn primary"
+                       th:href="@{'/organization/attendance/opportunity/' + ${o.opportunityId}}">
+                        Điểm danh
+                    </a>
+
+                    <a class="btn success"
+                       th:classappend="${!o.endTime.isBefore(#temporals.createNow()) ? 'disabled' : ''}"
+                       th:href="@{'/organization/ratings/opportunity/' + ${o.opportunityId}}">
+                        Đánh giá
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phân trang -->
+        <div class="pagination" th:if="${totalPages > 1}">
+            <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+               th:href="@{/organization/ratings/opportunities(page=${i}, keyword=${keyword}, sort=${sort}, eventStatus=${eventStatus})}"
+               th:text="${i + 1}"
+               th:classappend="${i == currentPage} ? 'btn primary' : 'btn ghost'"></a>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/rate.js}"></script>
+</body>
+</html>

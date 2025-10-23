@@ -1,5 +1,16 @@
+/**
+ * JS Quản lý Rating
+ * - Click chọn sao
+ * - Hiển thị số ký tự comment
+ * - Tự động submit form khi thay đổi trạng thái / sort
+ * - Hỗ trợ đổi kích thước trang
+ */
+
 document.addEventListener("DOMContentLoaded", () => {
-    // === STAR RATING ===
+
+    // ==========================
+    // 1. STAR RATING HIỂN THỊ
+    // ==========================
     document.querySelectorAll('.stars').forEach(starGroup => {
         const labels = starGroup.querySelectorAll('label');
 
@@ -7,15 +18,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const input = label.querySelector('input[type="radio"]');
             const span = label.querySelector('span');
 
-            // Khi click vào span hoặc label
             label.addEventListener('click', e => {
-                e.preventDefault(); // tránh trigger form submit
+                e.preventDefault(); // không allow label submit ngay
                 input.checked = true;
                 updateStars(starGroup, index + 1);
             });
         });
 
-        // Nếu có sao được chọn sẵn (trang chỉnh sửa)
+        // Nếu có sao chọn sẵn (khi edit)
         const checked = starGroup.querySelector('input[type="radio"]:checked');
         if (checked) {
             const idx = Array.from(labels).findIndex(l => l.querySelector('input').checked);
@@ -23,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Cập nhật hiển thị sao
+    // Hàm update hiển thị sao
     function updateStars(group, value) {
         const spans = group.querySelectorAll('span');
         spans.forEach((s, i) => {
@@ -32,17 +42,44 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // === COMMENT COUNTER ===
+    // ==========================
+    // 2. COMMENT COUNTER
+    // ==========================
     const textarea = document.querySelector('textarea[name$="comment"]');
     const counter = document.querySelector('.counter');
     if (textarea && counter) {
-        const updateCount = () => counter.textContent = `Tối đa 500 ký tự (${textarea.value.length}/500)`;
+        const updateCount = () => {
+            const len = textarea.value.length;
+            counter.textContent = `Tối đa 500 ký tự (${len}/500)`;
+        };
         updateCount();
         textarea.addEventListener('input', updateCount);
     }
+
+    // ==========================
+    // 3. AUTO SUBMIT FILTER FORM
+    // ==========================
+    const filterElements = [
+        document.getElementById("statusPendingSelect"),
+        document.getElementById("sortSelect"),
+        document.getElementById("statusSelect"), // nếu bạn thêm select này
+        document.getElementById("pageSizeSelect") // nếu có dropdown kích thước trang
+    ];
+
+    filterElements.forEach(select => {
+        if (select) {
+            select.addEventListener("change", function () {
+                const form = this.closest("form");
+                if (form) form.submit();
+            });
+        }
+    });
+
 });
 
-// === PAGE SIZE CHANGE ===
+/**
+ * Hàm đổi kích thước trang (nếu bạn dùng dropdown page size riêng)
+ */
 function changePageSize(size) {
     const params = new URLSearchParams(window.location.search);
     params.set('size', size);

@@ -8,12 +8,23 @@
     <link rel="stylesheet" th:href="@{/css/rate.css}">
 </head>
 <body>
+<div th:if="${successMessage}" class="toast success">
+    <i class="fa-solid fa-circle-check"></i>
+    <span th:text="${successMessage}"></span>
+</div>
+
+<div th:if="${errorMessage}" class="toast error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span th:text="${errorMessage}"></span>
+</div>
+
 <div class="app">
     <aside class="sidebar">
         <div class="title">Quản lý Đánh giá</div>
         <nav class="nav">
-            <a th:href="@{/ratings}">Danh sách đánh giá</a>
-            <a class="active" th:href="@{/ratings/edit/{id}(id=${rating.id})}">Chỉnh sửa đánh giá</a>
+            <a  th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}} ">
+                >Danh sách đánh giá</a>
+            <a class="active" th:href="@{/organization/ratings/edit/{id}(id=${rating.id})}">Chỉnh sửa đánh giá</a>
         </nav>
         <div class="user-mini">
             <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
@@ -30,18 +41,38 @@
         <div class="detail-layout">
             <div class="panel">
                 <h3>Chi tiết đánh giá</h3>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <img th:src="${volunteer.avatarUrl}" class="avatar-large" alt="avatar"
+                         style="width:60px;height:60px;border-radius:50%;">
+                    <div>
+                        <div><b>Tình nguyện viên:</b> <span th:text="${volunteer.fullName}"></span></div>
+                        <div><b>Email:</b> <span th:text="${volunteer.email}"></span></div>
+                        <div><b>Số điện thoại:</b> <span th:text="${volunteer.phone}"></span></div>
+                        <div><b>Địa chỉ:</b> <span th:text="${volunteer.address}"></span></div>
+                        <div><b>Sao trung bình:</b> <span th:text="${#numbers.formatDecimal(avgStars, 1, 1)}">0.0</span>
+                           ⭐
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
                 <div class="kv">
-                    <div class="row"><div class="key">Tình nguyện viên:</div>
-                        <div th:text="${rating.rateeUser.fullName}">Tên TNV</div></div>
                     <div class="row"><div class="key">Hoạt động:</div>
-                        <div th:text="${rating.opportunity.title}">Tên hoạt động</div></div>
-                    <div class="row"><div class="key">Ngày tạo:</div>
-                        <div th:text="${#temporals.format(rating.createdAt, 'dd/MM/yyyy')}">20/09/2025</div></div>
+                        <div th:text="${opportunity.title}">Tên hoạt động</div></div>
+                    <div class="row"><div class="key">Địa điểm:</div>
+                        <div th:text="${opportunity.location}">Địa điểm</div></div>
+                    <div class="row"><div class="key">Bắt đầu:</div>
+                        <div th:text="${#temporals.format(opportunity.startTime, 'dd/MM/yyyy HH:mm')}"></div></div>
+                    <div class="row"><div class="key">Kết thúc:</div>
+                        <div th:text="${#temporals.format(opportunity.endTime, 'dd/MM/yyyy HH:mm')}"></div></div>
                 </div>
             </div>
 
-            <form th:action="@{/ratings/update}" th:object="${rating}" method="post" class="panel form" style="grid-column:2/3">
+
+            <form th:action="@{/organization/ratings/update}" th:object="${rating}" method="post" class="panel form" style="grid-column:2/3">
                 <input type="hidden" th:field="*{id}" />
+                <input type="hidden" name="oppId" th:value="${rating.opportunity.oppId}" />
                 <h3>Cập nhật đánh giá</h3>
 
                 <div class="kv">
@@ -67,7 +98,7 @@
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                     <button type="submit" class="btn success">Cập nhật</button>
-                    <a th:href="@{/ratings}" class="btn ghost">Quay lại</a>
+                    <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}}" class="btn ghost">Quay lại</a>
                 </div>
             </form>
         </div>
@@ -76,5 +107,6 @@
 <script th:src="@{/js/rate.js}">
 
 </script>
+
 </body>
 </html>
