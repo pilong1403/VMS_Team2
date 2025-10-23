@@ -196,6 +196,30 @@
         .sidebar-dropdown-item:hover {
             background-color: #f5f5f5;
         }
+
+        /* === CSS CẢI TIỆN CHO NÚT ĐĂNG XUẤT === */
+        .sidebar-dropdown-menu form {
+            margin: 0; /* Bỏ margin mặc định của form */
+        }
+
+        .sidebar-dropdown-menu .dropdown-item[type="submit"] {
+            width: 100%;
+            border: none;
+            background: none;
+            text-align: left; /* Căn lề chữ giống các thẻ <a> */
+            font-family: inherit; /* Dùng font của cả trang */
+            cursor: pointer;
+        }
+
+        .sidebar-dropdown-menu .dropdown-item.text-danger {
+            color: #d9534f; /* Màu đỏ cảnh báo, dễ nhìn */
+            font-weight: 500;
+        }
+
+        .sidebar-dropdown-menu .dropdown-item.text-danger:hover {
+            color: #c9302c; /* Màu đỏ đậm hơn khi hover */
+            background-color: #fbebee; /* Nền đỏ rất nhạt khi hover */
+        }
     </style>
 
 
@@ -204,10 +228,10 @@
     <div class="sidebar-header">
         <div class="sidebar-logo">
             <div class="logo-icon">
-                <img src="https://res.cloudinary.com/vmscloudinary/image/upload/v1760603336/LogoVMS_k5xgal.jpg" alt="Logo">
+                <img src="/images/logo_sidebarAndHeader_Admin_Org.png" alt="Logo">
             </div>
             <div class="logo-text">
-                <h2>Trái Tim Thiện Nguyện</h2>
+                <h2>Trái Tim Tình Nguyện</h2>
                 <p>Hệ thống quản trị</p>
             </div>
         </div>
@@ -255,15 +279,22 @@
 
     <div class="sidebar-footer">
         <div class="sidebar-dropdown-menu" id="sidebarDropdownMenu">
-            <a th:href="@{/}" class="dropdown-item">Về trang chủ</a>
-            <a th:href="@{/logout}" class="dropdown-item">Đăng xuất</a>
             <a th:href="@{/profile}" class="dropdown-item">Xem thông tin cá nhân</a>
+            <a th:href="@{/}" class="dropdown-item">Về trang chủ</a>
+            <form th:action="@{/logout}" method="post" class="m-0">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="dropdown-item text-danger">Đăng xuất</button>
+            </form>
         </div>
 
         <div class="sidebar-profile" id="sidebarProfile">
             <div class="profile-avatar">
-                <img th:src="${session.AUTH_USER_AVATAR != null ? session.AUTH_USER_AVATAR :
-                                 'https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg'}"
+                <img th:if="${session.AUTH_USER_AVATAR != null}"
+                     th:src="${session.AUTH_USER_AVATAR}"
+                     alt="Avatar người dùng">
+
+                <img th:unless="${session.AUTH_USER_AVATAR != null}"
+                     th:src="@{/images/avatar_user_default.png}"
                      alt="Avatar người dùng">
             </div>
 
