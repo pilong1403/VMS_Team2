@@ -12,29 +12,31 @@
 <body data-page="orgs">
 <!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">
-            <div class="logo-icon">🏢</div>
-            <div class="logo-text">
-                <h2>Quản Lý Admin</h2>
-                <p>Hệ thống quản trị</p>
-            </div>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <div class="nav-label">MENU CHÍNH</div>
-        <ul class="nav-menu">
-            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>
-            <li><a th:href="@{/admin/organizations}" class="nav-item active">Hồ sơ tổ chức</a></li>
-            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>
-        </ul>
-    </nav>
+<!--    <div class="sidebar-header">-->
+<!--        <div class="sidebar-logo">-->
+<!--            <div class="logo-icon">🏢</div>-->
+<!--            <div class="logo-text">-->
+<!--                <h2>Quản Lý Admin</h2>-->
+<!--                <p>Hệ thống quản trị</p>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <nav class="sidebar-nav">-->
+<!--        <div class="nav-label">MENU CHÍNH</div>-->
+<!--        <ul class="nav-menu">-->
+<!--            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>-->
+<!--            <li><a th:href="@{/admin/organizations}" class="nav-item active">Hồ sơ tổ chức</a></li>-->
+<!--            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>-->
+<!--        </ul>-->
+<!--    </nav>-->
+    <div th:replace="~{fragments/admin/sidebar :: sidebar}"></div>
+
 </aside>
 
 <!-- ================= MAIN ================= -->
 <div class="main-wrapper">
-    <header class="header">
-        <div class="header-title">Hồ sơ đăng ký tổ chức</div>
+    <header >
+        <div th:replace="~{fragments/admin/header :: header}"></div>
     </header>
 
     <main class="content">
@@ -246,124 +248,7 @@
             </div>
         </div>
 
-        <!-- ========== MODAL CHI TIẾT BẰNG CHỨNG ========== -->
-<!--        <div class="modal" id="orgProofModal"-->
-<!--             th:if="${selectedOrg != null and viewType == 'proof'}"-->
-<!--             th:classappend="${viewType == 'proof'} ? ' show' : ''">-->
 
-<!--            <div class="modal-content user-detail-modal">-->
-<!--                <div class="modal-header">-->
-<!--                    <h2>Chi tiết bằng chứng</h2>-->
-<!--                    <a th:href="@{/admin/organizations}" class="modal-close">&times;</a>-->
-<!--                </div>-->
-
-<!--                <div class="user-detail-body">-->
-<!--&lt;!&ndash;                    <div class="user-detail-left">&ndash;&gt;-->
-<!--&lt;!&ndash;                        <i class="fa-solid fa-file-lines fa-4x" style="color:#555"></i>&ndash;&gt;-->
-
-<!--&lt;!&ndash;                    </div>&ndash;&gt;-->
-<!--                    <div class="user-detail-left" style="text-align:center; max-width: 350px;">-->
-<!--                        <div th:if="${selectedOrg.regDocUrl != null}">-->
-<!--                            <div th:with="url=${selectedOrg.regDocUrl}">-->
-
-<!--                                &lt;!&ndash; ẢNH &ndash;&gt;-->
-<!--                                <img th:if="${url != null and (#strings.endsWithIgnoreCase(url, '.jpg')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.jpeg')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.png')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.gif'))}"-->
-<!--                                     th:src="${url}"-->
-<!--                                     alt="Ảnh minh chứng"-->
-<!--                                     style="max-width: 100%; border-radius: 8px; border: 1px solid #ccc"/>-->
-
-<!--                                &lt;!&ndash; VIDEO &ndash;&gt;-->
-<!--                                <video th:if="${url != null and (#strings.endsWithIgnoreCase(url, '.mp4')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.webm')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.mov'))}"-->
-<!--                                       th:src="${url}"-->
-<!--                                       controls-->
-<!--                                       style="max-width: 100%; border-radius: 8px; border: 1px solid #ccc"></video>-->
-
-<!--                                &lt;!&ndash; WORD &ndash;&gt;-->
-<!--                                <div th:if="${url != null and (#strings.endsWithIgnoreCase(url, '.doc')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.docx'))}">-->
-<!--                                    <i class="fa-solid fa-file-word fa-4x" style="color:#2b579a"></i>-->
-<!--                                    <p><a th:href="${url}" target="_blank">Xem file Word</a></p>-->
-<!--                                </div>-->
-
-<!--                                &lt;!&ndash; PDF &ndash;&gt;-->
-<!--                                <div th:if="${url != null and #strings.endsWithIgnoreCase(url, '.pdf')}">-->
-<!--                                    <i class="fa-solid fa-file-pdf fa-4x" style="color:#e74c3c"></i>-->
-<!--                                    <p><a th:href="${url}" target="_blank">Xem file PDF</a></p>-->
-<!--                                </div>-->
-
-<!--                                &lt;!&ndash; EXCEL &ndash;&gt;-->
-<!--                                <div th:if="${url != null and (#strings.endsWithIgnoreCase(url, '.xls')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.xlsx'))}">-->
-<!--                                    <i class="fa-solid fa-file-excel fa-4x" style="color:#217346"></i>-->
-<!--                                    <p><a th:href="${url}" target="_blank">Xem file Excel</a></p>-->
-<!--                                </div>-->
-
-<!--                                &lt;!&ndash; KHÁC &ndash;&gt;-->
-<!--                                <div th:if="${url != null and !(#strings.endsWithIgnoreCase(url, '.jpg')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.jpeg')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.png')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.gif')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.mp4')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.webm')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.mov')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.pdf')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.doc')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.docx')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.xls')-->
-<!--                     or #strings.endsWithIgnoreCase(url, '.xlsx'))}">-->
-<!--                                    <i class="fa-solid fa-file-lines fa-4x" style="color:#555"></i>-->
-<!--                                    <p><a th:href="${url}" target="_blank">Tải xuống tệp minh chứng</a></p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-
-<!--                        <div th:if="${selectedOrg.regDocUrl == null}">-->
-<!--                            <i class="fa-solid fa-file-circle-xmark fa-4x" style="color:#ccc"></i>-->
-<!--                            <p>Không có tệp minh chứng</p>-->
-<!--                        </div>-->
-<!--                    </div>-->
-
-
-
-<!--                    <div class="user-detail-right">-->
-<!--                        <h3 th:text="${selectedOrg.name}">Tên tổ chức</h3>-->
-<!--                        <p><strong>Người gửi:</strong> <span th:text="${selectedOrg.owner.fullName}">Tên</span></p>-->
-<!--                        <p><strong>Email:</strong> <span th:text="${selectedOrg.owner.email}">Email</span></p>-->
-<!--                        <p><strong>Ngày gửi:</strong>-->
-<!--                            <span th:text="${#temporals.format(selectedOrg.createdAt, 'yyyy-MM-dd HH:mm')}"></span>-->
-<!--                        </p>-->
-<!--                        <p><strong>Trạng thái:</strong>-->
-<!--                            <span th:text="${selectedOrg.regStatus}"></span>-->
-<!--                        </p>-->
-<!--                        <p><strong>Mô tả bằng chứng:</strong></p>-->
-<!--                        <p th:text="${selectedOrg.description != null ? selectedOrg.description : 'Không có mô tả chi tiết.'}"></p>-->
-
-<!--                        <div th:if="${selectedOrg.regDocUrl != null}">-->
-<!--                            <strong>Tệp minh chứng:</strong>-->
-<!--                            <p>-->
-<!--                                <a th:href="${selectedOrg.regDocUrl}" target="_blank" class="btn btn-outline">-->
-<!--                                    <i class="fa fa-file"></i> Mở tài liệu minh chứng-->
-<!--                                </a>-->
-<!--                            </p>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                <div class="modal-footer">-->
-<!--                    &lt;!&ndash; Nút tải Excel &ndash;&gt;-->
-<!--                    <a th:href="@{'/admin/organizations/' + ${selectedOrg.orgId} + '/downloadExcel'}"-->
-<!--                       class="btn btn-outline" target="_blank">-->
-<!--                        <i class="fa fa-download"></i> Tải Excel-->
-<!--                    </a>-->
-<!--                    <a th:href="@{/admin/organizations}" class="btn btn-outline">Đóng</a>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
 
         <!-- ========== MODAL CHI TIẾT BẰNG CHỨNG ========== -->
         <div class="modal" id="orgProofModal"

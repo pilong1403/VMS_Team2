@@ -6,7 +6,7 @@ import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.repository.OpportunityRepository;
 import com.fptuni.vms.service.OpportunityService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +43,7 @@ public class OpportunityServiceImpl implements OpportunityService {
             String location,
             String status,
             String searchTerm,
+            String time,
             String sortBy,
             Pageable pageable) {
 
@@ -52,6 +53,9 @@ public class OpportunityServiceImpl implements OpportunityService {
         }
         if (searchTerm != null && searchTerm.trim().isEmpty()) {
             searchTerm = null;
+        }
+        if (time != null && time.trim().isEmpty()) {
+            time = null;
         }
         if (sortBy == null || sortBy.trim().isEmpty()) {
             sortBy = "newest";
@@ -68,7 +72,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         }
 
         Page<Opportunity> opportunities = opportunityRepository.findOpportunitiesWithFilters(
-                categoryId, location, statusEnum, searchTerm, sortBy, pageable);
+                categoryId, location, statusEnum, searchTerm, time, sortBy, pageable);
 
         List<OpportunityCardDto> dtos = opportunities.getContent().stream()
                 .map(this::convertToDto)
@@ -126,18 +130,18 @@ public class OpportunityServiceImpl implements OpportunityService {
         return dto;
     }
 
-
     @Override
-        public List<Opportunity> getAll() { return opportunityRepository.getAll(); }
+    public List<Opportunity> getAll() {
+        return opportunityRepository.getAll();
+    }
 
     @Override
     public List<Opportunity> findByOrganization(int orgId) {
         return opportunityRepository.findByOrganization(orgId);
     }
 
-//    @Override
-//    public Opportunity findById(int id) {
-//        return opportunityRepository.findById(id);
-//    }
+    // @Override
+    // public Opportunity findById(int id) {
+    // return opportunityRepository.findById(id);
+    // }
 }
-

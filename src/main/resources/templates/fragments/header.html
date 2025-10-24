@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
-  </head>
+</head>
   <body>
     <!-- Header Fragment -->
     <header th:fragment="header" class="sticky-top bg-white border-bottom shadow-sm" style="border-color: #e0f2fe">
@@ -56,15 +56,13 @@
                     <!-- User Avatar -->
                     <div class="me-2" style="width: 40px; height: 40px">
                       <img
-                        th:src="${session.AUTH_USER_AVATAR}"
-                        th:alt="${session.AUTH_USER_NAME}"
-                        style="
-                          width: 40px;
-                          height: 40px;
-                          border-radius: 50%;
-                          object-fit: cover;
-                          border: 2px solid #38bdf8;
-                        "
+                              th:src="${#strings.isEmpty(session.AUTH_USER_AVATAR)
+                              ? 'https://res.cloudinary.com/vmscloudinary/image/upload/v1760954395/User_Avt_Default_chq9k6.jpg'
+                              : session.AUTH_USER_AVATAR}"
+                              th:alt="${session.AUTH_USER_NAME}"
+                              style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #38bdf8;"
+                              referrerpolicy="no-referrer"
+                              onerror="this.onerror=null;this.src='/images/default.png';"
                       />
                     </div>
                     <div class="d-none d-lg-block">

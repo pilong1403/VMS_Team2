@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface OpportunityService {
 
@@ -16,6 +15,7 @@ public interface OpportunityService {
             String location,
             String status,
             String searchTerm,
+            String time,
             String sortBy,
             Pageable pageable);
 

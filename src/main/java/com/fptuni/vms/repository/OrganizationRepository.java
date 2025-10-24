@@ -15,7 +15,6 @@ public interface OrganizationRepository {
 
     /** Lưu tổ chức (chỉ cần INSERT cho ca đăng ký) */
     Organization save(Organization org);
-    void save1(Organization organization);
 
     Organization findById(Integer id);
 

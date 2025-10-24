@@ -26,11 +26,11 @@
 <body>
     <div class="admin-container">
 
-        <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+        <div th:replace="~{/fragments/admin/sidebar :: sidebar}"></div>
 
         <main class="main-content">
 
-            <div th:replace="~{admin/fragments/header :: header}"></div>
+            <div th:replace="~{/fragments/admin/header :: header}"></div>
 
 
             <div class="content-area">
@@ -166,7 +166,10 @@
                                               th:text="'[Lần cuối chỉnh sửa]: '+ ${#temporals.format(faq.getUpdatedAt(),'dd/MM/yyyy - HH:mm:ss')}">
                                             [Lần cuối chỉnh sửa]: 10/09/2024
                                         </span>
-<!--                                        <span>[Được chỉnh sửa bởi]: DuyNguyen</span>-->
+                                        <span th:if="${faq.updatedBy != null}"
+                                                th:text="'| [Được chỉnh sửa bởi]: '+ ${faq.getUpdatedBy().fullName}">
+                                        [Được chỉnh sửa bởi]: DuyNguyen
+                                        </span>
                                     </div>
                                     <div class="faq-actions">
 

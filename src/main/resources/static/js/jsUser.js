@@ -274,6 +274,100 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+    const avatarInput = document.getElementById('avatarFile');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarError = document.createElement("small");
+    avatarError.className = "error-text";
+    avatarInput.parentElement.appendChild(avatarError); // Gắn vào dưới avatar
 
+    const ALLOWED_TYPES = [
+        "image/jpeg",
+        "image/png",
+        "image/gif"
+    ];
+    const MAX_SIZE_BYTES = 5242880; // 5MB
+
+    avatarInput.addEventListener("change", () => {
+        const file = avatarInput.files[0];
+        if (!file) {
+            avatarError.textContent = "";
+            avatarError.classList.remove("active");
+            avatarPreview.src = "/images/default.png";
+            return;
+        }
+
+        // Validate loại file
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            avatarError.textContent = " Chỉ chấp nhận JPEG, PNG, GIF!";
+            avatarError.className = "error-text error active";
+            avatarInput.value = "";
+            avatarPreview.src = "/images/default.png";
+            return;
+        }
+
+        // Validate kích thước
+        if (file.size > MAX_SIZE_BYTES) {
+            avatarError.textContent = " Dung lượng tối đa 5MB!";
+            avatarError.className = "error-text error active";
+            avatarInput.value = "";
+            avatarPreview.src = "/images/default.png";
+            return;
+        }
+
+        // Hợp lệ → Preview
+        avatarError.textContent = "✔ Hợp lệ";
+        avatarError.className = "error-text success active";
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            avatarPreview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Nút bấm chọn avatar
+    document.getElementById("btnChooseAvatar").addEventListener("click", () => {
+        avatarInput.click();
+    });
+
+
+});
+
+// header profile
+document.addEventListener('DOMContentLoaded', function () {
+    const profileDropdown = document.getElementById('profileDropdown');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (profileDropdown) {
+        profileDropdown.addEventListener('click', function (event) {
+            event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+            dropdownMenu.classList.toggle('show');
+        });
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    window.addEventListener('click', function (event) {
+        if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebarProfile = document.getElementById('sidebarProfile');
+    const sidebarDropdownMenu = document.getElementById('sidebarDropdownMenu');
+
+    if (sidebarProfile) {
+        sidebarProfile.addEventListener('click', function (event) {
+            event.stopPropagation();
+            sidebarDropdownMenu.classList.toggle('show');
+        });
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    window.addEventListener('click', function (event) {
+        if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) {
+            sidebarDropdownMenu.classList.remove('show');
+        }
+    });
 });
 

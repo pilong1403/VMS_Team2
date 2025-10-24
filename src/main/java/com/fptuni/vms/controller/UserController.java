@@ -1,5 +1,6 @@
 package com.fptuni.vms.controller;
 
+import com.fptuni.vms.integrations.cloud.CloudStorageService;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.service.RoleService;
 import com.fptuni.vms.service.UserService;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -28,6 +30,9 @@ public class UserController {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private CloudStorageService cloudStorageService;
 
     // Trang danh sách user
 
@@ -90,42 +95,46 @@ public class UserController {
         return "admin/userManagement";
     }
 
-    // Tạo mới user
     @PostMapping("/create")
-    public String createUser(@ModelAttribute User user,
-                             @RequestParam("avatarUrl") String avatarUrl,
-                             @RequestParam("citySelect") String city,
-                             @RequestParam("districtSelect") String district,
-                             @RequestParam("wardSelect") String ward,
-                             RedirectAttributes redirectAttributes,
-                             Model model) {
+    public String createUser(
+            @ModelAttribute User user,
+            @RequestParam("avatarFile") MultipartFile avatarFile,
+            @RequestParam("citySelect") String city,
+            @RequestParam("districtSelect") String district,
+            @RequestParam("wardSelect") String ward,
+            RedirectAttributes redirectAttributes) {
 
+        // Kiểm tra email & phone
         if (userService.existsByEmail(user.getEmail())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Email đã tồn tại");
             return "redirect:/admin/users";
         }
-
         if (userService.existsByPhone(user.getPhone())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Số điện thoại đã tồn tại");
             return "redirect:/admin/users";
         }
-        // Gán ảnh và địa chỉ
-        user.setAvatarUrl(
-                (avatarUrl == null || avatarUrl.isBlank())
-                        ? "/images/default.png"  // ảnh mặc định
-                        : avatarUrl
-        );
+
+        // Xử lý upload ảnh
+        String avatarUrl;
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            avatarUrl = cloudStorageService.uploadFile(avatarFile);
+            if (avatarUrl == null) {
+                avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg";
+            }
+        } else {
+            avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg";
+        }
+        user.setAvatarUrl(avatarUrl);
+
+        // Gán địa chỉ
         user.setAddress(String.join(" - ", ward, district, city));
 
         // Lưu user
         userService.saveUser(user);
-
-        // Thêm flash attribute để show thông báo sau khi redirect
         redirectAttributes.addFlashAttribute("successMessage", "Thêm người dùng thành công!");
-
-        userService.saveUser(user);
         return "redirect:/admin/users";
     }
+
 
     // Khóa / Mở khóa user
     @PostMapping("/{id}/toggle-status")
