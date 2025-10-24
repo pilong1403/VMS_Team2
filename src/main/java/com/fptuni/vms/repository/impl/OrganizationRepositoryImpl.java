@@ -53,9 +53,6 @@ public class OrganizationRepositoryImpl implements OrganizationRepository {
         if (o.getRegStatus() == null) {
             o.setRegStatus(Organization.RegStatus.PENDING);
         }
-        if (o.getCreatedAt() == null) {
-            o.setCreatedAt(LocalDateTime.now());
-        }
 
         // Insert nếu chưa có id, ngược lại merge (update)
         if (o.getOrgId() == null || o.getOrgId() == 0) {

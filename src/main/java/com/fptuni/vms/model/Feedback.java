@@ -19,19 +19,13 @@ public class Feedback {
     private Integer feedbackId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "opp_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_fb_opp")
-    )
+    @JoinColumn(name = "opp_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fb_opp"))
     private Opportunity opportunity;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "user_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_fb_user")
-    )
+    @JoinColumn(name = "user_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fb_user"))
     private User user;
 
     // NVARCHAR(MAX)
@@ -50,6 +44,7 @@ public class Feedback {
     @Column(name = "feedback_type", length = 20, nullable = false)
     private FeedbackType feedbackType;
 
+    @Nationalized
     @Column(name = "attachment_url", length = 500)
     private String attachmentUrl;
 
@@ -57,16 +52,34 @@ public class Feedback {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    // DB không tự cập nhật -> app set
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist
     private void prePersist() {
-        if (feedbackType == null) feedbackType = FeedbackType.VOLUNTEER;
+        if (feedbackType == null) feedbackType = FeedbackType.VOLUNTEER; // mirror DB DEFAULT
+        normalize();
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
     }
 
-    // ====================== GETTERS & SETTERS ======================
+    @PreUpdate
+    private void preUpdate() {
+        normalize();
+        updatedAt = LocalDateTime.now();
+    }
 
+    private void normalize() {
+        if (content != null)        content = content.trim();
+        if (attachmentUrl != null)  attachmentUrl = attachmentUrl.trim();
+    }
+
+    /* ======================
+       GETTERS & SETTERS
+       ====================== */
     public Integer getFeedbackId() { return feedbackId; }
     public void setFeedbackId(Integer feedbackId) { this.feedbackId = feedbackId; }
 
@@ -89,8 +102,6 @@ public class Feedback {
     public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

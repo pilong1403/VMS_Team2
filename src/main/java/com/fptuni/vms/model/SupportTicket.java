@@ -1,6 +1,9 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
@@ -24,24 +27,29 @@ public class SupportTicket {
     @Column(name = "ticket_id")
     private Integer ticketId;
 
-    // May be null for guest-submitted tickets
+    // Có thể null (guest)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "user_id",
-            foreignKey = @ForeignKey(name = "FK_ticket_user")
-    )
+    @JoinColumn(name = "user_id",
+            foreignKey = @ForeignKey(name = "FK_ticket_user"))
     private User user;
 
+    @Nationalized
+    @Email
+    @Size(max = 100)
     @Column(name = "contact_email", length = 100)
     private String contactEmail;
 
+    @Nationalized
+    @NotBlank
+    @Size(max = 255)
     @Column(name = "subject", length = 255, nullable = false)
     private String subject;
 
     // NVARCHAR(MAX) NOT NULL
     @Lob
     @Nationalized
-    @Column(name = "description", nullable = false, columnDefinition="NVARCHAR(MAX)")
+    @NotBlank
+    @Column(name = "description", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     // NOT NULL DEFAULT 'OPEN' + CHECK
@@ -54,37 +62,56 @@ public class SupportTicket {
     @Column(name = "priority", length = 20, nullable = false)
     private TicketPriority priority;
 
+    @Nationalized
+    @Size(max = 500)
     @Column(name = "attachment_url", length = 500)
     private String attachmentUrl;
 
-    // DEFAULT SYSDATETIME() (DB)
+    // DB default SYSDATETIME()
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    // DB trigger cập nhật khi UPDATE -> read-only
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // Nullable; who resolved/owns the ticket
+    // Người xử lý (có thể null); khi CLOSE bắt buộc là ADMIN (theo trigger)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "resolved_by",
-            foreignKey = @ForeignKey(name = "FK_ticket_resolved")
-    )
+    @JoinColumn(name = "resolved_by",
+            foreignKey = @ForeignKey(name = "FK_ticket_resolved"))
     private User resolvedBy;
 
-    // Child responses; DB has ON DELETE CASCADE
+    // Child responses; DB ON DELETE CASCADE ở bảng con
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("createdAt ASC")
     private List<SupportResponse> responses;
 
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist
     private void prePersistDefaults() {
         if (status == null)   status = TicketStatus.OPEN;
         if (priority == null) priority = TicketPriority.NORMAL;
-        if (contactEmail != null) contactEmail = contactEmail.trim().toLowerCase();
+        normalize();
     }
 
-    // ===== Getters & Setters =====
+    @PreUpdate
+    private void preUpdate() {
+        normalize();
+        // Không set updatedAt ở đây; DB trigger sẽ cập nhật.
+    }
+
+    private void normalize() {
+        if (contactEmail != null) contactEmail = contactEmail.trim().toLowerCase();
+        if (subject != null)      subject = subject.trim();
+        if (description != null)  description = description.trim();
+        if (attachmentUrl != null) attachmentUrl = attachmentUrl.trim();
+    }
+
+    /* ======================
+       Getters & Setters
+       ====================== */
     public Integer getTicketId() { return ticketId; }
     public void setTicketId(Integer ticketId) { this.ticketId = ticketId; }
 
@@ -110,10 +137,7 @@ public class SupportTicket {
     public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     public User getResolvedBy() { return resolvedBy; }
     public void setResolvedBy(User resolvedBy) { this.resolvedBy = resolvedBy; }

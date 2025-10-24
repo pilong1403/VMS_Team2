@@ -1,6 +1,8 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
@@ -27,24 +29,29 @@ public class Donation {
     @JoinColumn(name = "opp_id", foreignKey = @ForeignKey(name = "FK_dn_opp"))
     private Opportunity opportunity;
 
+    @NotNull
+    @DecimalMin(value = "0.01") // khớp CHECK (amount > 0)
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
-    private BigDecimal amount; // DB CHECK (amount > 0)
+    private BigDecimal amount;
 
+    @Nationalized
     @Column(name = "method", length = 50)
     private String method;
 
-    // DB: NOT NULL DEFAULT 'PENDING' + CHECK (PENDING/PAID/FAILED/REFUNDED)
+    // DB DEFAULT 'PENDING' + CHECK
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private DonationStatus status;
 
+    @Nationalized
     @Column(name = "content", length = 255)
     private String content;
 
+    @Nationalized
     @Column(name = "receipt_url", length = 500)
     private String receiptUrl;
 
-    // DEFAULT SYSDATETIME() (DB side)
+    // DB DEFAULT SYSDATETIME()
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
@@ -52,29 +59,35 @@ public class Donation {
     private LocalDateTime updatedAt;
 
     // -------- Provider / Payment tracking ----------
+    @Nationalized
     @Column(name = "provider", length = 30)
-    private String provider; // e.g., "VNPAY", "MOMO"... (tùy bạn chuẩn hoá bằng enum nếu muốn)
+    private String provider; // ví dụ: "VNPAY", "MOMO"
 
+    @Nationalized
     @Column(name = "transaction_id", length = 100)
     private String transactionId;
 
-    @Column(name = "paid_at")
+    // DB tự gán khi status = PAID
+    @Column(name = "paid_at", insertable = false, updatable = false)
     private LocalDateTime paidAt;
 
     // -------- Refund tracking ----------
-    @Column(name = "refunded_at")
+    // DB tự gán khi status = REFUNDED
+    @Column(name = "refunded_at", insertable = false, updatable = false)
     private LocalDateTime refundedAt;
 
     @Column(name = "refund_amount", precision = 18, scale = 2)
     private BigDecimal refundAmount; // DB CHECK (>= 0)
 
+    @Nationalized
     @Column(name = "refund_reason", length = 255)
     private String refundReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "refund_by", foreignKey = @ForeignKey(name = "FK_dn_refund"))
-    private User refundBy;
+    private User refundBy; // trigger yêu cầu phải là ADMIN khi REFUNDED
 
+    @Nationalized
     @Column(name = "provider_refund_id", length = 100)
     private String providerRefundId;
 
@@ -83,14 +96,23 @@ public class Donation {
     @Column(name = "provider_payload", columnDefinition = "NVARCHAR(MAX)")
     private String providerPayload;
 
-    // ---------- Lifecycle: mặc định status như DB ----------
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist
     private void prePersist() {
-        if (status == null) status = DonationStatus.PENDING;
+        if (status == null) status = DonationStatus.PENDING; // mirror DB DEFAULT
+        if (updatedAt == null) updatedAt = LocalDateTime.now();
     }
 
-    // ====================== GETTERS & SETTERS ======================
+    @PreUpdate
+    private void preUpdate() {
+        updatedAt = LocalDateTime.now(); // DB không auto-update cột này
+    }
 
+    /* ======================
+       GETTERS & SETTERS
+       ====================== */
     public Integer getDonationId() { return donationId; }
     public void setDonationId(Integer donationId) { this.donationId = donationId; }
 
@@ -116,7 +138,6 @@ public class Donation {
     public void setReceiptUrl(String receiptUrl) { this.receiptUrl = receiptUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
@@ -128,10 +149,8 @@ public class Donation {
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
 
     public LocalDateTime getPaidAt() { return paidAt; }
-    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 
     public LocalDateTime getRefundedAt() { return refundedAt; }
-    public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
 
     public BigDecimal getRefundAmount() { return refundAmount; }
     public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }

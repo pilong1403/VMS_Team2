@@ -1,6 +1,10 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,18 +24,19 @@ public class UserAuthProvider {
 
     // FK → users (NOT NULL). DB ON DELETE CASCADE.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "user_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_uap_user")
-    )
+    @JoinColumn(name = "user_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_uap_user"))
     private User user;
 
-    // e.g., "GOOGLE"
+    @Nationalized
+    @NotBlank
+    @Size(max = 20)
     @Column(name = "provider", nullable = false, length = 20)
-    private String provider;
+    private String provider; // ví dụ: GOOGLE
 
-    // External subject/UID from the provider
+    @Nationalized
+    @NotBlank
+    @Size(max = 255)
     @Column(name = "external_uid", nullable = false, length = 255)
     private String externalUid;
 
@@ -39,13 +44,18 @@ public class UserAuthProvider {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist @PreUpdate
     private void normalize() {
-        if (provider != null) provider = provider.trim().toUpperCase();
+        if (provider != null)    provider = provider.trim().toUpperCase();
         if (externalUid != null) externalUid = externalUid.trim();
     }
 
-    // Getters & Setters
+    /* ======================
+       Getters & Setters
+       ====================== */
     public Integer getProviderId() { return providerId; }
     public void setProviderId(Integer providerId) { this.providerId = providerId; }
 
@@ -59,5 +69,4 @@ public class UserAuthProvider {
     public void setExternalUid(String externalUid) { this.externalUid = externalUid; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

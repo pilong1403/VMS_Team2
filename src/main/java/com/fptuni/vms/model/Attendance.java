@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 @Table(name = "attendance", schema = "dbo")
 public class Attendance {
 
-    public enum AttendanceStatus {
-        PRESENT, ABSENT, COMPLETED
-    }
+    public enum AttendanceStatus { PRESENT, ABSENT, COMPLETED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +16,8 @@ public class Attendance {
     private Integer attId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "app_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_att_app")
-    )
+    @JoinColumn(name = "app_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_att_app"))
     private Application application;
 
     @Column(name = "checkin_time")
@@ -31,10 +26,11 @@ public class Attendance {
     @Column(name = "checkout_time")
     private LocalDateTime checkoutTime;
 
-    @Column(name = "total_hours", precision = 5, scale = 2)
+    // DB auto-calc via trigger -> read-only in JPA
+    @Column(name = "total_hours", precision = 5, scale = 2, insertable = false, updatable = false)
     private BigDecimal totalHours;
 
-    // DB: NOT NULL DEFAULT 'PRESENT' + CHECK (PRESENT/ABSENT/COMPLETED)
+    // DEFAULT 'PRESENT' + CHECK
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private AttendanceStatus status;
@@ -45,11 +41,18 @@ public class Attendance {
     @Column(name = "proof_file_url", length = 500)
     private String proofFileUrl;
 
+    // DB: DEFAULT SYSDATETIME()
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // DB: updated by trigger trg_auto_update_attendance
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
     @PrePersist
     private void prePersist() {
-        if (status == null) {
-            status = AttendanceStatus.PRESENT; // mirror DEFAULT DB
-        }
+        if (status == null) status = AttendanceStatus.PRESENT; // mirror DEFAULT
+        // Không set totalHours ở đây; DB sẽ tự tính khi có checkin/checkout
     }
 
     // ===== Getters & Setters =====
@@ -66,7 +69,6 @@ public class Attendance {
     public void setCheckoutTime(LocalDateTime checkoutTime) { this.checkoutTime = checkoutTime; }
 
     public BigDecimal getTotalHours() { return totalHours; }
-    public void setTotalHours(BigDecimal totalHours) { this.totalHours = totalHours; }
 
     public AttendanceStatus getStatus() { return status; }
     public void setStatus(AttendanceStatus status) { this.status = status; }
@@ -77,9 +79,7 @@ public class Attendance {
     public String getProofFileUrl() { return proofFileUrl; }
     public void setProofFileUrl(String proofFileUrl) { this.proofFileUrl = proofFileUrl; }
 
-    // Helper tiện dùng trong service
-    @Transient
-    public boolean isOpenSession() {
-        return checkinTime != null && checkoutTime == null;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
 }

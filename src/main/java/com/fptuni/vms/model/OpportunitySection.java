@@ -1,6 +1,8 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
@@ -16,28 +18,32 @@ public class OpportunitySection {
 
     // FK → opportunities (NOT NULL). DB ON DELETE CASCADE.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "opp_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_oppsec_opp")
-    )
+    @JoinColumn(name = "opp_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_oppsec_opp"))
     private Opportunity opportunity;
 
+    @NotNull
     @Column(name = "section_order", nullable = false)
     private Integer sectionOrder;
 
+    @Nationalized
+    @Size(max = 255)
     @Column(name = "heading", length = 255)
     private String heading;
 
     // NVARCHAR(MAX)
     @Lob
     @Nationalized
-    @Column(name = "content",columnDefinition="NVARCHAR(MAX)")
+    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
+    @Nationalized
+    @Size(max = 500)
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Nationalized
+    @Size(max = 255)
     @Column(name = "caption", length = 255)
     private String caption;
 
@@ -45,7 +51,34 @@ public class OpportunitySection {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // ===== Getters & Setters =====
+    // DB trigger trg_auto_update_opportunitysections tự gán khi UPDATE
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
+    @PrePersist
+    private void prePersist() {
+        normalize();
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        normalize();
+        // Không set updatedAt ở đây; DB trigger sẽ cập nhật.
+    }
+
+    private void normalize() {
+        if (heading != null)    heading = heading.trim();
+        if (content != null)    content = content.trim();
+        if (imageUrl != null)   imageUrl = imageUrl.trim();
+        if (caption != null)    caption = caption.trim();
+    }
+
+    /* ======================
+       Getters & Setters
+       ====================== */
     public Integer getSectionId() { return sectionId; }
     public void setSectionId(Integer sectionId) { this.sectionId = sectionId; }
 
@@ -68,5 +101,5 @@ public class OpportunitySection {
     public void setCaption(String caption) { this.caption = caption; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

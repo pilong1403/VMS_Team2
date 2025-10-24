@@ -1,6 +1,11 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,34 +27,39 @@ public class Opportunity {
 
     // FK → organizations (NOT NULL). DB ON DELETE CASCADE; KHÔNG cascade REMOVE ở JPA.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "org_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_opp_org")
-    )
+    @JoinColumn(name = "org_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_opp_org"))
     private Organization organization;
 
     // FK → categories (NOT NULL)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "category_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "FK_opp_cat")
-    )
+    @JoinColumn(name = "category_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_opp_cat"))
     private Category category;
 
+    @Nationalized
+    @NotNull
+    @Size(max = 500)
     @Column(name = "title", nullable = false, length = 500)
     private String title;
 
+    @Nationalized
+    @Size(max = 500)
     @Column(name = "subtitle", length = 500)
     private String subtitle;
 
+    @Nationalized
+    @Size(max = 255)
     @Column(name = "location", length = 255)
     private String location;
 
+    @Nationalized
+    @Size(max = 500)
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
+    @NotNull
+    @Min(1)
     @Column(name = "needed_volunteers", nullable = false)
     private Integer neededVolunteers;
 
@@ -68,9 +78,30 @@ public class Opportunity {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    // DB trigger trg_auto_update_opportunities tự gán khi UPDATE
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist
     private void prePersist() {
-        if (status == null) status = OpportunityStatus.OPEN;
+        if (status == null) status = OpportunityStatus.OPEN; // mirror DB default
+        normalize();
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        normalize();
+        // KHÔNG set updatedAt ở đây; DB trigger sẽ cập nhật.
+    }
+
+    private void normalize() {
+        if (title != null)        title = title.trim();
+        if (subtitle != null)     subtitle = subtitle.trim();
+        if (location != null)     location = location.trim();
+        if (thumbnailUrl != null) thumbnailUrl = thumbnailUrl.trim();
     }
 
     /**
@@ -85,6 +116,9 @@ public class Opportunity {
     }
 
     // ===== Getters & Setters =====
+    /* ======================
+       Getters & Setters
+       ====================== */
     public Integer getOppId() { return oppId; }
     public void setOppId(Integer oppId) { this.oppId = oppId; }
 
@@ -119,5 +153,5 @@ public class Opportunity {
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

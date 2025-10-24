@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${form.oppId} != null ? 'Chỉnh sửa cơ hội' : 'Tạo cơ hội'">Cơ hội</title>
+
+  <link rel="stylesheet" th:href="@{/css/organization/organization-sidebar.css}">
+  <link rel="stylesheet" th:href="@{/css/organization/opportunity-form.css}">
+</head>
+<body>
+<div class="app">
+  <div th:replace="fragments/organization/sidebar :: sidebar"></div>
+
+  <!-- Main -->
+  <th:block th:with="isEdit=${form.oppId != null},
+                     pageTitle=${isEdit} ? 'Chỉnh sửa cơ hội' : 'Tạo cơ hội',
+                     actionUrl=${isEdit} ? ${'/opportunity/' + form.oppId} : '/opportunity'">
+
+    <main class="main">
+      <div class="header-bar">
+        <div>
+          <h2 th:text="${pageTitle}">Cơ hội</h2>
+          <div class="muted">Cập nhật thông tin cơ hội tình nguyện</div>
+        </div>
+        <a class="btn" th:href="@{/opportunity/org}">Hủy</a>
+      </div>
+
+      <!-- CHỈ 1 FORM DUY NHẤT -->
+      <form th:action="@{${actionUrl}}"
+            method="post" th:object="${form}" enctype="multipart/form-data">
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <!-- Thông tin cơ bản -->
+        <section class="card">
+          <h3>Thông tin cơ bản</h3>
+          <div class="grid">
+            <div>
+              <label>Tiêu đề cơ hội *</label>
+              <input th:field="*{title}" maxlength="500" required
+                     th:classappend="${#fields.hasErrors('title')}? ' field-error'">
+              <div class="error-text" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+            </div>
+
+            <div>
+              <label>Mô tả ngắn</label>
+              <input th:field="*{subtitle}" maxlength="500"
+                     th:classappend="${#fields.hasErrors('subtitle')}? ' field-error'">
+              <div class="error-text" th:if="${#fields.hasErrors('subtitle')}" th:errors="*{subtitle}"></div>
+            </div>
+
+            <div>
+              <label>Danh mục *</label>
+              <select th:field="*{categoryId}" required
+                      th:classappend="${#fields.hasErrors('categoryId')}? ' field-error'">
+                <option value="" hidden>-- Chọn --</option>
+                <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.categoryName}"></option>
+              </select>
+              <div class="error-text" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+            </div>
+
+            <div>
+              <label>Trạng thái *</label>
+              <select th:field="*{status}">
+                <option value="OPEN">Đang mở</option>
+                <option value="CLOSED">Đã đóng</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Địa điểm</label>
+              <input th:field="*{location}" maxlength="255"
+                     placeholder="VD: Sapa, Lào Cai">
+            </div>
+
+            <div>
+              <label>Số lượng tình nguyện viên cần *</label>
+              <input type="number" min="1" th:field="*{neededVolunteers}" required
+                     th:classappend="${#fields.hasErrors('neededVolunteers')}? ' field-error'">
+              <div class="error-text" th:if="${#fields.hasErrors('neededVolunteers')}" th:errors="*{neededVolunteers}"></div>
+            </div>
+
+            <div>
+              <label>Thumbnail URL</label>
+              <input th:field="*{thumbnailUrl}" maxlength="500" placeholder="https://...">
+              <div class="help">Bạn có thể dán URL đã có hoặc tải file ở ô bên cạnh.</div>
+            </div>
+
+            <div>
+              <label>Hoặc tải ảnh thumbnail</label>
+              <input type="file" name="thumbnailFile" accept="image/*,video/*,application/pdf">
+              <div class="help">Upload qua Cloudinary &rarr; tự sinh URL.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Thời gian tổ chức -->
+        <section class="card">
+          <h3>Thời gian tổ chức</h3>
+          <div class="grid">
+            <div>
+              <label>Ngày giờ bắt đầu *</label>
+              <input type="datetime-local" th:field="*{startTime}" required
+                     th:classappend="${#fields.hasErrors('startTime')}? ' field-error'">
+              <div class="error-text" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}"></div>
+            </div>
+
+            <div>
+              <label>Ngày giờ kết thúc *</label>
+              <input type="datetime-local" th:field="*{endTime}" required
+                     th:classappend="${#fields.hasErrors('endTime')}? ' field-error'">
+              <div class="error-text" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}"></div>
+
+              <div class="error-text" th:if="${#fields.hasGlobalErrors()}" th:each="e : ${#fields.globalErrors()}"
+                   th:text="${e}">Lỗi</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Nội dung chi tiết -->
+        <section class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0">Nội dung chi tiết</h3>
+            <button type="button" class="btn primary" onclick="addSection()">+ Thêm phần</button>
+          </div>
+
+          <div id="sections">
+            <div class="section-card" th:each="s, iStat : ${form.sections}">
+              <h4 th:text="'Phần ' + ${iStat.index + 1}"></h4>
+              <div class="grid">
+                <div>
+                  <label>Thứ tự *</label>
+                  <input type="number" min="1"
+                         th:name="${'sections['+iStat.index+'].sectionOrder'}"
+                         th:value="${s.sectionOrder}" required>
+                </div>
+                <div>
+                  <label>Tiêu đề</label>
+                  <input th:name="${'sections['+iStat.index+'].heading'}" th:value="${s.heading}">
+                </div>
+              </div>
+
+              <div>
+                <label>Nội dung</label>
+                <textarea rows="4"
+                          th:name="${'sections['+iStat.index+'].content'}"
+                          th:text="${s.content}"></textarea>
+              </div>
+
+              <div class="grid">
+                <div>
+                  <label>Hình ảnh</label>
+                  <input type="file" name="sectionFiles" accept="image/*">
+                  <div th:if="${s.imageUrl}">
+                    <img th:src="${s.imageUrl}" alt="Ảnh minh họa"
+                         style="width:120px;height:auto;margin-top:8px;border-radius:6px;">
+                  </div>
+                </div>
+                <div>
+                  <label>Chú thích hình</label>
+                  <input th:name="${'sections['+iStat.index+'].caption'}" th:value="${s.caption}">
+                </div>
+              </div>
+
+              <div class="toolbar">
+                <button type="button" class="btn danger"
+                        onclick="this.closest('.section-card').remove()">Xóa phần</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template thêm mới -->
+          <template id="tpl-section">
+            <div class="section-card">
+              <h4>Phần mới</h4>
+              <div class="grid">
+                <div>
+                  <label>Thứ tự *</label>
+                  <input class="inp-order" type="number" min="1" required>
+                </div>
+                <div>
+                  <label>Tiêu đề</label>
+                  <input class="inp-heading">
+                </div>
+              </div>
+              <div>
+                <label>Nội dung</label>
+                <textarea class="inp-content" rows="4"></textarea>
+              </div>
+              <div class="grid">
+                <div>
+                  <label>Hình ảnh</label>
+                  <input class="inp-img" type="file" name="sectionFiles" accept="image/*">
+                </div>
+                <div>
+                  <label>Chú thích hình</label>
+                  <input class="inp-caption">
+                </div>
+              </div>
+              <div class="toolbar">
+                <button type="button" class="btn danger"
+                        onclick="this.closest('.section-card').remove()">Xóa phần</button>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        <div class="actions-sticky">
+          <div class="toolbar">
+            <a class="btn" th:href="@{/opportunity/org}">Hủy</a>
+            <button type="submit" class="btn primary" onclick="prepareNamesBeforeSubmit()">Lưu thay đổi</button>
+          </div>
+        </div>
+      </form>
+    </main>
+  </th:block>
+</div>
+
+<script th:src="@{/js/organization/form-error-handler.js}"></script>
+<script>
+  function addSection() {
+    const tpl = document.getElementById('tpl-section').content.cloneNode(true);
+    document.getElementById('sections').appendChild(tpl);
+  }
+  function prepareNamesBeforeSubmit() {
+    const cards = document.querySelectorAll('#sections .section-card');
+    cards.forEach((card, i) => {
+      const sel = (q) => card.querySelector(q);
+      sel('.inp-order')?.setAttribute('name', `sections[${i}].sectionOrder`);
+      sel('.inp-heading')?.setAttribute('name', `sections[${i}].heading`);
+      sel('.inp-content')?.setAttribute('name', `sections[${i}].content`);
+      sel('.inp-caption')?.setAttribute('name', `sections[${i}].caption`);
+    });
+  }
+</script>
+</body>
+</html>

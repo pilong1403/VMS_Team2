@@ -1,15 +1,21 @@
 package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.Nationalized;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "otpverification", schema = "dbo")
 public class OtpVerification {
 
+    // Phải khớp DDL: VERIFY_EMAIL / RESET_PASSWORD / ORG_REGISTER
     public enum Purpose {
-        LOGIN,
-        REGISTER,
+        VERIFY_EMAIL,
         RESET_PASSWORD,
         ORG_REGISTER
     }
@@ -19,15 +25,20 @@ public class OtpVerification {
     @Column(name = "otp_id")
     private Integer otpId;
 
-    // Email to verify / reset (NOT NULL)
+    @Nationalized
+    @Email
+    @NotBlank
+    @Size(max = 100)
     @Column(name = "email", length = 100, nullable = false)
     private String email;
 
-    // OTP code content (NOT NULL)
+    @Nationalized
+    @NotBlank
+    @Size(max = 10)
     @Column(name = "otp_code", length = 10, nullable = false)
     private String otpCode;
 
-    // Expiration timestamp (NOT NULL)
+    @NotNull
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
@@ -39,27 +50,33 @@ public class OtpVerification {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    // Optional purpose with CHECK (RESET_PASSWORD / VERIFY_EMAIL)
+    // NULLABLE + CHECK
     @Enumerated(EnumType.STRING)
     @Column(name = "purpose", length = 30)
     private Purpose purpose;
 
-    // Optional token (e.g., link-based verification)
+    @Nationalized
+    @Size(max = 200)
     @Column(name = "token", length = 200)
     private String token;
 
-    // When the OTP/token was consumed (nullable)
     @Column(name = "consumed_at")
     private LocalDateTime consumedAt;
 
+    /* ======================
+       Lifecycle Hooks
+       ====================== */
     @PrePersist @PreUpdate
     private void normalize() {
         if (email != null) email = email.trim().toLowerCase();
+        if (otpCode != null) otpCode = otpCode.trim();
+        if (token != null) token = token.trim();
         if (verified == null) verified = Boolean.FALSE; // mirror DB default
     }
 
-    // ====================== GETTERS & SETTERS ======================
-
+    /* ======================
+       Getters & Setters
+       ====================== */
     public Integer getOtpId() { return otpId; }
     public void setOtpId(Integer otpId) { this.otpId = otpId; }
 
@@ -76,7 +93,6 @@ public class OtpVerification {
     public void setVerified(Boolean verified) { this.verified = verified; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public Purpose getPurpose() { return purpose; }
     public void setPurpose(Purpose purpose) { this.purpose = purpose; }
