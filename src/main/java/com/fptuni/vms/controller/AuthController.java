@@ -73,7 +73,7 @@ public class AuthController {
             if ("ADMIN".equals(r))
                 return "redirect:/admin/reports";
             if ("ORG_OWNER".equals(r))
-                return "redirect:/ratings";
+                return "redirect:/organization/ratings/opportunities";
             return "redirect:/home";
 
         } catch (AuthService.AuthException ex) {

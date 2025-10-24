@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điểm danh - Quản lý tình nguyện viên</title>
+    <link rel="stylesheet" th:href="@{/css/attendance/styleAttend.css}" />
+
+</head>
+
+<body>
+<div class="app-container">
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div th:replace="~{fragments/organization/header :: header}"></div>
+
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h1>Quản Lý Điểm danh</h1>
+                <p>Theo dõi điểm danh theo từng sự kiện của tổ chức</p>
+            </div>
+
+            <div class="section-title">Danh sách sự kiện</div>
+
+
+            <div class="controls-wrapper">
+
+                <!-- Search by keyword -->
+                <div class="search-box">
+                    <form th:action="@{/organization/attendance}" method="get">
+                        <input type="hidden" name="status" th:value="${status}">
+                        <input type="hidden" name="num" th:value="${num}">
+                        <input type="hidden" name="timeOrder" th:value="${timeOrder}">
+
+                        <input type="text" name="keyword"
+                               placeholder="Tìm kiếm theo tên sự kiện"
+                               th:value="${keyword != null ? keyword : ''}"/>
+                    </form>
+                </div>
+
+                <!-- Filter by num -->
+                <div class="filters-group">
+                    <div class="filter-dropdown">
+                        <form method="get" action="/organization/attendance">
+                            <input type="hidden" name="status" th:value="${status}">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="timeOrder" th:value="${timeOrder}">
+
+                            <select name="num" onchange="this.form.submit()">
+                                <option value="" th:selected="${num == null}" disabled>Hiển thị số bản ghi</option>
+                                <option value="10" th:selected="${num == 10}">10</option>
+                                <option value="20" th:selected="${num == 20}">20</option>
+                                <option value="50" th:selected="${num == 50}">50</option>
+                            </select>
+                        </form>
+                    </div>
+
+
+                    <!-- Filter by time order -->
+                    <div class="filter-dropdown">
+                        <form method="get" action="/organization/attendance">
+                            <input type="hidden" name="status" th:value="${status}">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="num" th:value="${num}">
+
+                            <select name="timeOrder" onchange="this.form.submit()">
+                                <option value="" th:selected="${timeOrder == null or #strings.isEmpty(timeOrder)}" disabled>Sắp xếp theo thời gian</option>                                <option value="desc" th:selected="${timeOrder == 'desc'}">Mới nhất</option>
+                                <option value="asc" th:selected="${timeOrder == 'asc'}">Cũ nhất</option>
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Filter by status -->
+                    <div class="filter-dropdown">
+                        <form method = "get" action="/organization/attendance">
+                            <input type="hidden" name="num" th:value="${num}">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="timeOrder" th:value="${timeOrder}">
+
+                            <select name="status" onchange="this.form.submit()">
+                                <option th:selected="${status == null or #strings.isEmpty(status)}" disabled>Lọc theo trạng thái</option>
+                                <option value="open" th:selected="${status == 'open'}">Mở</option>
+                                <option value="closed" th:selected="${status == 'closed'}">Kết thúc</option>
+                                <option value="cancelled" th:selected="${status == 'cancelled'}">Hủy</option>
+                                <option value="all" th:selected="${status == 'all'}">Tất cả</option>
+                            </select>
+
+                        </form>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="opp : ${oppList}">
+
+                        <td th:text="${opp.title}"> TITLE OPP </td>
+
+                        <td th:text="${#temporals.format(opp.startTime,'dd/MM/yyyy - HH:mm')}">
+                            10/10/2025 - 10:00
+                        </td>
+
+                        <td th:text="${#temporals.format(opp.endTime,'dd/MM/yyyy - HH:mm')}">
+                            10/10/2025 - 15:00
+                        </td>
+
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${opp.status.name().toLowerCase()}"
+                                  th:text="${opp.status.name() == 'OPEN' ? 'Mở' : (opp.status.name() == 'CLOSED' ? 'Kết Thúc' : 'Bị Hủy')}">
+                                  Trạng thái
+                            </span>
+                        </td>
+
+                        <td>
+                            <button th:if="${opp.status.name() != 'CANCELLED'}"
+                                    class="btn-view"
+                                    th:onclick="|window.location.href='@{/organization/attendance-details(opportunityId=${opp.oppId})}'|">
+                                Xem điểm danh
+                            </button>
+
+                            <button th:if="${opp.status.name() == 'CANCELLED'}" class="btn-disabled" disabled>
+                                Đã bị hủy
+                            </button>
+                        </td>
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+                <div id="error-alert" th:if="${error != null}" th:text="${error}"
+                     style="background-color:#f8d7da; color:#842029; border:1px solid #f5c2c7;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                </div>
+
+                <div id="success-alert" th:if="${success != null}" th:text="${success}"
+                     style="background-color:#d1e7dd; color:#0f5132; border:1px solid #badbcc;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                </div>
+
+
+            </div>
+
+
+
+            <div class="pagination" th:if="${totalPages >= 1}">
+                <button class="page-btn prev"
+                        th:disabled="${currentPage == 1}"
+                        th:onclick="|window.location.href='@{/organization/attendance(page=${currentPage - 1}, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|">
+                    &laquo;
+                </button>
+
+                <th:block th:if="${startPage > 2}">
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/organization/attendance(page=1, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|"
+                    >1</button>
+                    <button class="page-btn" disabled>...</button>
+                </th:block>
+
+                <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                    <button class="page-btn"
+                            th:text="${i}"
+                            th:classappend="${i == currentPage} ? ' active' : ''"
+                            th:onclick="|window.location.href='@{/organization/attendance(page=${i}, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|">
+                    </button>
+                </th:block>
+
+                <th:block th:if="${(endPage + 1) < totalPages}">
+                    <button class="page-btn" disabled>...</button>
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/organization/attendance(page=${totalPages}, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|">
+                        [[${totalPages}]]
+                    </button>
+                </th:block>
+
+                <button class="page-btn next"
+                        th:disabled="${currentPage == totalPages}"
+                        th:onclick="|window.location.href='@{/organization/attendance(page=${currentPage + 1}, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|">
+                    &raquo;
+                </button>
+            </div>
+
+
+
+        </div>
+
+    </div>
+</div>
+
+<script th:src="@{/js/attendance/script.js}"></script>
+
+<script>
+    const autoHideAlert = (elementId, timeout) => {
+        const alertElement = document.getElementById(elementId);
+        if (alertElement) {
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, timeout);
+        }
+    };
+
+    autoHideAlert('error-alert', 5000);
+    autoHideAlert('success-alert', 5000);
+
+</script>
+</body>
+
+</html>

@@ -8,74 +8,101 @@
     <link rel="stylesheet" th:href="@{/css/rate.css}">
 </head>
 <body>
+<div th:if="${successMessage}" class="toast success">
+    <i class="fa-solid fa-circle-check"></i>
+    <span th:text="${successMessage}"></span>
+</div>
+
+<div th:if="${errorMessage}" class="toast error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span th:text="${errorMessage}"></span>
+</div>
+
 <div class="app">
-    <aside class="sidebar">
-        <div class="title">Quản lý Đánh giá</div>
-        <nav class="nav">
-            <a th:href="@{/ratings}">Danh sách đánh giá</a>
-            <a class="active" th:href="@{/ratings/create}">Đánh giá tình nguyện viên</a>
-        </nav>
-        <div class="user-mini">
-            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
-            <div>
-                <div th:text="${currentUser.fullName}">Nguyễn Văn A</div>
-                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
+
 
     <main class="main">
-        <h2 style="margin-top:0">Đánh giá Tình nguyện viên</h2>
+        <div th:replace="~{fragments/organization/header :: header}"></div>
 
         <div class="detail-layout">
             <div class="panel">
                 <h3>Hướng dẫn</h3>
                 <div class="helper">
-                    Chọn tình nguyện viên và hoạt động bạn muốn đánh giá.
                     Sau đó chọn số sao và viết nhận xét, nhấn <b>Lưu</b> để hoàn tất.
                 </div>
                 <div class="divider"></div>
-                <div class="kv">
-                    <div class="row"><div class="key">Tổ chức:</div>
-                        <div th:text="${currentOrg.name}">Tên tổ chức</div></div>
-                    <div class="row"><div class="key">Người đánh giá:</div>
-                        <div th:text="${currentUser.fullName}">Tên người dùng</div></div>
-                </div>
-            </div>
-
-            <form th:action="@{/ratings/save}" th:object="${rating}" method="post" class="panel form" style="grid-column:2/3">
-                <h3>Tạo đánh giá mới</h3>
-
-                <div class="kv">
-                    <div class="row">
-                        <div class="key">Tình nguyện viên</div>
-                        <select th:field="*{rateeUser.userId}" required>
-                            <option value="">-- Chọn tình nguyện viên --</option>
-                            <option th:each="v : ${volunteers}"
-                                    th:value="${v.userId}"
-                                    th:text="${v.fullName}"></option>
-                        </select>
+                <div class="panel">
+                    <h3>Chi tiết đánh giá</h3>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <img th:src="${volunteer.avatarUrl != null ? volunteer.avatarUrl : 'https://i.pravatar.cc/100'}"
+                             class="avatar-large" alt="avatar"
+                             style="width:60px;height:60px;border-radius:50%;object-fit:cover;">
+                        <div>
+                            <div><b>Tình nguyện viên:</b> <span th:text="${volunteer.fullName}"></span></div>
+                            <div><b>Email:</b> <span th:text="${volunteer.email}"></span></div>
+                            <div><b>Số điện thoại:</b> <span th:text="${volunteer.phone}"></span></div>
+                            <div><b>Địa chỉ:</b> <span th:text="${volunteer.address}"></span></div>
+                            <div><b>Sao trung bình:</b>
+                                <span th:text="${#numbers.formatDecimal(avgStars, 1, 1)}">0.0</span> ⭐
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="row">
-                        <div class="key">Hoạt động</div>
-                        <select th:field="*{opportunity.oppId}" required>
-                            <option value="">-- Chọn hoạt động --</option>
-                            <option th:each="o : ${opportunities}"
-                                    th:value="${o.oppId}"
-                                    th:text="${o.title}"></option>
-                        </select>
+                    <div class="divider" style="margin:16px 0;"></div>
+
+                    <div class="kv">
+                        <div class="row">
+                            <div class="key"><b>Hoạt động:</b></div>
+                            <div th:text="${opportunity.title}">Tên hoạt động</div>
+                        </div>
+                        <div class="row">
+                            <div class="key"><b>Địa điểm:</b></div>
+                            <div th:text="${opportunity.location}">Địa điểm</div>
+                        </div>
+                        <div class="row">
+                            <div class="key"><b>Thời gian:</b></div>
+                            <div>
+                                <span th:text="${#temporals.format(opportunity.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+                                đến
+                                <span th:text="${#temporals.format(opportunity.endTime, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="key"><b>Trạng thái:</b></div>
+                            <div>
+                                <span th:if="${opportunity.startTime > T(java.time.LocalDateTime).now()}">UPCOMING</span>
+                                <span th:if="${opportunity.startTime <= T(java.time.LocalDateTime).now() and opportunity.endTime >= T(java.time.LocalDateTime).now()}">ONGOING</span>
+                                <span th:if="${opportunity.endTime < T(java.time.LocalDateTime).now()}">FINISHED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <form th:action="@{/organization/ratings/save}" method="post" th:object="${rating}" class="panel form">
+                <!-- Hidden -->
+                <input type="hidden" name="oppId" th:value="${opportunity.oppId}">
+                <input type="hidden" name="userId" th:value="${volunteer.userId}">
+
+                <div class="kv">
+                    <div class="row"><div class="key">Tình nguyện viên:</div>
+                        <div th:text="${volunteer.fullName}">Tên tình nguyện viên</div>
+                    </div>
+                    <div class="row"><div class="key">Hoạt động:</div>
+                        <div th:text="${opportunity.title}">Tên hoạt động</div>
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
                 <div class="kv">
-                    <div class="key">Đánh giá sao</div>
+                    <div class="key">Số sao</div>
                     <div class="stars">
                         <label th:each="i : ${#numbers.sequence(1,5)}">
-                            <input type="radio" th:field="*{stars}" th:value="${i}" required style="display:none">
-                            <span th:text="${i <= (rating.stars != null ? rating.stars : 0) ? '★':'☆'}"
+                            <input type="radio" th:field="*{stars}" th:value="${i}" required hidden>
+                            <span th:text="${i <= (rating.stars != null ? rating.stars : 0) ? '★' : '☆'}"
                                   style="font-size:24px;cursor:pointer;color:#f59e0b"></span>
                         </label>
                     </div>
@@ -85,15 +112,16 @@
 
                 <div class="kv">
                     <div class="key">Nhận xét</div>
-                    <textarea th:field="*{comment}" maxlength="500" placeholder="Viết nhận xét của bạn..."></textarea>
+                    <textarea th:field="*{comment}" maxlength="500" placeholder="Viết nhận xét..."></textarea>
                     <div class="counter">Tối đa 500 ký tự</div>
                 </div>
 
                 <div class="actions" style="margin-top:16px;">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-                    <button type="submit" class="btn success">Lưu đánh giá</button>
-                    <a th:href="@{/ratings}" class="btn ghost">Hủy</a>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn primary"><i class="fa-solid fa-star"></i> Lưu đánh giá</button>
+                    <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}}" class="btn ghost">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại
+                    </a>
                 </div>
             </form>
         </div>
@@ -102,5 +130,6 @@
 <script th:src="@{/js/rate.js}">
 
 </script>
+
 </body>
 </html>

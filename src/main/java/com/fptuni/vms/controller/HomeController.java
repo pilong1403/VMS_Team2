@@ -3,6 +3,11 @@ package com.fptuni.vms.controller;
 import com.fptuni.vms.dto.view.OpportunityCardDto;
 import com.fptuni.vms.model.Category;
 import com.fptuni.vms.service.OpportunityService;
+import com.fptuni.vms.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties.Http;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,14 +22,22 @@ import java.util.List;
 public class HomeController {
 
     private final OpportunityService opportunityService;
+    private final UserService userService;;
 
-    public HomeController(OpportunityService opportunityService) {
+    public HomeController(OpportunityService opportunityService, UserService userService) {
         this.opportunityService = opportunityService;
+        this.userService = userService;
     }
 
     @GetMapping("/home")
-    public String volunteerHome(Model model) {
+    public String volunteerHome(Model model, HttpSession session) {
         try {
+            Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (currentUserId != null) {
+                // Inject currentUser vào model để Thymeleaf và JS có thể prefill modal
+                model.addAttribute("currentUserId", currentUserId);
+                model.addAttribute("currentUser", userService.getUserById(currentUserId));
+            }
             List<OpportunityCardDto> latestOpportunities = opportunityService.getTop3LatestOpportunities();
             model.addAttribute("latestOpportunities", latestOpportunities);
         } catch (Exception e) {
@@ -34,8 +47,8 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String publicHome(Model model) {
-        return volunteerHome(model);
+    public String publicHome(Model model, HttpSession session) {
+        return volunteerHome(model, session);
     }
 
     @GetMapping("/home/opportunities")
@@ -105,13 +118,13 @@ public class HomeController {
     }
 
     @GetMapping("/homepage")
-    public String homepage(Model model) {
-        return volunteerHome(model);
+    public String homepage(Model model, HttpSession session) {
+        return volunteerHome(model, session);
     }
 
     @GetMapping("/index")
-    public String index(Model model) {
-        return volunteerHome(model);
+    public String index(Model model, HttpSession session) {
+        return volunteerHome(model, session);
     }
 
     @GetMapping("/about")

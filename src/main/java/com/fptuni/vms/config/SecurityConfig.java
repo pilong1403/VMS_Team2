@@ -66,7 +66,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/org/register", "/org/register/**").anonymous()
                                                 // ADMIN
                                                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                                                .requestMatchers("/ratings/**").hasAuthority("ORG_OWNER")
+                                                .requestMatchers("/organization/**").hasAuthority("ORG_OWNER")
 
                                                 // Điều hướng sau đăng nhập theo vai trò (ví dụ)
                                                 .requestMatchers("/home")

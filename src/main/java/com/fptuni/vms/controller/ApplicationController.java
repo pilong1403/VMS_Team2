@@ -5,6 +5,9 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Controller
 public class ApplicationController {
@@ -28,7 +32,7 @@ public class ApplicationController {
 
     /** Trang chi tiết cơ hội */
     @GetMapping("/opportunities/{id}")
-    public String view(@PathVariable Integer id, Model model) {
+    public String view(@PathVariable Integer id, Model model, HttpSession session) {
         Opportunity opp = applicationRepository.findOpportunityById(id);
         if (opp == null) {
             model.addAttribute("error", "Không tìm thấy cơ hội.");
@@ -36,8 +40,12 @@ public class ApplicationController {
         }
         model.addAttribute("opp", opp);
 
-        // tạm hardcode user đang test (thống nhất = 10)
-        Integer currentUserId = 11;
+        // Danh sách đơn của volunteer hiện tại
+        // lấy current user id từ session
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (currentUserId == null)
+            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+        model.addAttribute("items", service.listMyApplications(currentUserId));
         model.addAttribute("currentUserId", currentUserId);
 
         // Prefill profile cho popup
@@ -88,10 +96,124 @@ public class ApplicationController {
 
     // Danh sách đơn của volunteer
     @GetMapping("/volunteer/applications")
-    public String myApplications(Model model) {
-        Integer currentUserId = 11; // TODO: thay bằng ID từ session/auth
+    public String myApplications(Model model, HttpSession session) {
+        // lấy current user id từ session
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (currentUserId == null)
+            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
         model.addAttribute("items", service.listMyApplications(currentUserId));
         return "volunteer/my-applications";
+    }
+
+    // Danh sách đơn theo tổ chức (với filter, paging) - Phi Long iter 2
+    @GetMapping("/organization/{orgId}/applications")
+    public String listApplicationsByOrganization(
+            @PathVariable Integer orgId,
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            Model model, HttpSession session) {
+
+        // chuẩn hoá input
+        if (q != null && q.isBlank())
+            q = null;
+        if (status != null && status.isBlank())
+            status = null;
+        if (from != null && to != null && from.isAfter(to)) {
+            var t = from;
+            from = to;
+            to = t;
+        }
+
+        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to, Math.max(page, 0),
+                Math.max(size, 1));
+        var stats = service.computeOrgAppStats(orgId);
+
+        var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (currentUserId == null)
+            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+        model.addAttribute("currentUserId", currentUserId);
+
+        model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
+        model.addAttribute("toStr", to != null ? to.format(fmt) : "");
+
+        model.addAttribute("page", result);
+        model.addAttribute("stats", stats);
+        model.addAttribute("orgId", orgId);
+        model.addAttribute("q", q);
+        model.addAttribute("status", status);
+        return "organization/application-list";
+    }
+
+    // ===== helpers để giữ query khi quay lại list =====
+    private String keepListParams(Map<String, String> params) {
+        // chỉ pick các khóa được sử dụng
+        String[] keys = { "q", "status", "from", "to", "page", "size" };
+        StringBuilder sb = new StringBuilder();
+        try {
+            for (String k : keys) {
+                String v = params.get(k);
+                if (v != null && !v.isBlank()) {
+                    if (!sb.isEmpty())
+                        sb.append('&');
+                    sb.append(java.net.URLEncoder.encode(k, java.nio.charset.StandardCharsets.UTF_8))
+                            .append('=')
+                            .append(java.net.URLEncoder.encode(v, java.nio.charset.StandardCharsets.UTF_8));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return sb.toString();
+    }
+
+    // Duyệt đơn - Phi Long iter2
+    @PostMapping("/organization/{orgId}/applications/{appId}/approve")
+    public String approveApplication(@PathVariable Integer orgId,
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
+        try {
+            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            service.approveApplication(orgId, appId, processedById, note);
+            ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Không thể duyệt đơn. Vui lòng thử lại.");
+        }
+        String qs = keepListParams(allParams);
+        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
+    }
+
+    // Từ chối đơn - Phi Long iter2
+    @PostMapping("/organization/{orgId}/applications/{appId}/reject")
+    public String rejectApplication(@PathVariable Integer orgId,
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
+        try {
+            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            service.rejectApplication(orgId, appId, processedById, note);
+            ra.addFlashAttribute("success", "Đã từ chối đơn.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Không thể từ chối đơn. Vui lòng thử lại.");
+        }
+        String qs = keepListParams(allParams);
+        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
 }
