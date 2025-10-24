@@ -7,7 +7,12 @@ import java.time.LocalDateTime;
 @Table(name = "otpverification", schema = "dbo")
 public class OtpVerification {
 
-    public enum Purpose { RESET_PASSWORD, VERIFY_EMAIL }
+    public enum Purpose {
+        LOGIN,
+        REGISTER,
+        RESET_PASSWORD,
+        ORG_REGISTER
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
