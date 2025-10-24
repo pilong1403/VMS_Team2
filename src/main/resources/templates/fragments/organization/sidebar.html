@@ -238,9 +238,9 @@
         <div class="nav-label">MENU CHÍNH</div>
         <ul class="nav-menu">
             <li>
-                <a th:href="@{#}"
+                <a th:href="@{/organization/ratings/opportunities}"
                    class="nav-item"
-                   th:classappend="${activePage == 'users'} ? 'active' : ''">
+                   th:classappend="${activePage == 'opportunities'} ? 'active' : ''">
                     Quản lý Sự Kiện
                 </a>
             </li>
@@ -252,9 +252,9 @@
                 </a>
             </li>
             <li>
-                <a th:href="@{#}"
+                <a th:href="@{/organization/ratings/opportunity/{oppId}}"
                    class="nav-item"
-                   th:classappend="${activePage == 'faq'} ? 'active' : ''">
+                   th:classappend="${activePage == 'ratings'} ? 'active' : ''">
                     Đánh Giá
                 </a>
             </li>

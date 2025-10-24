@@ -1,123 +1,194 @@
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Danh sách Đánh giá Tình nguyện viên</title>
+    <title>TNV của hoạt động</title>
     <link rel="stylesheet" th:href="@{/css/rate.css}">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13Z8Y7P8QJdQfPRpA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
 <body>
+<div th:if="${successMessage}" class="toast success">
+    <i class="fa-solid fa-circle-check"></i>
+    <span th:text="${successMessage}"></span>
+</div>
+
+<div th:if="${errorMessage}" class="toast error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span th:text="${errorMessage}"></span>
+</div>
 <div class="app">
-    <aside class="sidebar">
-        <div class="title">Quản lý Đánh giá</div>
-        <nav class="nav">
-            <a class="active" th:href="@{/ratings}">Danh sách đánh giá</a>
-            <a th:href="@{/ratings/create}">Đánh giá tình nguyện viên</a>
-        </nav>
-        <div class="user-mini">
-            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
-            <div>
-                <div th:text="${currentUser.fullName}">Nguyễn Văn A</div>
-                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
-            </div>
-        </div>
-    </aside>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
+
+    <!-- Main -->
     <main class="main">
-        <div class="header">
+
+        <!-- Header -->
+        <div >
+            <div th:replace="~{fragments/organization/header :: header}"></div>
+
             <div>
-                <h2 style="margin:0">Danh sách Đánh giá Tình nguyện viên</h2>
+                <h2 style="margin:0" th:text="${opportunity.title}">Tên hoạt động</h2>
                 <div class="muted">
-                    Quản lý và theo dõi đánh giá của các tình nguyện viên thuộc
-                    <b th:text="${currentOrg.name}">Tên tổ chức</b>
+                    <i class="fa-solid fa-location-dot" style="margin-right:6px"></i>
+                    <span th:text="${opportunity.location}">Địa điểm</span>
+                    <span class="dot"></span>
+                    <i class="fa-regular fa-calendar" style="margin-right:6px"></i>
+                    <span th:text="|${#temporals.format(opportunity.startTime, 'dd/MM/yyyy')} &ndash; ${#temporals.format(opportunity.endTime, 'dd/MM/yyyy')}|">
+            10/10/2025 – 12/10/2025
+          </span>
                 </div>
-            </div>
-            <div class="badges">
-                <span class="badge warning" th:text="${pendingCount + ' chờ đánh giá'}">0 chờ đánh giá</span>
-                <span class="badge success" th:text="${doneCount + ' đã đánh giá'}">0 đã đánh giá</span>
             </div>
         </div>
 
-        <div class="toolbar">
-            <form th:action="@{/ratings}" method="get" style="display:flex;gap:10px;align-items:center;">
-                <div class="search">
-                    <span class="icon">🔎</span>
-                    <input id="search" type="text" name="keyword" th:value="${keyword}" placeholder="Tìm kiếm...">
-                </div>
+        <!-- Toolbar -->
+        <form class="toolbar" method="get" th:action="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}}">
+            <div class="search" style="margin-right:8px">
+                <i class="fa-solid fa-magnifying-glass icon"></i>
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên TNV...">
+            </div>
 
-                <select id="statusSelect" name="stars" class="select">
-                    <option th:value="''" th:selected="${filteredStars == null}">Tất cả sao</option>
-                    <option th:each="i : ${#numbers.sequence(1,5)}"
-                            th:value="${i}"
-                            th:text="${i + ' sao'}"
-                            th:selected="${filteredStars == i}"></option>
-                </select>
+            <select id="statusSelect" name="statusFilter" class="select" style="min-width:180px">
+                <option value="all" th:selected="${statusFilter == 'all'}">Tất cả trạng thái</option>
+                <option value="not_attended" th:selected="${statusFilter == 'not_attended'}">Chưa điểm danh</option>
+                <option value="pending" th:selected="${statusFilter == 'pending'}">Chờ đánh giá</option>
+                <option value="rated" th:selected="${statusFilter == 'rated'}">Đã đánh giá</option>
+            </select>
 
-                <button type="submit" class="btn primary">Lọc</button>
-            </form>
+            <select id="sortSelect" name="sort" class="select" style="min-width:200px">
+                <option value="nameAsc" th:selected="${sort == null or sort == 'nameAsc'}">Tên (A–Z)</option>
+                <option value="nameDesc" th:selected="${sort == 'nameDesc'}">Tên (Z–A)</option>
+                <option value="hoursDesc" th:selected="${sort == 'hoursDesc'}">Giờ tham gia (nhiều → ít)</option>
+                <option value="hoursAsc" th:selected="${sort == 'hoursAsc'}">Giờ tham gia (ít → nhiều)</option>
+                <option value="checkinDesc" th:selected="${sort == 'checkinDesc'}">Check-in (mới → cũ)</option>
+                <option value="checkinAsc" th:selected="${sort == 'checkinAsc'}">Check-in (cũ → mới)</option>
+            </select>
+
+            <select id="pageSizeSelect" name="size" class="select" style="min-width:120px">
+                <option value="10" th:selected="${pageSize == 10}">10 / trang</option>
+                <option value="20" th:selected="${pageSize == 20}">20 / trang</option>
+                <option value="50" th:selected="${pageSize == 50}">50 / trang</option>
+            </select>
+
+            <button type="submit" class="btn primary">Áp dụng</button>
+        </form>
+
+        <!-- Bảng danh sách -->
+        <div class="panel" style="padding:0">
+            <div class="table-responsive">
+                <table class="vms-table">
+                    <thead>
+                    <tr>
+                        <th style="width:38px"></th>
+                        <th>
+                            Tình nguyện viên
+                            <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
+        (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+         statusFilter=${statusFilter}, sort='name')}">
+                                <i class="fa-solid fa-arrow-down-a-z"></i>
+                            </a>
+                        </th>
+
+                        <th>
+                            Giờ tham gia
+                            <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
+        (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+         statusFilter=${statusFilter}, sort='hours')}">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                            </a>
+                        </th>
+
+                        <th>
+                            Check-in
+                            <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
+        (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+         statusFilter=${statusFilter}, sort='checkin')}">
+                                <i class="fa-solid fa-clock"></i>
+                            </a>
+                        </th>
+                        <th style="width:120px;text-align:center">Tổng giờ</th>
+                        <th style="width:140px;text-align:center">Thời gian check-in</th>
+                        <th style="width:220px;text-align:right">Thao tác</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="v : ${volunteers}">
+                        <td>
+                            <img class="avatar" style="width:36px;height:36px"
+                                 th:src="${v.userAvatar != null ? v.userAvatar : 'https://i.pravatar.cc/100'}" alt="avatar">
+                        </td>
+
+                        <td>
+                            <div class="name" th:text="${v.userFullName}">Tên TNV</div>
+                            <div class="muted" th:text="${v.opportunityTitle}">Tên hoạt động</div>
+                        </td>
+
+                        <td>
+              <span class="pill"
+                    th:classappend="${v.status == 'RATED'} ? ' success' :
+                                    (v.status == 'PENDING' ? ' warning' : ' gray')"
+                    th:text="${v.status == 'RATED' ? 'Đã đánh giá' :
+                             (v.status == 'PENDING' ? 'Chờ đánh giá' : 'Chưa điểm danh')}"></span>
+                        </td>
+
+                        <td>
+                            <i class="fa-regular fa-calendar"></i>
+                            <span th:text="|${#temporals.format(v.opportunityStart, 'dd/MM/yyyy')} &ndash; ${#temporals.format(v.opportunityEnd, 'dd/MM/yyyy')}|"></span>
+                            <div class="muted" style="margin-top:4px">
+                <span th:if="${v.checkinTime != null}">
+                  <i class="fa-regular fa-clock"></i>
+                  <span th:text="|In: ${#temporals.format(v.checkinTime, 'HH:mm dd/MM')}|"></span>
+                </span>
+                                <span th:if="${v.checkoutTime != null}" style="margin-left:10px">
+                  <i class="fa-regular fa-clock"></i>
+                  <span th:text="|Out: ${#temporals.format(v.checkoutTime, 'HH:mm dd/MM')}|"></span>
+                </span>
+                            </div>
+                        </td>
+
+                        <td th:text="${v.totalHours != null ? v.totalHours + ' giờ' : '0 giờ'}">0 giờ</td>
+
+                        <td th:text="${v.checkinTime != null ? #temporals.format(v.checkinTime, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+
+                        <td style="text-align:right">
+                            <a th:if="${v.status == 'PENDING'}" class="btn primary"
+                               th:href="@{'/organization/ratings/save/' + ${v.opportunityId} + '/' + ${v.userId}}">
+                                <i class="fa-solid fa-star" style="margin-right:6px"></i>Đánh giá
+                            </a>
+
+                            <a th:if="${v.status == 'RATED'}" class="btn ghost"
+                               th:href="@{'/organization/ratings/edit/' + ${v.ratingId}}">Xem / Sửa</a>
+
+                            <span th:if="${v.status == 'NOT_ATTENDED' or v.status == 'IN_PROGRESS'}" class="btn ghost" style="opacity:.6;cursor:not-allowed">
+    <i class="fa-regular fa-circle-xmark" style="margin-right:6px"></i>Chưa thể đánh giá
+</span>
+
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <section class="list">
-            <div th:if="${#lists.isEmpty(ratings)}" style="padding:20px;text-align:center;color:#6b7280">
-                Không có đánh giá nào.
-            </div>
-
-            <div class="card" th:each="r : ${ratings}">
-                <div class="card-head">
-                    <img class="avatar"
-                         th:src="${r.rateeUser.avatarUrl != null ? r.rateeUser.avatarUrl : 'https://i.pravatar.cc/100'}" alt="avatar">
-                    <div class="info">
-                        <div class="name" th:text="${r.rateeUser.fullName}">Tên TNV</div>
-                        <div class="muted"
-                             th:text="${#temporals.format(r.opportunity.startTime, 'dd/MM/yyyy')} + ' - ' + r.opportunity.title">
-                            Ngày - Hoạt động
-                        </div>
-                    </div>
-                    <span class="pill"
-                          th:classappend="${r.stars == null} ? ' gray' : ''"
-                          th:text="${r.stars == null ? 'Chờ đánh giá' : 'Đã đánh giá'}">
-                        Đã đánh giá
-                    </span>
-                </div>
-
-                <div class="card-body">
-                    <div>
-                        <div class="meta">
-                            <span th:text="${r.opportunity.title}">Hoạt động</span>
-                            <span class="dot"></span>
-                            <span th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy') : 'Chưa tạo'}">Ngày tạo</span>
-                        </div>
-                        <div class="quote"
-                             th:text="${r.comment != null ? '“' + r.comment + '”' : 'Chưa có nhận xét.'}">
-                            “Cảm ơn vì sự đóng góp!”
-                        </div>
-                    </div>
-                    <div class="org">
-                        <div class="rating">
-                            <span th:each="i : ${#numbers.sequence(1,5)}"
-                                  th:text="${i <= (r.stars != null ? r.stars : 0) ? '★' : '☆'}"></span>
-                        </div>
-                        <div class="org-name" th:text="${currentOrg.name}">Tên tổ chức</div>
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <a class="btn ghost" th:href="@{'/ratings/edit/' + ${r.id}}">Chỉnh sửa</a>
-                </div>
-            </div>
-        </section>
-
+        <!-- Pagination -->
         <div style="margin-top:20px;display:flex;justify-content:center;gap:6px;" th:if="${totalPages > 1}">
             <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-               th:href="@{/ratings(page=${i}, keyword=${keyword}, stars=${filteredStars}, size=${pageSize})}"
+               th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
+           (page=${i}, size=${pageSize}, keyword=${keyword}, status=${status}, sort=${sort})}"
                th:text="${i + 1}"
-               th:classappend="${i == currentPage} ? ' btn primary' : ' btn ghost'">1</a>
+               th:classappend="${i == currentPage} ? ' btn primary' : ' btn ghost'"></a>
         </div>
+
     </main>
 </div>
-<script th:src="@{/js/rate.js}">
 
-</script>
+<script th:src="@{/js/rate.js}"></script>
+
 </body>
 </html>
