@@ -11,28 +11,27 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
 <body>
+<div th:if="${successMessage}" class="toast success">
+    <i class="fa-solid fa-circle-check"></i>
+    <span th:text="${successMessage}"></span>
+</div>
+
+<div th:if="${errorMessage}" class="toast error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span th:text="${errorMessage}"></span>
+</div>
 <div class="app">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="title">Quản lý Đánh giá</div>
-        <nav class="nav">
-            <a th:href="@{/organization/ratings/opportunities}">Danh sách hoạt động</a>
-            <a class="active" th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}}">Hoạt động hiện tại</a>
-        </nav>
-        <div class="user-mini">
-            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
-            <div>
-                <div th:text="${currentUser.fullName}">Tên Admin</div>
-                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
+
 
     <!-- Main -->
     <main class="main">
 
         <!-- Header -->
-        <div class="header">
+        <div >
+            <div th:replace="~{fragments/organization/header :: header}"></div>
+
             <div>
                 <h2 style="margin:0" th:text="${opportunity.title}">Tên hoạt động</h2>
                 <div class="muted">

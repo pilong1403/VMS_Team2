@@ -19,22 +19,11 @@
 </div>
 
 <div class="app">
-    <aside class="sidebar">
-        <div class="title">Quản lý Đánh giá</div>
-        <nav class="nav">
-            <a class="active" th:href="@{/organization/ratings/create}">Đánh giá tình nguyện viên</a>
-        </nav>
-        <div class="user-mini">
-            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100?img=5'}" alt="admin">
-            <div>
-                <div th:text="${currentUser.fullName}">Nguyễn Văn A</div>
-                <div style="color:#9ca3af;font-size:12px" th:text="${currentUser.role.roleName}">Admin</div>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
+
 
     <main class="main">
-        <h2 style="margin-top:0">Đánh giá Tình nguyện viên</h2>
+        <div th:replace="~{fragments/organization/header :: header}"></div>
 
         <div class="detail-layout">
             <div class="panel">

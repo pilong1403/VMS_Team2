@@ -7,28 +7,17 @@
 </head>
 <body>
 <div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="title">Quản lý Đánh giá</div>
-        <nav class="nav">
-            <a class="active" th:href="@{/organization/ratings/opportunities}">Danh sách hoạt động</a>
 
-        </nav>
-        <div class="user-mini">
-            <img th:src="${currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://i.pravatar.cc/100'}">
-            <div>
-                <div th:text="${currentUser.fullName}">Tên người dùng</div>
-                <div class="role" th:text="${currentUser.role.roleName}">ORG_OWNER</div>
-            </div>
-        </div>
-    </aside>
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
+
 
     <!-- Main -->
     <main class="main">
 
         <!-- Header -->
-        <div class="header">
-            <h2>Hoạt động thuộc tổ chức <span th:text="${currentOrg.name}">Tên tổ chức</span></h2>
+        <div >
+            <div th:replace="~{fragments/organization/header :: header}"></div>
+
         </div>
 
         <!-- Toolbar -->
