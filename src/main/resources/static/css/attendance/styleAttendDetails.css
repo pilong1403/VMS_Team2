@@ -1,0 +1,894 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh; /* Sửa thành height */
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+
+/** ============================== ATTENDANCE PAGE Styles ============================= */
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #007bff;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+    margin-bottom: 8px;
+}
+
+.back-link:hover {
+    color: #0056b3;
+    transform: translateX(-2px);
+}
+
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Stats Cards */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-icon.clock {
+    background-color: #e8f0fe;
+    color: #1e40af;
+}
+
+.stat-icon.check {
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+
+.stat-icon.close {
+    background-color: #ffebee;
+    color: #f44336;
+}
+
+.stat-icon.percent {
+    background-color: antiquewhite;
+    color: darkorange;
+}
+
+/* Records Section */
+.records-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1.5rem;
+}
+
+.filters-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.search-box::before {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.filter-select {
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+/* Table */
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table thead {
+    background-color: #f8f9fa;
+}
+
+.attendance-table th {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.attendance-table td {
+    text-align: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.attendance-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.volunteer-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.volunteer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.volunteer-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.volunteer-name {
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+}
+
+.volunteer-email {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.time-cell {
+    color: #444;
+    font-size: 0.9rem;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.status-badge.present {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-badge.absent {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.status-badge.completed {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-ongoing {
+    background-color: saddlebrown;
+    color: white;
+}
+
+.btn-checkin {
+    background-color: #4285f4;
+    color: white;
+}
+
+.btn-checkin:hover {
+    background-color: #81d4fa;
+    color: #3367d6;
+}
+
+.btn-checkout {
+    background-color: #ff9800;
+    color: white;
+}
+
+.btn-checkout:hover {
+    background-color: #ffb74d;
+    color: brown;
+}
+
+.btn-detail {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 0.75rem;
+}
+
+.btn-detail:hover {
+    background-color: #f5f5f5;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+}
+
+.modal-subtitle {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 0.5rem;
+}
+
+.form-value {
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+}
+
+.form-value.textarea {
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+.hours-badge {
+    padding: 0.4rem 1rem;
+    background-color: #ff9800;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.upload-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.upload-icon {
+    font-size: 2rem;
+}
+
+.modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    background-color: white;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #f5f5f5;
+}
+
+.btn-save {
+    padding: 0.75rem 1.5rem;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #3367d6;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .search-box {
+        min-width: 100%;
+    }
+}
+
+.form-label small,
+.form-label span.readonly-text {
+    font-size: 0.8em;
+    color: #d32f2f;
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 0;
+}
+
+
+/* ===== Pagination Styles ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin: 30px 0 40px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    border: 1px solid #ddd;
+    background-color: #fff;
+    color: #333;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.page-btn.active {
+    background-color: #1a73e8;
+    color: white;
+    font-weight: 600;
+    border-color: #1a73e8;
+}
+
+.page-btn:disabled {
+    color: #aaa;
+    border-color: #eee;
+    cursor: not-allowed;
+    background-color: #f9f9f9;
+}
+
+.page-btn.prev,
+.page-btn.next {
+    font-weight: bold;
+    padding: 8px 12px;
+}
+
+
+
+/* =================================================================== */
+/* STYLES RIÊNG CHO MODAL CHECK-IN (#attendanceModal)        */
+/* =================================================================== */
+
+/* --- Lớp Phủ & Hiệu Ứng --- */
+#attendanceModal {
+    /* Các thuộc tính position, top, left, v.v... để phủ toàn màn hình */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex; /* Dùng flex để căn giữa modal */
+    align-items: center;
+    justify-content: center;
+
+    /* Hiệu ứng mượt mà */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#attendanceModal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* --- Khung Modal Chính --- */
+#attendanceModal .modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 480px; /* Kích thước phù hợp cho modal xác nhận */
+    overflow: hidden; /* Ẩn phần tràn ra khỏi border-radius */
+
+    /* Hiệu ứng xuất hiện */
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+#attendanceModal.active .modal {
+    transform: scale(1);
+}
+
+
+/* --- Header --- */
+#attendanceModal .modal-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+}
+
+#attendanceModal .modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+
+/* --- Body & Layout (Avatar trái, thông tin phải) --- */
+#attendanceModal .modal-body {
+    padding: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start; /* Căn các item theo đỉnh */
+}
+
+#attendanceModal .modal-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e9ecef;
+    flex-shrink: 0; /* Không bị co lại khi không đủ chỗ */
+}
+
+#attendanceModal .volunteer-details {
+    flex-grow: 1; /* Lấp đầy không gian còn lại */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#attendanceModal .volunteer-details p {
+    margin: 0;
+    font-size: 1rem;
+    color: #495057;
+}
+
+#attendanceModal .volunteer-details .volunteer-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+#attendanceModal input[type="datetime-local"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #495057;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#attendanceModal input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+
+/* --- Footer & Buttons (Căn phải) --- */
+#attendanceModal .modal-footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid #f0f0f0;
+    background-color: #f8f9fa; /* Nền nhẹ cho footer */
+    display: flex;
+    justify-content: flex-end; /* Đẩy các nút về bên phải */
+    gap: 1rem;
+}
+
+#attendanceModal .modal-footer button {
+    padding: 0.75rem 1.75rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#attendanceModal .btn-cancel {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+#attendanceModal .btn-cancel:hover {
+    background-color: #dee2e6;
+    transform: translateY(-1px);
+}
+
+#attendanceModal .btn-confirm {
+    background-color: #28a745; /* Màu xanh lá cây */
+    color: white;
+}
+
+#attendanceModal .btn-confirm:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+
+/* =================================================================== */
+/* STYLES RIÊNG CHO MODAL CHECK-OUT (#attendanceModal2)        */
+/* =================================================================== */
+
+/* --- Lớp Phủ & Hiệu Ứng --- */
+#attendanceModal2 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#attendanceModal2.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* --- Khung Modal Chính --- */
+#attendanceModal2 .modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 480px;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+#attendanceModal2.active .modal {
+    transform: scale(1);
+}
+
+
+/* --- Header --- */
+#attendanceModal2 .modal-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+}
+
+#attendanceModal2 .modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+
+/* --- Body & Layout (Avatar trái, thông tin phải) --- */
+#attendanceModal2 .modal-body {
+    padding: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+#attendanceModal2 .modal-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+#attendanceModal2 .volunteer-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#attendanceModal2 .volunteer-details p {
+    margin: 0;
+    font-size: 1rem;
+    color: #495057;
+}
+
+#attendanceModal2 .volunteer-details .volunteer-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+#attendanceModal2 input[type="datetime-local"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #495057;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#attendanceModal2 input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+
+/* --- Footer & Buttons --- */
+#attendanceModal2 .modal-footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid #f0f0f0;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+#attendanceModal2 .modal-footer button {
+    padding: 0.75rem 1.75rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#attendanceModal2 .btn-cancel {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+#attendanceModal2 .btn-cancel:hover {
+    background-color: #dee2e6;
+    transform: translateY(-1px);
+}
+
+#attendanceModal2 .btn-confirm {
+    background-color: #28a745;
+    color: white;
+}
+
+#attendanceModal2 .btn-confirm:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
