@@ -155,9 +155,9 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
                 att.checkinTime, att.checkoutTime, att.totalHours,
                 vr.id, vr.stars, vr.comment, vr.createdAt,
                 CASE
+                            WHEN vr.id IS NOT NULL THEN 'RATED'
                             WHEN att.checkinTime IS NULL THEN 'NOT_ATTENDED'
                             WHEN att.checkoutTime IS NULL THEN 'IN_PROGRESS'
-                            WHEN vr.id IS NOT NULL THEN 'RATED'
                             ELSE 'PENDING'
                         END
             )
@@ -174,20 +174,31 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
             jpql.append(" AND LOWER(u.fullName) LIKE LOWER(:kw) ");
         }
 
-        // Filter by volunteer rating status
         switch (statusFilter.toUpperCase()) {
             case "NOT_ATTENDED":
+                // Chưa điểm danh: chưa checkin
                 jpql.append(" AND att.checkinTime IS NULL ");
                 break;
+
+            case "IN_PROGRESS":
+                // Đang tham gia: đã checkin nhưng chưa checkout
+                jpql.append(" AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NULL ");
+                break;
+
             case "PENDING":
-                jpql.append(" AND att.checkinTime IS NOT NULL AND vr.id IS NULL ");
+                // Chờ đánh giá: đã checkout đầy đủ giờ nhưng chưa rating
+                jpql.append(" AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NOT NULL AND vr.id IS NULL ");
                 break;
+
             case "RATED":
-                jpql.append(" AND vr.id IS NOT NULL ");
+                // Đã đánh giá: phải đảm bảo có rating và đã tham gia đầy đủ
+                jpql.append(" AND vr.id IS NOT NULL AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NOT NULL ");
                 break;
+
             default: // ALL
                 break;
         }
+
 
         // Sorting
         switch (sort) {

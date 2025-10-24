@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TNV của hoạt động</title>
+    <title>Tình nguyện viên của hoạt động</title>
     <link rel="stylesheet" th:href="@{/css/rate.css}">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
@@ -50,23 +50,24 @@
         <form class="toolbar" method="get" th:action="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}}">
             <div class="search" style="margin-right:8px">
                 <i class="fa-solid fa-magnifying-glass icon"></i>
-                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên TNV...">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên tình nguyện viên...">
             </div>
 
             <select id="statusSelect" name="statusFilter" class="select" style="min-width:180px">
                 <option value="all" th:selected="${statusFilter == 'all'}">Tất cả trạng thái</option>
                 <option value="not_attended" th:selected="${statusFilter == 'not_attended'}">Chưa điểm danh</option>
+                <option value="in_progress" th:selected="${statusFilter == 'in_progress'}">Đang tham gia</option>
                 <option value="pending" th:selected="${statusFilter == 'pending'}">Chờ đánh giá</option>
                 <option value="rated" th:selected="${statusFilter == 'rated'}">Đã đánh giá</option>
             </select>
 
             <select id="sortSelect" name="sort" class="select" style="min-width:200px">
-                <option value="nameAsc" th:selected="${sort == null or sort == 'nameAsc'}">Tên (A–Z)</option>
-                <option value="nameDesc" th:selected="${sort == 'nameDesc'}">Tên (Z–A)</option>
+                <option value="nameAsc" th:selected="${sort == null or sort == 'nameAsc'}">Sắp xếp theo tên từ A-Z</option>
+                <option value="nameDesc" th:selected="${sort == 'nameDesc'}">Sắp xếp theo tên từ Z-A</option>
                 <option value="hoursDesc" th:selected="${sort == 'hoursDesc'}">Giờ tham gia (nhiều → ít)</option>
                 <option value="hoursAsc" th:selected="${sort == 'hoursAsc'}">Giờ tham gia (ít → nhiều)</option>
-                <option value="checkinDesc" th:selected="${sort == 'checkinDesc'}">Check-in (mới → cũ)</option>
-                <option value="checkinAsc" th:selected="${sort == 'checkinAsc'}">Check-in (cũ → mới)</option>
+                <option value="checkinDesc" th:selected="${sort == 'checkinDesc'}">Điểm danh (mới → cũ)</option>
+                <option value="checkinAsc" th:selected="${sort == 'checkinAsc'}">Điểm danh (cũ → mới)</option>
             </select>
 
             <select id="pageSizeSelect" name="size" class="select" style="min-width:120px">
@@ -112,7 +113,7 @@
                             </a>
                         </th>
                         <th style="width:120px;text-align:center">Tổng giờ</th>
-                        <th style="width:140px;text-align:center">Thời gian check-in</th>
+                        <th style="width:140px;text-align:center">Thời gian điểm danh</th>
                         <th style="width:220px;text-align:right">Thao tác</th>
                     </tr>
                     </thead>
@@ -125,7 +126,7 @@
                         </td>
 
                         <td>
-                            <div class="name" th:text="${v.userFullName}">Tên TNV</div>
+                            <div class="name" th:text="${v.userFullName}">Tên Tình Nguyện Viên</div>
                             <div class="muted" th:text="${v.opportunityTitle}">Tên hoạt động</div>
                         </td>
 

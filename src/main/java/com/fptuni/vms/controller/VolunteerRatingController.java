@@ -80,6 +80,7 @@ public class VolunteerRatingController {
 
         model.addAttribute("currentUser", me);
         model.addAttribute("currentOrg", org);
+        model.addAttribute("activePage", "op");
 
         return "rating/listOpportunities";
     }
