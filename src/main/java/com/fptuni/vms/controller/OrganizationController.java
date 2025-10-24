@@ -1,7 +1,7 @@
 package com.fptuni.vms.controller;
 
+import com.fptuni.vms.integrations.mail.MailService;
 import com.fptuni.vms.model.Organization;
-import com.fptuni.vms.service.MailService;
 import com.fptuni.vms.service.OrganizationService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.Sheet;

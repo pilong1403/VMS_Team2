@@ -4,6 +4,7 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,29 @@ public class MailServiceImpl implements MailService {
         } catch (Exception e) {
             throw new RuntimeException("MAIL_TEMPLATE_ERROR", e);
         }
+    }
+
+    @Override
+    public void sendRejectEmail(String to, String orgName, String reason) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Kết quả xét duyệt hồ sơ tổ chức: " + orgName);
+        message.setText("Xin chào,\n\nHồ sơ '" + orgName + "' đã bị từ chối."
+                + (reason != null && !reason.isBlank() ? "\n\nLý do: " + reason : "")
+                + "\n\nTrân trọng,\nBan quản trị hệ thống.");
+        mailSender.send(message);
+    }
+
+    @Override
+    public void sendApproveEmail(String to, String orgName, String note) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Kết quả xét duyệt hồ sơ tổ chức: " + orgName);
+        message.setText("Xin chào,\n\nHồ sơ '" + orgName + "' đã được DUYỆT."
+                + (note != null && !note.isBlank() ? "\n\nGhi chú: " + note : "")
+                + "\n\nTrân trọng,\nBan quản trị hệ thống.");
+        mailSender.send(message);
+
     }
 
     /** Hàm tiện ích chung cho text & html */
