@@ -89,6 +89,27 @@
                       Hồ sơ cá nhân
                     </a>
                   </li>
+                  <!-- Dashboard cho Admin và Org Owner -->
+                  <li th:if="${session.AUTH_ROLE == 'ADMIN'}">
+                    <a class="dropdown-item" th:href="@{/admin/reports}">
+                      <i class="bi bi-speedometer2 me-2"></i>
+                      Dashboard
+                    </a>
+                  </li>
+                  <li th:if="${session.AUTH_ROLE == 'ORG_OWNER'}">
+                    <a class="dropdown-item" th:href="@{/ratings}">
+                      <i class="bi bi-speedometer2 me-2"></i>
+                      Dashboard
+                    </a>
+                  </li>
+
+                  <!-- Lịch trình chỉ hiển thị cho volunteer -->
+                  <li th:if="${session.AUTH_ROLE == 'VOLUNTEER'}">
+                    <a class="dropdown-item" th:href="@{/profile/my-schedule}">
+                      <i class="bi bi-calendar3 me-2"></i>
+                      Lịch trình
+                    </a>
+                  </li>
                   <li><hr class="dropdown-divider" /></li>
                   <li>
                     <form th:action="@{/logout}" method="post" class="m-0">
