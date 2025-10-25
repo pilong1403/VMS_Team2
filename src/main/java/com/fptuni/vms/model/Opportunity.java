@@ -73,6 +73,17 @@ public class Opportunity {
         if (status == null) status = OpportunityStatus.OPEN;
     }
 
+    /**
+     * Phương thức này được gọi sau khi một entity được tải từ cơ sở dữ liệu.
+     * Nó sẽ tự động cập nhật trạng thái của cơ hội dựa trên thời gian kết thúc.
+     */
+    @PostLoad
+    private void updateStatusBasedOnTime() {
+        if (this.status == OpportunityStatus.OPEN && this.endTime != null && LocalDateTime.now().isAfter(this.endTime)) {
+            this.status = OpportunityStatus.CLOSED;
+        }
+    }
+
     // ===== Getters & Setters =====
     public Integer getOppId() { return oppId; }
     public void setOppId(Integer oppId) { this.oppId = oppId; }
