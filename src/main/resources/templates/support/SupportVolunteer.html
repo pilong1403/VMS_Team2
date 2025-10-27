@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn yêu cầu hỗ trợ</title>
+
+    <link rel="stylesheet" th:href="@{/css/support/stylesSP-volunteer.css}"/>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css}"/>
+
+</head>
+
+<body>
+<div class="app-container">
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Đơn yêu cầu hỗ trợ</h1>
+            <p class="page-subtitle">Tìm kiếm câu trả lời cho thắc mắc của bạn hoặc liên hệ với chúng tôi để được hỗ
+                trợ</p>
+        </div>
+
+        <div class="support-banner">
+            <h2>Cần hỗ trợ ngay?</h2>
+            <p>Chúng tôi luôn sẵn sàng giúp đỡ bạn 24/7</p>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>Hotline: 1900 1234</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>support@volunteer.vn</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>24/7 hỗ trợ</span>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="tabs">
+            <button th:classappend="${activeTab == 'submit' || activeTab == null} ? 'active'"
+                    class="tab-btn" onclick="window.location.href='/support_ticket'">Gửi đơn yêu cầu</button>
+
+            <button th:classappend="${activeTab == 'ticket'} ? 'active'"
+                    class="tab-btn" onclick="window.location.href='/support_ticket_tab2'">Đơn yêu cầu</button>
+
+            <button th:classappend="${activeTab == 'response'} ? 'active'"
+                    class="tab-btn" onclick="window.location.href='/support_ticket_tab3'">Đơn phản hồi</button>
+        </div>
+
+
+
+        <!-- ALERT MESSAGES -->
+        <div id="error-alert" th:if="${error != null}" th:text="${error}"
+             style="background-color:#f8d7da; color:#842029; border:1px solid #f5c2c7;
+                     padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+        </div>
+
+        <div id="success-alert" th:if="${success != null}" th:text="${success}"
+             style="background-color:#d1e7dd; color:#0f5132; border:1px solid #badbcc;
+                     padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+        </div>
+
+
+
+
+        <!--SUBMIT TAB-->
+        <div id="submit-tab" th:classappend="${activeTab == 'submit' || activeTab == null} ? 'active'" class="tab-content">
+            <form class="support-form" id="newTicketForm" action="/support_ticket/create" method="post" enctype="multipart/form-data"
+                  xmlns:th="http://www.thymeleaf.org"> <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subject">Tiêu đề <span style="color: red;">*</span></label>
+                        <input type="text" id="subject" name="title" placeholder="Tóm tắt vấn đề của bạn.." required>
+                        <span id="submit-subject-error" class="form-error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Mức độ ưu tiên <span style="color: red;">*</span></label>
+                        <select name="priority" id="priority" required>
+                            <option value="low">Thấp</option>
+                            <option value="normal">Trung bình</option>
+                            <option value="high">Cao</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Mô tả chi tiết <span style="color: red;">*</span></label>
+                    <textarea id="description" rows="5" name="description"
+                              placeholder="Hãy mô tả chi tiết vấn đề bạn đang gặp phải..."
+                              required></textarea>
+                    <span id="submit-desc-error" class="form-error-message"></span>
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group file-group">
+                        <label for="file-upload">Tải file</label>
+                        <div class="file-upload-area">
+                            <input name="attachment" type="file" id="file-upload">
+                        </div>
+                        <span id="submit-file-error" class="form-error-message"></span>
+                    </div>
+
+                    <div class="tips-box">
+                        <div class="tips-header">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span>Mẹo để nhận được hỗ trợ tốt nhất</span>
+                        </div>
+                        <ul>
+                            <li>Cung cấp đầy đủ thông tin chi tiết về vấn đề</li>
+                            <li>Đính kèm ảnh chụp màn hình nếu có thể</li>
+                            <li>Vui lòng tải lên tệp có định dạng được hỗ trợ:
+                                Hình ảnh: .jpg, .png, .gif /
+                                Video: .mp4, .mov /
+                                Tài liệu: .pdf, .doc, .docx"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert-box-warning">
+                    <div class="tips-header">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span>XIN CHÚ Ý</span>
+                    </div>
+                    <ul>
+                        <li>ĐƠN ĐÃ GỬI THÌ KHÔNG THỂ HỦY ĐƠN</li>
+                    </ul>
+                </div>
+
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Gửi yêu cầu</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+
+
+
+        <!--TICKET TAB-->
+        <div id="tickets-tab" th:classappend="${activeTab == 'ticket'} ? 'active'" class="tab-content">
+            <div class="filters-bar">
+
+                <!--Search Form -->
+                <form method="get" action="/support_ticket_tab2">
+                    <input type="hidden" name="status" th:value="${status}">
+                    <input type="hidden" name="num" th:value="${num}">
+                    <input type="hidden" name="priority" th:value="${priority}">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text"
+                               placeholder="Tìm kiếm theo ID, chủ đề (vd: 1, bị lỗi tài khoản,...)"
+                               name="keyword"
+                               th:value="${keyword != null ? keyword : '' }">
+                    </div>
+                </form>
+
+                <!--Filter by status form -->
+                <form method="get" action="/support_ticket_tab2">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+                    <input type="hidden" name="num" th:value="${num}">
+                    <input type="hidden" name="priority" th:value="${priority}">
+
+                    <select class="filter-select" name="status" onchange="this.form.submit()">
+                        <option selected disabled>Lọc theo trạng thái</option>
+                        <option value="OPEN" th:selected="${status == 'OPEN'}">Đang mở</option>
+                        <option value="IN_PROGRESS" th:selected="${status == 'IN_PROGRESS'}">Đang xử lý</option>
+                        <option value="CLOSED" th:selected="${status == 'CLOSED'}">Đã giải quyết</option>
+                        <option value="">Tất cả</option>
+                    </select>
+                </form>
+
+                <!--Filter by priority form -->
+                <form method="get" action="/support_ticket_tab2">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+                    <input type="hidden" name="num" th:value="${num}">
+                    <input type="hidden" name="status" th:value="${status}">
+
+                    <select class="filter-select" name="priority" onchange="this.form.submit()">
+                        <option selected disabled>Lọc theo priority</option>
+                        <option value="HIGH" th:selected="${priority == 'HIGH'}">Cao</option>
+                        <option value="NORMAL" th:selected="${priority == 'NORMAL'}">Trung bình</option>
+                        <option value="LOW" th:selected="${priority == 'LOW'}">Thấp</option>
+                        <option value="">Tất cả</option>
+                    </select>
+                </form>
+
+                <!--Filter by num -->
+                <form method="get" action="/support_ticket_tab2">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+                    <input type="hidden" name="status" th:value="${status}">
+                    <input type="hidden" name="priority" th:value="${priority}">
+
+                    <select class="filter-select records-select" name="num" onchange="this.form.submit()">
+                        <option value="" disabled th:selected="${num == null}">Số bản ghi</option>
+                        <option value="10" th:selected="${num == 10}">10</option>
+                        <option value="20" th:selected="${num == 20}">20</option>
+                        <option value="50" th:selected="${num == 50}">50</option>
+                    </select>
+                </form>
+
+            </div>
+
+
+
+
+            <!-- Tickets List -->
+            <div class="tickets-list">
+
+                <div class="ticket-card" th:each="ticket : ${listSupportTickets}">
+
+
+                    <div class="ticket-header">
+                        <div class="ticket-id" th:text="${'#' + ticket.ticketId}">#1236</div>
+                        <div class="ticket-badges">
+
+                            <div th:switch="${ticket.status.name()}">
+                                <span th:case="'OPEN'" class="badge badge-open">Đang mở</span>
+                                <span th:case="'IN_PROGRESS'" class="badge badge-processing">Đang xử lý</span>
+                                <span th:case="'CLOSED'" class="badge badge-close">Đã giải quyết</span>
+                            </div>
+
+
+                            <div th:switch="${ticket.priority.name()}">
+                                <span th:case="'LOW'" class="badge-priority badge-low">Ưu tiên: Thấp</span>
+                                <span th:case="'NORMAL'"
+                                      class="badge-priority badge-medium">Ưu tiên: Trung bình</span>
+                                <span th:case="'HIGH'" class="badge-priority badge-high">Ưu tiên: Cao</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <h3 class="ticket-title" th:text="${ticket.subject}">Title</h3>
+
+                    <div class="ticket-meta">
+                         <span th:if="${ticket.contactEmail != null}"
+                               th:text="${'[Gmail]: ' + ticket.contactEmail}">
+                                         Gmail: duyflt@gmail.com
+                         </span> |
+
+                        <span th:if="${ticket.getCreatedAt != null}"
+                              th:text="${'[Thời gian gửi]: ' + #temporals.format(ticket.getCreatedAt, 'dd/MM/yyyy - HH:mm:ss')}">
+                        </span>
+                    </div>
+
+
+                    <div class="ticket-footer">
+                        <span class="assigned-to">Đơn hỗ trợ</span>
+                        <div class="ticket-actions">
+
+                            <button class="btn btn-primary" onclick="viewDetailSupportTicket(this)"
+                                    th:data-ticket-id="${ticket.getTicketId()}"
+                                    th:data-subject="${ticket.getSubject()}"
+                                    th:data-priority="${ticket.getPriority()}"
+                                    th:data-status="${ticket.getStatus()}"
+                                    th:data-created-at="${ticket.getCreatedAt()}"
+                                    th:data-description="${ticket.getDescription()}"
+                                    th:data-attachment-url="${ticket.getAttachmentUrl()}"
+                                    th:data-contact-email="${ticket.getContactEmail()}">
+                                Xem chi tiết
+                            </button>
+
+                            <th:block th:if="${ticket.status.name() == 'OPEN'}">
+
+                                <button class="btn btn-primary btn-sm" onclick="openEditSupportTicketModal(this)"
+                                        th:data-ticket-id="${ticket.getTicketId()}"
+                                        th:data-subject="${ticket.getSubject()}"
+                                        th:data-priority="${ticket.getPriority()}"
+                                        th:data-des="${ticket.getDescription()}"
+                                        th:data-file="${ticket.getAttachmentUrl()}">
+                                    Sửa đơn
+                                </button>
+                            </th:block>
+
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev"
+                        th:disabled="${currentPage == 1}"
+                        th:onclick="|window.location.href='@{/support_ticket_tab2(page=${currentPage - 1}, num=${num}, status=${status}, keyword=${keyword}, priority=${priority})}'|">
+                    &laquo;
+                </button>
+
+                <th:block th:if="${startPage > 2}">
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/support_ticket_tab2(page=1, num=${num}, status=${status}, keyword=${keyword}, priority=${priority})}'|">
+                        1
+                    </button>
+                    <button class="page-btn" disabled>...</button>
+                </th:block>
+
+                <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                    <button class="page-btn"
+                            th:text="${i}"
+                            th:classappend="${i == currentPage} ? ' active' : ''"
+                            th:onclick="|window.location.href='@{/support_ticket_tab2(page=${i}, num=${num}, status=${status}, keyword=${keyword}, priority=${priority})}'|">
+                    </button>
+                </th:block>
+
+                <th:block th:if="${(endPage + 1) < totalPages}">
+                    <button class="page-btn" disabled>...</button>
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/support_ticket_tab2(page=${totalPages}, num=${num}, status=${status}, keyword=${keyword}, priority=${priority})}'|">
+                        [[${totalPages}]]
+                    </button>
+                </th:block>
+
+                <button class="page-btn next"
+                        th:disabled="${currentPage == totalPages}"
+                        th:onclick="|window.location.href='@{/support_ticket_tab2(page=${currentPage + 1}, num=${num}, status=${status}, keyword=${keyword}, priority=${priority})}'|">
+                    &raquo;
+                </button>
+            </div>
+        </div>
+
+
+
+        <!--RESPONSE TAB-->
+        <div id="responses-tab" th:classappend="${activeTab == 'response'} ? 'active'" class="tab-content">
+            <div class="filters-bar">
+
+                <form method="get" th:action="@{/support_ticket_tab3}">
+                    <input type="hidden" name="num" th:value="${numResponse}">
+                    <div class="search-box">
+                        <span class="search-icon"></span>
+                        <input type="text" name="keyword"
+                               placeholder="Tìm kiếm theo ID hoặc chủ đề ticket, vd: 1, bị lỗi tài khoản,..."
+                               th:value="${keywordResponse}" style="width: 500px;">
+                    </div>
+                </form>
+
+                <form method="get" th:action="@{/support_ticket_tab3}">
+                    <input type="hidden" name="keyword" th:value="${keywordResponse}">
+                    <select class="filter-select records-select" name="num" onchange="this.form.submit()">
+                        <option value="" disabled th:selected="${numResponse == null}">Số bản ghi</option>
+                        <option value="10" th:selected="${numResponse == 10}">10</option>
+                        <option value="20" th:selected="${numResponse == 20}">20</option>
+                        <option value="50" th:selected="${numResponse == 50}">50</option>
+                    </select>
+                </form>
+            </div>
+
+            <div id="error-response-alert" th:if="${errorResponse != null}" th:text="${errorResponse}"
+                 style="background-color:#f8d7da; color:#842029; border:1px solid #f5c2c7;
+                    padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+            </div>
+
+            <div id="success-alert2" th:if="${success != null}" th:text="${success}"
+                 style="background-color:#d1e7dd; color:#0f5132; border:1px solid #badbcc;
+                    padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+            </div>
+
+            <!-- Responses List -->
+            <div class="responses-list">
+                <div class="response-card" th:each="response : ${listSupportResponses}">
+                    <div class="response-header">
+                        <div class="response-id" th:text="${'R' + response.responseId}">R001</div>
+                    </div>
+                    <div class="response-ticket-info">
+                            <span class="ticket-link"
+                                  th:text="'Phản hồi cho đơn: #' + ${response.ticket.ticketId}"></span>
+                        - <span th:text="${response.ticket.subject}"></span>
+                    </div>
+                    <div class="response-meta">
+                        <span th:text="'Người gửi: ' + ${response.responder.fullName}"></span> |
+                        <span th:text="'Thời gian gửi: ' + ${#temporals.format(response.createdAt, 'dd/MM/yyyy - HH:mm')}"></span>
+                    </div>
+                    <div class="ticket-footer">
+                        <span class="assigned-to">Đơn phản hồi</span>
+                        <div class="ticket-actions">
+                            <button class="btn btn-primary btn-sm" onclick="viewDetailResponse(this)"
+                                    th:data-ticket-id="${response.getTicket().getTicketId()}"
+                                    th:data-ticket-subject="${response.getTicket().getSubject()}"
+                                    th:data-res-id="${response.getResponseId()}"
+                                    th:data-name="${response.getResponder().getFullName()}"
+                                    th:data-created-at="${response.getCreatedAt()}"
+                                    th:data-messagse="${response.getMessage()}"
+                                    th:data-attachment-url="${response.getAttachmentUrl()}">
+                                Xem chi tiết
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="pagination">
+                <button class="page-btn prev"
+                        th:disabled="${currentPageResponse == 1}"
+                        th:onclick="|window.location.href='@{/support_ticket_tab3(page=${currentPageResponse - 1}, num=${numResponse}, keyword=${keywordResponse})}'|">
+                    &laquo;
+                </button>
+
+                <th:block th:if="${startPageResponse > 1}">
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/support_ticket_tab3(page=1, num=${numResponse}, keyword=${keywordResponse})}'|">
+                        1
+                    </button>
+                    <button class="page-btn disabled">...</button>
+                </th:block>
+
+                <th:block th:each="i : ${#numbers.sequence(startPageResponse, endPageResponse)}">
+                    <button class="page-btn"
+                            th:text="${i}"
+                            th:classappend="${i == currentPageResponse} ? ' active' : ''"
+                            th:onclick="|window.location.href='@{/support_ticket_tab3(page=${i}, num=${numResponse}, keyword=${keywordResponse})}'|">
+                    </button>
+                </th:block>
+
+                <th:block th:if="${endPageResponse < totalPagesResponses}">
+                    <button class="page-btn disabled">...</button>
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/support_ticket_tab3(page=${totalPagesResponses}, num=${numResponse}, keyword=${keywordResponse})}'|">
+                        [[${totalPagesResponses}]]
+                    </button>
+                </th:block>
+
+                <button class="page-btn next"
+                        th:disabled="${currentPageResponse == totalPagesResponses}"
+                        th:onclick="|window.location.href='@{/support_ticket_tab3(page=${currentPageResponse + 1}, num=${numResponse}, keyword=${keywordResponse})}'|">
+                    &raquo;
+                </button>
+            </div>
+
+
+        </div>
+    </main>
+</div>
+
+
+
+<!--TICKET DETAIL MODAL-->
+<div id="ticketDetailModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="titleSP"><i class="fa-solid fa-ticket"></i> Chi Tiết Ticket #1234</h2>
+            <button class="modal-close" onclick="closeModal('ticketDetailModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="detail-grid">
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-id-card"></i> TICKET ID</label>
+                    <div class="detail-value" id="idSP">#1234</div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-pen-to-square"></i> CHỦ ĐỀ</label>
+                    <div class="detail-value" id="subjectSP">Unable to register for volunteer opportunity</div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-signal"></i> TRẠNG THÁI</label>
+                    <div class="detail-value">
+                        <span class="badge" id="statusSP">Đang mở</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-bolt"></i> ĐỘ ƯU TIÊN</label>
+                    <div class="detail-value">
+                        <span class="badge-priority" id="prioritySP">Trung bình</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-user"></i> NGƯỜI GỬI</label>
+                    <div class="detail-value" id="gmailSP">johndoe@email.com</div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-calendar-plus"></i> NGÀY GỬI</label>
+                    <div class="detail-value" id="dateSP">2024-12-15 10:30</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label><i class="fa-solid fa-align-left"></i> MÔ TẢ CHI TIẾT</label>
+                <div class="detail-description" id="desSP">
+                    I keep getting an error when trying to register for this beach cleanup event.
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label><i class="fa-solid fa-paperclip"></i> FILE ĐÍNH KÈM</label>
+                <div class="attachment-list">
+                    <div class="attachment-item" id="attachmentSP">
+                        <i class="fa-regular fa-file-image"></i> error-screenshot.png
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<!-- UPDATE TICKET MODAL-->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2 id="titleUpdate">Cập nhật đơn #1234</h2>
+            <button class="modal-close" onclick="closeModal('updateModal')">&times;</button>
+        </div>
+
+
+        <form id="updateTicketForm" th:action="@{/support_ticket_tab2/update}" method="post" enctype="multipart/form-data">
+            <div class="modal-body">
+
+                <input type="hidden" name="ticketId" id="ticketIdUpdate">
+                <input type="hidden" name="page" th:value="${currentPage != null ? currentPage : 1}">
+                <input type="hidden" name="size" th:value="${num != null ? num : 5}">
+
+
+                <div class="form-group">
+                    <label for="subject">Chủ đề <span style="color: red;">*</span></label>
+                    <input type="text" id="edit-title" class="form-control" name="titleUpdate" required>
+                    <span id="title-error" class="form-error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-priority">Mức độ ưu tiên <span style="color: red;">*</span></label>
+                    <select required id="edit-priority" class="form-control" name="priorityUpdate">
+                        <option value="HIGH">Cao</option>
+                        <option value="NORMAL">Trung Bình</option>
+                        <option value="LOW">Thấp</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mô tả chi tiết <span style="color: red;">*</span></label>
+                    <textarea required id="desUpdate" name="desUpdate" class="form-textarea" placeholder="Nhập phản hồi của bạn..." rows="6"></textarea>
+                    <span id="desc-error" class="form-error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Đính kèm file</label>
+                    <div id="detailProofLinkContainer" style="margin-bottom: 8px;"></div>
+                    <input type="file" class="file-upload" id="attachmentUpdate" name="attachmentUpdate">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeModal('updateModal')">Hủy</button>
+                    <button class="btn btn-primary" id="submit-update-btn">Cập nhật</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+
+
+
+<!-- Modal: Response Detail -->
+<div id="responseDetailModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="titleRes"><i class="fa-solid fa-reply"></i> Chi Tiết Phản Hồi R001</h2>
+            <button class="modal-close" onclick="closeModal('responseDetailModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="detail-section response-ticket-section">
+                <label><i class="fa-solid fa-link"></i> PHẢN HỒI ĐƠN</label>
+                <div class="ticket-reference">
+                    <span class="ticket-ref-id" id="idAndTileTicket">#1234</span>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-user"></i> NGƯỜI GỬI</label>
+                    <div class="detail-value" id="nameResponder">
+                        Nguyễn Văn A<br><small>ADMIN</small>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <label><i class="fa-solid fa-calendar-day"></i> NGÀY GỬI</label>
+                    <div class="detail-value" id="dateRes">2024-12-15 15:30</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label><i class="fa-solid fa-comment-dots"></i> NỘI DUNG PHẢN HỒI</label>
+                <div class="detail-description" id="massageRes">
+                    Cảm ơn bạn đã liên hệ. Chúng tôi đã xác định vấn đề là do lỗi validation trong form đăng ký.
+                    Đội kỹ thuật đang xử lý và sẽ sửa trong vòng 24 giờ. Trong thời gian chờ đợi,
+                    bạn có thể thử đăng ký qua link thay thế này...
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label><i class="fa-solid fa-paperclip"></i> FILE ĐÍNH KÈM</label>
+                <div class="attachment-list">
+                    <div class="attachment-item" id="attachmentRes">
+                        <i class="fa-regular fa-file-pdf"></i> solution-guide.pdf
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/support/script.js}"></script>
+<script th:src="@{/js/support/support-volunteer.js}"></script>
+
+<script>
+    const autoHideAlert = (elementId, timeout) => {
+        const alertElement = document.getElementById(elementId);
+        if (alertElement) {
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, timeout);
+        }
+    };
+
+    autoHideAlert('error-alert', 5000);
+    autoHideAlert('success-alert', 5000);
+    autoHideAlert('error-response-alert', 5000);
+    autoHideAlert('success-alert2', 5000);
+</script>
+</body>
+
+</html>
