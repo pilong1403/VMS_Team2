@@ -105,6 +105,7 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
         return query.getResultList();
     }
 
+
     @Override
     public long countOpportunitiesByOrg(int orgId, String keyword, String eventStatus) {
         StringBuilder jpql = new StringBuilder("""
@@ -151,25 +152,25 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
             String sort, int offset, int limit) {
 
         StringBuilder jpql = new StringBuilder("""
-                    SELECT new com.fptuni.vms.dto.response.OpportunityVolunteerRatingDto(
-                        u.userId, u.fullName, u.avatarUrl,
-                        o.oppId, o.title, o.location, o.startTime, o.endTime,
-                        att.checkinTime, att.checkoutTime, att.totalHours,
-                        vr.id, vr.stars, vr.comment, vr.createdAt,
-                        CASE
-                                    WHEN att.checkinTime IS NULL THEN 'NOT_ATTENDED'
-                                    WHEN att.checkoutTime IS NULL THEN 'IN_PROGRESS'
-                                    WHEN vr.id IS NOT NULL THEN 'RATED'
-                                    ELSE 'PENDING'
-                                END
-                    )
-                    FROM Application a
-                    JOIN a.volunteer u
-                    JOIN a.opportunity o
-                    LEFT JOIN Attendance att ON att.application.appId = a.appId
-                    LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = u.userId
-                    WHERE o.organization.orgId = :orgId AND o.oppId = :opportunityId
-                """);
+            SELECT new com.fptuni.vms.dto.response.OpportunityVolunteerRatingDto(
+                u.userId, u.fullName, u.avatarUrl,
+                o.oppId, o.title, o.location, o.startTime, o.endTime,
+                att.checkinTime, att.checkoutTime, att.totalHours,
+                vr.id, vr.stars, vr.comment, vr.createdAt,
+                CASE
+                            WHEN vr.id IS NOT NULL THEN 'RATED'
+                            WHEN att.checkinTime IS NULL THEN 'NOT_ATTENDED'
+                            WHEN att.checkoutTime IS NULL THEN 'IN_PROGRESS'
+                            ELSE 'PENDING'
+                        END
+            )
+            FROM Application a
+            JOIN a.volunteer u
+            JOIN a.opportunity o
+            LEFT JOIN Attendance att ON att.application.appId = a.appId
+            LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = u.userId
+            WHERE o.organization.orgId = :orgId AND o.oppId = :opportunityId
+        """);
 
         // Filter keyword
         if (keyword != null && !keyword.isBlank()) {
@@ -179,17 +180,29 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
         // Filter by volunteer rating status
         switch (statusFilter.toUpperCase()) {
             case "NOT_ATTENDED":
+                // Chưa điểm danh: chưa checkin
                 jpql.append(" AND att.checkinTime IS NULL ");
                 break;
+
+            case "IN_PROGRESS":
+                // Đang tham gia: đã checkin nhưng chưa checkout
+                jpql.append(" AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NULL ");
+                break;
+
             case "PENDING":
-                jpql.append(" AND att.checkinTime IS NOT NULL AND vr.id IS NULL ");
+                // Chờ đánh giá: đã checkout đầy đủ giờ nhưng chưa rating
+                jpql.append(" AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NOT NULL AND vr.id IS NULL ");
                 break;
+
             case "RATED":
-                jpql.append(" AND vr.id IS NOT NULL ");
+                // Đã đánh giá: phải đảm bảo có rating và đã tham gia đầy đủ
+                jpql.append(" AND vr.id IS NOT NULL AND att.checkinTime IS NOT NULL AND att.checkoutTime IS NOT NULL ");
                 break;
+
             default: // ALL
                 break;
         }
+
 
         // Sorting
         switch (sort) {
