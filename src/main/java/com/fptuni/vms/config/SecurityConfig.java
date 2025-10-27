@@ -74,6 +74,7 @@ public class SecurityConfig {
 
                                                 // Chức năng dành cho chủ tổ chức
                                                 .requestMatchers("/opportunity/**").hasAuthority("ORG_OWNER")
+                                                .requestMatchers("/org/opps/**").hasAuthority("ORG_OWNER")
                                                 // Vùng tự phục vụ
                                                 .requestMatchers("/vol/**")
                                                 .hasAnyAuthority("VOLUNTEER", "ORG_OWNER", "ADMIN")

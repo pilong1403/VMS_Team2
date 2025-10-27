@@ -2,7 +2,6 @@ package com.fptuni.vms.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,7 +31,7 @@ public class OpportunitySection {
     // NVARCHAR(MAX)
     @Lob
     @Nationalized
-    @Column(name = "content",columnDefinition="NVARCHAR(MAX)")
+    @Column(name = "content", columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
     @Column(name = "image_url", length = 500)
@@ -44,6 +43,10 @@ public class OpportunitySection {
     // DEFAULT SYSDATETIME() từ DB
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
+    // Trigger cập nhật khi UPDATE
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 
     // ===== Getters & Setters =====
     public Integer getSectionId() { return sectionId; }
@@ -69,4 +72,7 @@ public class OpportunitySection {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
