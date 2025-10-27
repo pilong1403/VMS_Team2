@@ -240,7 +240,7 @@
             <li>
                 <a th:href="@{/org/opps}"
                    class="nav-item"
-                   th:classappend="${activePage == 'op'} ? 'active' : ''">
+                   th:classappend="${activePage == '#'} ? 'active' : ''">
                     Quản lý Sự Kiện
                 </a>
             </li>
@@ -254,7 +254,7 @@
             <li>
                 <a th:href="@{/organization/ratings/opportunities}"
                    class="nav-item"
-                   th:classappend="${activePage == 'ratingsActive'} ? 'active' : ''">
+                   th:classappend="${activePage == 'op'} ? 'active' : ''">
                     Đánh Giá
                 </a>
             </li>
