@@ -34,20 +34,20 @@ public class ApplicationServiceImpl implements ApplicationService {
         public Application apply(Integer oppId, Integer volunteerId, String reason) {
                 Opportunity opp = repo.findOpportunityById(oppId);
                 if (opp == null)
-                        throw new IllegalArgumentException("Opportunity not found: " + oppId);
+                        throw new IllegalArgumentException("Cơ hội không tồn tại: " + oppId);
 
                 if (opp.getStatus() != Opportunity.OpportunityStatus.OPEN)
-                        throw new IllegalStateException("Opportunity is not OPEN");
+                        throw new IllegalStateException("Cơ hội không còn mở");
 
                 if (opp.getEndTime() != null && !opp.getEndTime().isAfter(LocalDateTime.now()))
-                        throw new IllegalStateException("Opportunity already ended");
+                        throw new IllegalStateException("Cơ hội đã kết thúc");
 
                 User volunteer = repo.findUserById(volunteerId);
                 if (volunteer == null)
-                        throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
+                        throw new IllegalArgumentException("Tình nguyện viên không tồn tại: " + volunteerId);
 
                 if (repo.existsByOppIdAndVolunteerId(oppId, volunteerId))
-                        throw new IllegalStateException("You already applied to this opportunity");
+                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này");
 
                 Application app = new Application();
                 app.setOpportunity(opp);
@@ -58,7 +58,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 try {
                         return repo.save(app);
                 } catch (PersistenceException ex) {
-                        throw new IllegalStateException("You already applied to this opportunity");
+                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này");
                 }
         }
 

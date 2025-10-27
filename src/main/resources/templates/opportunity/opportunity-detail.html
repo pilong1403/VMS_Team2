@@ -60,14 +60,7 @@
                             </form>
 
 
-                            <a class="btn btn-outline-secondary btn-rounded"
-                                th:href="@{/opportunities/favorite(oppId=${opp != null ? opp.oppId : 0})}">
-                                <i class="bi bi-heart"></i> Yêu thích
-                            </a>
-                            <a class="btn btn-outline-secondary btn-rounded"
-                                th:href="@{/opportunities/save(oppId=${opp != null ? opp.oppId : 0})}">
-                                <i class="bi bi-bookmark"></i> Lưu lại
-                            </a>
+
                         </div>
 
                     </div>
@@ -197,7 +190,7 @@
                         <div class="text-secondary small mb-2"
                             th:text="${org != null ? org.description : 'Mô tả về tổ chức...'}">Mô tả</div>
                         <a class="btn btn-outline-primary btn-sm btn-rounded"
-                            th:href="@{/organizations/{id}(id=${org != null ? org.orgId : 0})}">Xem trang tổ chức</a>
+                            th:href="@{/organizations/{id}(id=${opp.organization.orgId})}">Xem trang tổ chức</a>
                     </div>
                 </div>
             </div>

@@ -260,4 +260,76 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             return null; // tránh exception nếu không tìm thấy
         }
     }
+
+    // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
+    @Override
+    public Page<Opportunity> findOrgOpportunitiesWithFilters(
+            int orgId,
+            Integer categoryId,
+            String keyword,
+            Opportunity.OpportunityStatus status,
+            String quick,
+            String sortBy,
+            Pageable pageable) {
+        StringBuilder where = new StringBuilder(" WHERE org.orgId = :orgId ");
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", orgId);
+
+        if (categoryId != null) {
+            where.append(" AND c.categoryId = :catId ");
+            params.put("catId", categoryId);
+        }
+        if (status != null) {
+            where.append(" AND o.status = :st ");
+            params.put("st", status);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            where.append("""
+                        AND (
+                             LOWER(o.title)    LIKE LOWER(CONCAT('%', :kw, '%'))
+                          OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :kw, '%'))
+                          OR LOWER(o.location) LIKE LOWER(CONCAT('%', :kw, '%'))
+                        )
+                    """);
+            params.put("kw", keyword.trim());
+        }
+
+        if (quick != null && !quick.isBlank()) {
+            switch (quick.toLowerCase()) {
+                case "upcoming" -> where.append(" AND o.startTime >= CURRENT_TIMESTAMP ");
+                case "ongoing" ->
+                    where.append(" AND o.startTime <= CURRENT_TIMESTAMP AND o.endTime >= CURRENT_TIMESTAMP ");
+                case "past" -> where.append(" AND o.endTime < CURRENT_TIMESTAMP ");
+                default -> {
+                    /* no-op */ }
+            }
+        }
+
+        String orderClause = ("deadline".equalsIgnoreCase(sortBy))
+                ? " ORDER BY o.endTime ASC "
+                : " ORDER BY o.createdAt DESC ";
+
+        String dataJpql = "SELECT o FROM Opportunity o " +
+                "JOIN FETCH o.organization org " +
+                "JOIN FETCH o.category c " +
+                where + orderClause;
+
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o " +
+                "JOIN o.organization org " +
+                "JOIN o.category c " +
+                where;
+
+        TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class);
+        params.forEach(dataQ::setParameter);
+        dataQ.setFirstResult((int) pageable.getOffset());
+        dataQ.setMaxResults(pageable.getPageSize());
+        List<Opportunity> content = dataQ.getResultList();
+
+        TypedQuery<Long> cntQ = em.createQuery(countJpql, Long.class);
+        params.forEach(cntQ::setParameter);
+        Long total = cntQ.getSingleResult();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+    // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
 }

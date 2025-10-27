@@ -40,4 +40,13 @@ public interface OpportunityRepository {
 
     Opportunity findById(int id);
 
+    // === Org scope + keyword + quick chips ===
+    Page<Opportunity> findOrgOpportunitiesWithFilters(
+            int orgId,
+            Integer categoryId,
+            String keyword, // tìm trong title/subtitle/location
+            Opportunity.OpportunityStatus status,
+            String quick, // upcoming | ongoing | past | null
+            String sortBy,
+            Pageable pageable);
 }

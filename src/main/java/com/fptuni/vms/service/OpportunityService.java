@@ -31,4 +31,20 @@ public interface OpportunityService {
 
     List<Opportunity> findByOrganization(int orgId);
     // Opportunity findById(int id);
+
+    // ================= PHI LONG ITER 3 =================//
+    // Trang tổ chức - trả về Entity trực tiếp
+    Page<Opportunity> getOrgOpportunities(
+            int orgId,
+            Integer categoryId,
+            String keyword,
+            String status, // OPEN|CLOSED|CANCELLED
+            String quick, // upcoming|ongoing|past|null
+            String sortBy,
+            Pageable pageable);
+
+    // đếm số đơn APPROVED/COMPLETED cho 1 opp (dùng để render progress)
+    long countApproved(int oppId);
+    // ================= PHI LONG ITER 3 =================//
+
 }

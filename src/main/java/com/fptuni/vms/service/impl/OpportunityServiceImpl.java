@@ -144,4 +144,37 @@ public class OpportunityServiceImpl implements OpportunityService {
     // public Opportunity findById(int id) {
     // return opportunityRepository.findById(id);
     // }
+
+    // === Volunteer view Org opportunities – trả entity trực tiếp === PhiLong iter
+    // 3
+    @Override
+    public Page<Opportunity> getOrgOpportunities(
+            int orgId,
+            Integer categoryId,
+            String keyword,
+            String status,
+            String quick,
+            String sortBy,
+            Pageable pageable) {
+        Opportunity.OpportunityStatus st = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                st = Opportunity.OpportunityStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        if (sortBy == null || sortBy.isBlank())
+            sortBy = "newest";
+
+        return opportunityRepository.findOrgOpportunitiesWithFilters(
+                orgId, categoryId, keyword, st, quick, sortBy, pageable);
+    }
+
+    // === NEW: helper count ===
+    @Override
+    public long countApproved(int oppId) {
+        Long c = opportunityRepository.countApprovedApplications(oppId);
+        return c == null ? 0L : c;
+    }
+    // ================= PHI LONG ITER 3 =================//
 }
