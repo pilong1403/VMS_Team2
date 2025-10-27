@@ -12,6 +12,6 @@ public class AdminController {
     /** Trang placeholder đúng với redirect sau đăng nhập ADMIN */
     @GetMapping("/file-giu-cho")
     public String adminPlaceholder() {
-        return "admin/file-giu-cho"; // templates/admin/file-giu-cho.html
+        return "admin/FAQ";
     }
 }

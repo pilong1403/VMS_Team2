@@ -105,12 +105,12 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
-    // ================== PhiLong iter2 query theo tổ chức ==================
+    // ================== Query theo tổ chức ==================
     @Override
     public List<Application> findOrgApplications(Integer orgId, String q,
-            Application.ApplicationStatus status,
-            LocalDateTime from, LocalDateTime to,
-            int offset, int limit) {
+                                                 Application.ApplicationStatus status,
+                                                 LocalDateTime from, LocalDateTime to,
+                                                 int offset, int limit) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT a
                   FROM Application a
@@ -152,8 +152,8 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public long countOrgApplications(Integer orgId, String q,
-            Application.ApplicationStatus status,
-            LocalDateTime from, LocalDateTime to) {
+                                     Application.ApplicationStatus status,
+                                     LocalDateTime from, LocalDateTime to) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT COUNT(a.appId)
                   FROM Application a
@@ -211,8 +211,7 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         return m;
     }
 
-    // ======PhiLong iter2 :lấy 1 application thuộc orgId (kèm fetch
-    // volunteer/opportunity) phê duyệt đơn======
+    // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
     @Override
     public Application findByIdAndOrgId(Integer appId, Integer orgId) {
         try {
@@ -232,5 +231,42 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
             return null;
         }
     }
-    // ==========================================
+
+    // ====== THÊM MỚI: phục vụ gửi mail/thông báo khi opp hủy/sửa ======
+
+    /** Danh sách User đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
+    @Override
+    public List<User> findApprovedVolunteersByOppId(Integer oppId) {
+        return em.createQuery("""
+                SELECT v
+                  FROM Application a
+                  JOIN a.volunteer v
+                 WHERE a.opportunity.oppId = :oppId
+                   AND a.status IN (:s1, :s2)
+                 ORDER BY a.appliedAt DESC
+                """, User.class)
+                .setParameter("oppId", oppId)
+                .setParameter("s1", Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
+                .getResultList();
+    }
+
+    /** Danh sách Application đã duyệt (kèm fetch opp & org) để build nội dung mail chi tiết. */
+    @Override
+    public List<Application> findApprovedApplicationsByOppId(Integer oppId) {
+        return em.createQuery("""
+                SELECT a
+                  FROM Application a
+                  JOIN FETCH a.volunteer v
+                  JOIN FETCH a.opportunity o
+                  JOIN FETCH o.organization org
+                 WHERE a.opportunity.oppId = :oppId
+                   AND a.status IN (:s1, :s2)
+                 ORDER BY a.appliedAt DESC
+                """, Application.class)
+                .setParameter("oppId", oppId)
+                .setParameter("s1", Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
+                .getResultList();
+    }
 }

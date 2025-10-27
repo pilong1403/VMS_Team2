@@ -1,7 +1,6 @@
 /* Profile Container */
 .profile-container {
-  max-width: 80rem;
-  margin: 0 auto;
+  margin: 0;
 }
 
 /* Profile Header */
@@ -170,11 +169,21 @@
   color: #1f2937;
 }
 
+/* Profile Card Enhancement */
+.profile-container .card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15);
+}
+
 /* Modal Styles */
 .modal-content {
   border: none;
   border-radius: 0.75rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
 }
 
 .modal-header {
@@ -218,4 +227,74 @@
   .profile-container {
     margin: 0 1rem;
   }
+}
+/* Body Background */
+body {
+  background: linear-gradient(135deg, #fef3c7 0%, #dbeafe 30%, #bfdbfe 70%, #e0f2fe 100%);
+  min-height: 100vh;
+}
+
+/* Breadcrumb Styling */
+.breadcrumb {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px 16px;
+  margin: 0;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+  color: #6b7280;
+}
+
+.breadcrumb-item a {
+  color: #2563eb;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: #1d4ed8;
+}
+
+.breadcrumb-item.active {
+  color: #6b7280;
+}
+/* Button Enhancements */
+.btn-primary {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+}
+
+.btn-light {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
 }

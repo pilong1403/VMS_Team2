@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!-- Volunteer Sidebar Fragment -->
+    <div th:fragment="volunteer-sidebar(activePage)" class="volunteer-sidebar">
+      <!-- User Profile Section -->
+      <div class="sidebar-profile">
+        <div class="profile-avatar">
+          <img
+            th:src="${user.avatarUrl ?: '/images/default-avatar.jpg'}"
+            th:alt="${user.fullName}"
+            class="sidebar-avatar-img"
+          />
+        </div>
+        <div class="profile-info">
+          <h3 class="sidebar-profile-name" th:text="${user.fullName}">Phạm Minh Tuấn</h3>
+          <p class="sidebar-profile-role">Volunteer</p>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a th:href="@{/profile}" class="nav-link" th:classappend="${activePage == 'profile'} ? 'active' : ''">
+              <i class="bi bi-person nav-icon"></i>
+              <span class="nav-text">Hồ sơ cá nhân</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              th:href="@{/profile/my-schedule}"
+              class="nav-link"
+              th:classappend="${activePage == 'schedule'} ? 'active' : ''"
+            >
+              <i class="bi bi-calendar3 nav-icon"></i>
+              <span class="nav-text">Lịch trình của tôi</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a th:href="@{/volunteer/applications}" class="nav-link">
+              <i class="bi bi-file-text nav-icon"></i>
+              <span class="nav-text">Đơn đăng ký</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Home Section -->
+      <div class="sidebar-footer">
+        <a th:href="@{/}" class="nav-link home-btn">
+          <i class="bi bi-house nav-icon"></i>
+          <span class="nav-text">Trang chính</span>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
