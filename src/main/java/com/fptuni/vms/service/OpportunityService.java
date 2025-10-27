@@ -30,5 +30,9 @@ public interface OpportunityService {
     List<Opportunity> getAll();
 
     List<Opportunity> findByOrganization(int orgId);
-    // Opportunity findById(int id);
+
+    Opportunity save(Opportunity o);
+
+    Page<Opportunity> searchByOrg(int orgId, String q,
+                                  Opportunity.OpportunityStatus status, int page, int size);
 }

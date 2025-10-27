@@ -238,7 +238,7 @@
         <div class="nav-label">MENU CHÍNH</div>
         <ul class="nav-menu">
             <li>
-                <a th:href="@{/organization/ratings/opportunities}"
+                <a th:href="@{/org/opps}"
                    class="nav-item"
                    th:classappend="${activePage == 'opportunities'} ? 'active' : ''">
                     Quản lý Sự Kiện
@@ -252,7 +252,7 @@
                 </a>
             </li>
             <li>
-                <a th:href="@{/organization/ratings/opportunity/{oppId}}"
+                <a th:href="@{/organization/ratings/opportunities}"
                    class="nav-item"
                    th:classappend="${activePage == 'ratings'} ? 'active' : ''">
                     Đánh Giá

@@ -7,13 +7,14 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 
 import com.fptuni.vms.model.Application;
+import com.fptuni.vms.model.User;
 
 public interface ApplicationService {
     Application apply(Integer oppId, Integer volunteerId, String reason);
 
     // apply kèm cập nhật nhanh thông tin liên hệ
     Application apply(Integer oppId, Integer volunteerId, String reason,
-            String fullName, String phone, String address);
+                      String fullName, String phone, String address);
 
     // danh sách đơn của volunteer
     List<Application> listMyApplications(Integer volunteerId);
@@ -30,12 +31,12 @@ public interface ApplicationService {
 
     // ====== PhiLong iter 2 search + stats theo organization ======
     Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
-            String q,
-            String status,
-            LocalDate from,
-            LocalDate to,
-            int page,
-            int size);
+                                                        String q,
+                                                        String status,
+                                                        LocalDate from,
+                                                        LocalDate to,
+                                                        int page,
+                                                        int size);
 
     Map<String, Integer> computeOrgAppStats(Integer orgId);
 
@@ -43,5 +44,8 @@ public interface ApplicationService {
     void approveApplication(Integer orgId, Integer appId, Integer processedById, String note);
 
     void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note);
-    // ================
+
+    // ====== Thêm để controller không phải gọi repository ======
+    /** Danh sách user đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
+    List<User> findApprovedUsersByOppId(Integer oppId);
 }

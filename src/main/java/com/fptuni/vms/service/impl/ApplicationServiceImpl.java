@@ -62,63 +62,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 }
         }
 
-        // @Override
-        // public Application apply(Integer oppId, Integer volunteerId, String reason,
-        // String fullName, String phone, String address) {
-
-        // Opportunity opp = repo.findOpportunityById(oppId);
-        // if (opp == null)
-        // throw new IllegalArgumentException("Opportunity not found: " + oppId);
-        // if (opp.getStatus() != Opportunity.OpportunityStatus.OPEN)
-        // throw new IllegalStateException("Opportunity is not OPEN");
-        // if (opp.getEndTime() != null &&
-        // !opp.getEndTime().isAfter(LocalDateTime.now()))
-        // throw new IllegalStateException("Opportunity already ended");
-
-        // User volunteer = repo.findUserById(volunteerId);
-        // if (volunteer == null)
-        // throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
-
-        // // Cập nhật nhanh thông tin liên hệ nếu người dùng có sửa trên form
-        // boolean changed = false;
-        // if (fullName != null && !fullName.isBlank() &&
-        // !fullName.equals(volunteer.getFullName())) {
-        // volunteer.setFullName(fullName.trim());
-        // changed = true;
-        // }
-        // if (phone != null && !phone.isBlank() && !phone.equals(volunteer.getPhone()))
-        // {
-        // volunteer.setPhone(phone.trim());
-        // changed = true;
-        // }
-        // if (address != null && !address.isBlank() &&
-        // !address.equals(volunteer.getAddress())) {
-        // volunteer.setAddress(address.trim());
-        // changed = true;
-        // }
-        // if (changed)
-        // repo.saveUser(volunteer);
-
-        // if (repo.existsByOppIdAndVolunteerId(oppId, volunteerId))
-        // throw new IllegalStateException("You already applied to this opportunity");
-
-        // Application app = new Application();
-        // app.setOpportunity(opp);
-        // app.setVolunteer(volunteer);
-        // app.setAppliedAt(LocalDateTime.now());
-        // app.setReason(reason);
-
-        // try {
-        // return repo.save(app);
-        // } catch (PersistenceException ex) {
-        // throw new IllegalStateException("You already applied to this opportunity");
-        // }
-        // }
-
         @Override
         public Application apply(Integer oppId, Integer volunteerId, String reason,
-                        String fullName, String phone, String address) {
-                // cập nhật thông tin user nếu FE gửi lên từ popup (không ép buộc)
+                                 String fullName, String phone, String address) {
                 var user = repo.findUserById(volunteerId);
                 if (user == null)
                         throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
@@ -138,56 +84,50 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (dirty)
                         repo.saveUser(user);
 
-                // gọi lại apply gốc để tái dùng toàn bộ rule/trigger kiểm tra
                 return apply(oppId, volunteerId, reason);
         }
 
         @Override
-        public java.util.List<Application> listMyApplications(Integer volunteerId) {
+        public List<Application> listMyApplications(Integer volunteerId) {
                 return repo.findAllByVolunteerId(volunteerId);
         }
 
-        // ================= Phi Long iter 2: list theo orgId =================
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
-                        String q,
-                        String status,
-                        LocalDate from,
-                        LocalDate to,
-                        int page,
-                        int size) {
+                                                                   String q,
+                                                                   String status,
+                                                                   LocalDate from,
+                                                                   LocalDate to,
+                                                                   int page,
+                                                                   int size) {
                 var pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
 
-                // map filter
                 Application.ApplicationStatus st = null;
                 if (status != null && !status.isBlank()) {
                         try {
                                 st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
-                        } catch (IllegalArgumentException ignored) {
-                                /* giữ null để coi như "all" */ }
+                        } catch (IllegalArgumentException ignored) { /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
-                // query
                 List<Application> rows = repo.findOrgApplications(
-                                orgId, q, st, fromDT, toDT,
-                                pageable.getPageNumber() * pageable.getPageSize(),
-                                pageable.getPageSize());
+                        orgId, q, st, fromDT, toDT,
+                        pageable.getPageNumber() * pageable.getPageSize(),
+                        pageable.getPageSize());
                 long total = repo.countOrgApplications(orgId, q, st, fromDT, toDT);
 
-                // map -> VM
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
                 for (Application a : rows) {
                         var volunteer = a.getVolunteer();
                         var opp = a.getOpportunity();
                         vms.add(new ApplicationRowVM(
-                                        a.getAppId(),
-                                        volunteer != null ? volunteer.getFullName() : "—",
-                                        volunteer != null ? volunteer.getAvatarUrl() : null,
-                                        opp != null ? opp.getTitle() : "—",
-                                        a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
-                                        a.getStatus() != null ? a.getStatus().name() : "PENDING"));
+                                a.getAppId(),
+                                volunteer != null ? volunteer.getFullName() : "—",
+                                volunteer != null ? volunteer.getAvatarUrl() : null,
+                                opp != null ? opp.getTitle() : "—",
+                                a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
+                                a.getStatus() != null ? a.getStatus().name() : "PENDING"));
                 }
 
                 return new PageImpl<>(vms, pageable, total);
@@ -196,7 +136,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         @Override
         public Map<String, Integer> computeOrgAppStats(Integer orgId) {
                 Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId);
-                // ép về key như template đang dùng: total/pending/approved/rejected
                 long total = 0, pending = 0, approved = 0, rejected = 0;
                 for (var e : m.entrySet()) {
                         total += e.getValue();
@@ -204,8 +143,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 case PENDING -> pending = e.getValue();
                                 case APPROVED -> approved = e.getValue();
                                 case REJECTED -> rejected = e.getValue();
-                                default -> {
-                                }
+                                default -> {}
                         }
                 }
                 Map<String, Integer> out = new LinkedHashMap<>();
@@ -216,7 +154,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return out;
         }
 
-        // ================= Phi Long iter 2: duyệt / từ chối đơn =================
         @Override
         public void approveApplication(Integer orgId, Integer appId, Integer processedById, String note) {
                 var app = repo.findByIdAndOrgId(appId, orgId);
@@ -230,7 +167,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                         if (user != null)
                                 app.setProcessedBy(user);
                 }
-                // Tạm dùng cancelReason để lưu ghi chú xử lý
                 if (note != null && !note.isBlank())
                         app.setCancelReason(note.trim());
 
@@ -252,7 +188,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                         if (user != null)
                                 app.setProcessedBy(user);
                 }
-                // Lưu lý do từ chối
                 if (note != null && !note.isBlank())
                         app.setCancelReason(note.trim());
 
@@ -260,6 +195,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                 app.setUpdatedAt(LocalDateTime.now());
                 repo.save(app);
         }
-        // ===========================================================
 
+        // ====== Thêm để controller không phải gọi repository ======
+        @Override
+        public List<User> findApprovedUsersByOppId(Integer oppId) {
+                return repo.findApprovedVolunteersByOppId(oppId);
+        }
 }

@@ -63,22 +63,25 @@ public class RegisterController {
                                  BindingResult binding,
                                  HttpServletRequest req,
                                  Model model) {
-        // 1) Kiểm tra confirm password
-        if (!form.passwordsMatch()) {
-            binding.rejectValue("confirmPassword", "Mismatch", "Passwords do not match");
-        }
+        // KHÔNG kiểm tra confirm password ở đây nữa vì đã có @AssertTrue trong DTO
+
         if (binding.hasErrors()) return "auth/register";
 
         try {
-            // 2) Generate & send OTP
-            otpService.generateAndSendOtp(form.getEmail(), "VERIFY_EMAIL");
+            // Chuẩn hoá email trước khi gửi OTP
+            String normalizedEmail = form.getEmail().trim().toLowerCase();
 
-            // 3) Save pending form to session
+            // 1) Gửi OTP
+            otpService.generateAndSendOtp(normalizedEmail, "VERIFY_EMAIL");
+
+            // 2) Lưu form tạm vào session
             HttpSession ss = req.getSession(true);
+            // Lưu lại email đã chuẩn hoá để verify khớp
+            form.setEmail(normalizedEmail);
             ss.setAttribute("PENDING_REG", form);
 
-            // 4) Go to OTP page
-            model.addAttribute("email", form.getEmail());
+            // 3) Sang trang nhập OTP
+            model.addAttribute("email", normalizedEmail);
             return "auth/register-verify";
 
         } catch (OtpVerificationService.ActiveOtpExistsException ex) {
@@ -90,12 +93,12 @@ public class RegisterController {
             return "auth/register";
 
         } catch (DataIntegrityViolationException ex) {
-            model.addAttribute("error", "Dữ liệu vi phạm ràng buộc CSDL (email trùng hoặc độ dài).");
+            model.addAttribute("error", "Dữ liệu vi phạm ràng buộc CSDL (ví dụ: email đã dùng hoặc độ dài vượt giới hạn).");
             return "auth/register";
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            model.addAttribute("error", "Cannot send verification code. Please try again.");
+            model.addAttribute("error", "Không thể gửi mã xác minh. Vui lòng thử lại.");
             return "auth/register";
         }
     }
@@ -112,36 +115,30 @@ public class RegisterController {
         }
         RegisterForm form = (RegisterForm) ss.getAttribute("PENDING_REG");
 
-        if (!form.getEmail().equalsIgnoreCase(email)) {
+        // So sánh với email đã chuẩn hoá trong session
+        String normalizedEmail = email.trim().toLowerCase();
+        if (!form.getEmail().equalsIgnoreCase(normalizedEmail)) {
             model.addAttribute("email", form.getEmail());
-            model.addAttribute("error", "Email does not match pending registration");
+            model.addAttribute("error", "Email không trùng với phiên đăng ký đang chờ.");
             return "auth/register-verify";
         }
 
         try {
-            // 1) Verify OTP
-            otpService.verifyOtp(email, "VERIFY_EMAIL", otp);
+            // 1) Xác minh OTP
+            otpService.verifyOtp(normalizedEmail, "VERIFY_EMAIL", otp);
 
-            // 2) Create user
-            User created = authService.registerVolunteer(
-                    form.getFullName(),
-                    form.getEmail(),
-                    form.getPhone(),
-                    form.getPassword()
-            );
-
-            // 3) Clear session
+            // 2) Xoá session tạm
             ss.removeAttribute("PENDING_REG");
 
-            // 4) Flash message
+            // 3) Thông báo thành công
             redirectAttributes.addFlashAttribute("success",
-                    "Registration successful. Please login to continue.");
+                    "Đăng ký thành công. Vui lòng đăng nhập để tiếp tục.");
 
-            // 5) Redirect -> /login
+            // 4) Chuyển về /login
             return "redirect:/login";
 
         } catch (OtpVerificationService.OtpException ex) {
-            model.addAttribute("email", email);
+            model.addAttribute("email", form.getEmail());
             model.addAttribute("error", ex.getMessage());
             return "auth/register-verify";
 
@@ -159,10 +156,10 @@ public class RegisterController {
     private String mapError(String code) {
         if (code == null) return null;
         return switch (code) {
-            case "SESSION_EXPIRED" -> "Your registration session has expired. Please start again.";
-            case "SYSTEM_ERROR" -> "Registration failed due to a system error. Please try again later.";
-            case "DATA_VIOLATION" -> "Your data violates database constraints (e.g., email already used or value too long).";
-            case "REGISTER_OK" -> "Registration successful. Please login.";
+            case "SESSION_EXPIRED" -> "Phiên đăng ký đã hết hạn. Vui lòng bắt đầu lại.";
+            case "SYSTEM_ERROR"    -> "Đăng ký thất bại do lỗi hệ thống. Vui lòng thử lại sau.";
+            case "DATA_VIOLATION"  -> "Dữ liệu vi phạm ràng buộc CSDL (ví dụ: email đã dùng hoặc độ dài vượt giới hạn).";
+            case "REGISTER_OK"     -> "Đăng ký thành công. Vui lòng đăng nhập.";
             default -> null;
         };
     }
