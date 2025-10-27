@@ -2,7 +2,9 @@ package com.fptuni.vms.controller;
 
 import com.fptuni.vms.integrations.mail.MailService;
 import com.fptuni.vms.model.Organization;
+import com.fptuni.vms.model.User;
 import com.fptuni.vms.service.OrganizationService;
+import com.fptuni.vms.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -26,6 +28,7 @@ public class OrganizationController {
 
     @Autowired private OrganizationService organizationService;
     @Autowired private MailService mailService;
+    @Autowired private UserService userService;
 
     @GetMapping
     public String listOrganizations(
@@ -117,6 +120,12 @@ public class OrganizationController {
         org.setRegNote(reason);
         org.setRegReviewedAt(LocalDateTime.now());
         organizationService.saveOrganization(org);
+
+        var owner = org.getOwner();                 // đã dùng để gửi mail => chắc chắn có
+        if (owner != null) {
+            owner.setStatus(User.UserStatus.ACTIVE);              // hoặc owner.setStatus(User.Status.ACTIVE) nếu bạn dùng enum
+            userService.save(owner);                // hoặc userRepository.save(owner);
+        }
 
         try {
             mailService.sendApproveEmail(org.getOwner().getEmail(), org.getName(), reason);

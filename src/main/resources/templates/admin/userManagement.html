@@ -14,7 +14,7 @@
 <!-- Global Error Popup -->
         <div th:if="${errorMessage}" id="errorPopup" class="error-popup">
             <div class="error-content">
-                <strong>⚠ Lỗi!</strong>
+                <strong> Lỗi!</strong>
                 <p th:text="${errorMessage}"></p>
             </div>
         </div>
@@ -162,7 +162,7 @@
                     <td th:text="${u.phone}">SĐT</td>
                     <td th:text="${u.role.roleName}">Vai trò</td>
                     <td>
-                          <span th:classappend="${u.status=='ACTIVE' ? 'status-active':'status-locked'}"
+                          <span th:classappend="${#strings.trim(u.status).equalsIgnoreCase('ACTIVE') ? 'status-active' : 'status-locked'}"
                                 th:text="${u.status}">Trạng thái</span>
                     </td>
                     <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">Ngày</td>

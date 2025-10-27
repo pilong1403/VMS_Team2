@@ -8,11 +8,19 @@ import com.fptuni.vms.service.CloudinaryService;
 import com.fptuni.vms.service.UserService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.io.IOException;
@@ -242,10 +250,33 @@ public class UserServiceImpl implements UserService {
         return userRepository.getUsersByRole(roleId);
     }
 
-//    @Override
-//    public User findByEmail(String email) {
-//        return userRepository.findByEmail(email);
-//    }
 
+@Override
+    public ResponseEntity<InputStreamResource> downloadFileFromUrl(String fileUrl) {
+        try {
+            // Mở kết nối tới file từ URL
+            URL url = new URL(fileUrl);
+            URLConnection connection = url.openConnection();
+            InputStream inputStream = new BufferedInputStream(connection.getInputStream());
 
+            // Lấy tên file từ URL (nếu không có thì đặt mặc định)
+            String fileName = extractFileName(fileUrl);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(inputStream));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể tải file từ URL: " + fileUrl, e);
+        }
+    }
+
+    private String extractFileName(String fileUrl) {
+        try {
+            return fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+        } catch (Exception e) {
+            return "downloaded_file";
+        }
+    }
 }
