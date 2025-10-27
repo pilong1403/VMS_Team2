@@ -64,6 +64,15 @@ public class FAQServiceImpl implements FAQService {
         return faqRepository.countFilteredFAQs(status, category, keyword);
     }
 
+    @Override
+    public List<FAQ> filterFAQsPublic(String category, Integer num, String keyword, int page, int size) {
+        return faqRepository.filterFAQsPublic(category, num, keyword, page, size);
+    }
+
+    @Override
+    public long countFilteredFAQsPublic(String category, String keyword) {
+        return faqRepository.countFilteredFAQsPublic(category, keyword);
+    }
 
 
 }

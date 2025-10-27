@@ -13,5 +13,8 @@ public interface FAQService {
     List<FAQ> filterFAQs(String status, String category,Integer num, String keyword, int page, int size);
     long countFilteredFAQs(String status, String category, String keyword);
 
+    List<FAQ> filterFAQsPublic(String category, Integer num, String keyword, int page, int size);
+    long countFilteredFAQsPublic(String category, String keyword);
+
 }
 

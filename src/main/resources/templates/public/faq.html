@@ -1,10 +1,232 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Câu hỏi thường gặp | Trái Tim Tình Nguyện</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/faq/styleFaqPublic.css}"/>
+</head>
+
+<body>
+<!-- Header Section -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+<!-- Main Content -->
+<main class="faq-page">
+
+
+    <!-- Hero Section -->
+    <section class="relative" style="height: 400px; overflow: hidden">
+        <div
+                class="position-absolute w-100 h-50"
+                style="
+            background: linear-gradient(rgba(56, 189, 248, 0.8), rgba(14, 165, 233, 0.8)),
+              url('https://arise.com.sg/wp-content/uploads/2021/10/FAQ.jpeg')
+                center/cover;">
+
+        </div>
+
+        <div
+                class="container position-relative h-100 d-flex align-items-center justify-content-center text-center text-white"
+                style="z-index: 10">
+            <div>
+                <!-- Breadcrumb -->
+                <nav class="mb-3" style="font-size: 0.9rem">
+                    <a th:href="@{/}" class="text-white text-decoration-none opacity-75">Trang Chủ</a>
+                    <span class="mx-2">›</span>
+                    <span class="fw-semibold">FAQ</span>
+                </nav>
+                <h1 class="display-4 fw-bold mb-3">FAQ</h1>
+                <p class="lead opacity-90">Danh sách những câu hỏi mà bạn có thể thắc mắc </p>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Hero Section -->
+    <section class="faq-hero py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <!-- Icon -->
+                <div class="faq-icon mb-4">
+                    <div class="icon-circle">
+                        <i class="bi bi-question-circle"></i>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h1 class="faq-title mb-3">Câu hỏi thường gặp</h1>
+                <p class="faq-subtitle text-muted">Tìm câu trả lời cho những thắc mắc phổ biến về hệ thống tình
+                    nguyện</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="faq-search-container">
+                <div class="row g-3">
+                    <!-- Search Input -->
+                    <div class="col-lg-8">
+                        <div class="search-input-wrapper">
+                            <i class="bi bi-search search-icon"></i>
+                            <form th:action="@{/faqPublic}" method="get">
+                                <input type="hidden" name="category" th:value="${category}">
+
+                                <input type="text" name="keyword" class="form-control search-input"
+                                       placeholder="Tìm kiếm câu hỏi..."
+                                       th:value="${keyword != null ? keyword : ''}">
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="col-lg-4">
+                        <form method = "get" action="/faqPublic">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+
+                            <select class="form-select category-select" name="category" onchange="this.form.submit()">
+                                <option selected disabled>Lọc theo chủ đề</option>
+                                <option value="account" th:selected="${category == 'account'}" >Tài khoản</option>
+                                <option value="event" th:selected="${category == 'event'}" >Sự kiện</option>
+                                <option value="org" th:selected="${category == 'org'}" >Tổ chức</option>
+                                <option value="donation" th:selected="${category == 'donation'}" >Quyên góp</option>
+                                <option value="common" th:selected="${category == 'common'}" >Chung</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ List Section -->
+    <section class="faq-list-section py-4">
+        <div class="container">
+
+            <div class="faq-accordion">
+                <div th:each="faq : ${listFaqList}" class="faq-item">
+                    <div class="faq-question">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="faq-question-text mb-0" th:text="${faq.getQuestion()}">Làm thế nào để đăng ký tài khoản?</h3>
+                            <div class="d-flex align-items-center gap-2">
+
+                                <span class="faq-tag"
+                                      th:classappend="${#strings.equals(faq.getCategory(), 'Tài khoản')} ? 'faq-tag-taikhoan' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Sự kiện')} ? 'faq-tag-sukien' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Tổ chức')} ? 'faq-tag-tochuc' :
+                                                                 (${#strings.equals(faq.getCategory(), 'Quyên góp')} ? 'faq-tag-quyengop' : 'faq-tag-chung')))"
+                                      th:text="${faq.getCategory()}">
+                                                danh mục
+                                </span>
+
+                                <i class="bi bi-chevron-down faq-chevron"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-answer" th:text="${faq.getAnswer()}">
+                            Câu trả lời
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" th:if="${totalPages >= 1}">
+                <button class="page-btn prev"
+                        th:disabled="${currentPage == 1}"
+                        th:onclick="|window.location.href='@{/faqPublic(page=${currentPage - 1}, num=${num}, category=${category}, status=${status}, keyword=${keyword})}'|">
+                    &laquo;
+                </button>
+
+                <th:block th:if="${startPage > 2}">
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/faqPublic(page=1, num=${num}, category=${category}, status=${status}, keyword=${keyword})}'|">1</button>
+                    <button class="page-btn" disabled>...</button>
+                </th:block>
+
+                <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                    <button class="page-btn"
+                            th:text="${i}"
+                            th:classappend="${i == currentPage} ? ' active' : ''"
+                            th:onclick="|window.location.href='@{/faqPublic(page=${i}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                    </button>
+                </th:block>
+
+                <th:block th:if="${(endPage + 2) < totalPages}">
+                    <button class="page-btn" disabled>...</button>
+                    <button class="page-btn"
+                            th:onclick="|window.location.href='@{/faqPublic(page=${totalPages}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                        [[${totalPages}]]
+                    </button>
+                </th:block>
+
+                <button class="page-btn next"
+                        th:disabled="${currentPage == totalPages}"
+                        th:onclick="|window.location.href='@{/faqPublic(page=${currentPage + 1}, num=${num}, category=${category},status=${status}, keyword=${keyword})}'|">
+                    &raquo;
+                </button>
+            </div>
+
+
+
+
+        </div>
+    </section>
+
+
+
+
+    <!-- Contact CTA Section -->
+    <section class="faq-contact-section py-5">
+        <div class="container">
+            <div class="contact-cta-card">
+                <!-- Icon -->
+                <div class="contact-icon mb-4">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+
+                <!-- Title -->
+                <h2 class="contact-title mb-3">Không tìm thấy câu trả lời?</h2>
+                <p class="contact-subtitle mb-4">Liên hệ với đội ngũ hỗ trợ của chúng tôi để được giải đáp thắc mắc
+                </p>
+
+                <!-- Buttons -->
+                <div class="contact-buttons mb-4">
+                    <a class="btn btn-contact btn-email">
+                        <i class="bi bi-envelope-fill me-2"></i>
+                        Gửi email hỗ trợ
+                    </a>
+                    <a class="btn btn-contact btn-hotline">
+                        <i class="bi bi-telephone-fill me-2"></i>
+                        Gọi hotline
+                    </a>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="contact-info">
+                    <p class="mb-1">Email: support@volunteerhub.vn | Hotline: (+84) 123-456-789</p>
+                    <p class="mb-0">Thời gian hỗ trợ: 8:00 - 18:00 (Thứ 2 - Thứ 6)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer Section -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JavaScript -->
+<script th:src="@{/js/faq/faqPublic.js}"></script>
 </body>
+
 </html>
