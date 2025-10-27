@@ -60,7 +60,7 @@ public class SecurityConfig {
                                                                 "/auth/org-register", "/auth/org-register/**",
                                                                 "/assets/**", "/css/**", "/js/**", "/images/**",
                                                                 "/forgot-password", "/forgot-password/**",
-                                                                "/webjars/**", "/favicon.ico")
+                                                                "/webjars/**", "/favicon.ico",  "/faqPublic")
 
                                                 .permitAll()
                                                 .requestMatchers("/org/register", "/org/register/**").anonymous()

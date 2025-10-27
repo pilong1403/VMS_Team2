@@ -60,6 +60,19 @@
               <span class="nav-text">Đơn đăng ký</span>
             </a>
           </li>
+
+            <li class="nav-item">
+                <a
+                        th:href="@{/support_ticket}"
+                        class="nav-link"
+                        th:classappend="${activePage == 'support_ticket'} ? 'active' : ''"
+                >
+                    <i class="bi bi-file-text nav-icon"></i>
+                    <span class="nav-text">Đơn yêu cầu hỗ trợ </span>
+                </a>
+            </li>
+
+
         </ul>
       </nav>
 

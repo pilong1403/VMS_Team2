@@ -34,8 +34,11 @@ public class SupportTicketVolunteerController {
     }
 
     @GetMapping("/support_ticket")
-    public String viewSupportTicketPage(Model model) {
+    public String viewSupportTicketPage(Model model, @AuthenticationPrincipal CustomUserDetails loggedInUser) {
         model.addAttribute("activeTab", "submit");
+        model.addAttribute("activePage", "support_ticket");
+        model.addAttribute("user", loggedInUser.getUser());// sd để hiển thị tên user trên sidebar
+
 
         // add data default for support ticket tab (tab2)
         model.addAttribute("listSupportTickets", java.util.Collections.emptyList());
@@ -69,7 +72,8 @@ public class SupportTicketVolunteerController {
                                         @RequestParam(required = false) String keyword,
                                         @AuthenticationPrincipal CustomUserDetails loggedInUser,
                                         @RequestParam(defaultValue = "1") int page) {
-
+        model.addAttribute("activePage", "support_ticket");
+        model.addAttribute("user", loggedInUser.getUser());// sd để hiển thị tên user trên sidebar
         int userId = loggedInUser.getUserId();
         int recordsPerPage = (num != null && num > 0) ? num : 5;
         List<SupportTicket> ticketListFiltered = supportTicketService.filterTicketsWithUserId(status, priority, num, userId, keyword, page, recordsPerPage);

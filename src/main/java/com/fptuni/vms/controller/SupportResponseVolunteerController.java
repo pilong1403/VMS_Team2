@@ -32,6 +32,8 @@ public class SupportResponseVolunteerController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size) {
 
+        model.addAttribute("activePage", "support_ticket");
+        model.addAttribute("user", loggedInUser.getUser()); // sd để hiển thị tên user trên sidebar
         int userId = loggedInUser.getUser().getUserId();
         int pageSize = (num != null && num > 0) ? num : size;
         List<SupportResponse> responseList = supportResponseService.findResponsesBySenderId(userId, keyword, num, page, pageSize);
