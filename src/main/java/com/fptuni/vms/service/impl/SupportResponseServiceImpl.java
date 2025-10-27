@@ -94,7 +94,6 @@ public class SupportResponseServiceImpl implements SupportResponseService {
                 existingTicket.setStatus(SupportTicket.TicketStatus.IN_PROGRESS);
             }
             existingTicket.setResolvedBy(admin);  // set người xử lý
-            existingTicket.setUpdatedAt(LocalDateTime.now()); // Cập nhật thời gian chỉnh sửa
             supportTicketService.update(existingTicket);
 
             return true;
@@ -105,6 +104,15 @@ public class SupportResponseServiceImpl implements SupportResponseService {
         }
     }
 
+    @Override
+    public List<SupportResponse> findResponsesBySenderId(Integer userId, String keyword, Integer num, int page, int size) {
+        return supportResponseRepository.findResponsesBySenderId(userId, keyword, num, page, size);
+    }
+
+    @Override
+    public long countResponsesBySenderId(Integer userId, String keyword) {
+        return supportResponseRepository.countResponsesBySenderId(userId, keyword);
+    }
 
 
 }

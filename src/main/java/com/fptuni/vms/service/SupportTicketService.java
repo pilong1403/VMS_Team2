@@ -12,5 +12,9 @@ public interface SupportTicketService {
     List<SupportTicket> filterTickets(String status, String priority, Integer num, String keyword, int page, int size);
     long countFilteredTickets(String status, String priority, String keyword);
     SupportTicket update(SupportTicket supportTicket);
+    void create(SupportTicket supportTicket);
+
+    List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId ,String keyword, int page, int size);
+    long countFilteredTicketsWithUserId(Integer userId, String status, String priority,  String keyword);
 
 }

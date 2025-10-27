@@ -57,7 +57,7 @@
                 <div class="stat-card">
                     <div class="stat-info">
                         <div class="stat-label">Tỷ Lệ Hoàn Thành</div>
-                        <div class="stat-value" th:text="${completeStatistic} + '%'">36%</div>
+                        <div class="stat-value" th:text="${#numbers.formatDecimal(completeStatistic, 1, 2)} +'%'">36%</div>
                     </div>
                     <div class="stat-icon percent">
                         <i class="fa-solid fa-users"></i>
@@ -190,8 +190,11 @@
                                             th:data-event-start-time="${opportunity.startTime != null ? #temporals.formatISO(opportunity.startTime) : ''}"
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
-                                            onclick="openCheckinModal(this)">
-                                        Check In
+                                            th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
+
+                                            onclick="openCheckinModal(this)"
+                                            th:text="${record.checkinTime != null ? 'Update checkin' : 'Check In'}"
+                                            th:data-type="${record.checkinTime != null ? 'Update' : 'CheckIn'}">
                                     </button>
 
                                     <button class="btn btn-checkout"
@@ -199,12 +202,14 @@
                                             th:data-name="${record.fullName}"
                                             th:data-avatar="${record.avatarUrl != null ? record.avatarUrl : 'https://res.cloudinary.com/vmscloudinary/image/upload/v1760799914/images_i5lbsq.jpg'}"
                                             th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
-                                            th:data-event-start-time="${opportunity.startTime != null ? #temporals.formatISO(opportunity.startTime) : ''}"
+                                            th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-opp-id="${opportunity.oppId}"
                                             th:disabled="${record.checkinTime == null}"
-                                            onclick="openCheckOutModal(this)">
-                                        Check Out
+
+                                            onclick="openCheckOutModal(this)"
+                                            th:text="${record.checkoutTime != null ? 'Update checkout' : 'Check Out'}"
+                                            th:data-type="${record.checkoutTime != null ? 'Update' : 'CheckOut'}">
                                     </button>
 
                                     <button class="btn btn-detail"
@@ -254,8 +259,11 @@
                                             th:data-event-start-time="${opportunity.startTime != null ? #temporals.formatISO(opportunity.startTime) : ''}"
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
-                                            onclick="openCheckinModal(this)">
-                                        Check In
+                                            th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
+
+                                            onclick="openCheckinModal(this)"
+                                            th:text="${record.checkinTime != null ? 'Update checkin' : 'Check In'}"
+                                            th:data-type="${record.checkinTime != null ? 'Update' : 'CheckIn'}">
                                     </button>
 
                                     <button class="btn btn-checkout"
@@ -263,12 +271,14 @@
                                             th:data-name="${record.fullName}"
                                             th:data-avatar="${record.avatarUrl != null ? record.avatarUrl : 'https://res.cloudinary.com/vmscloudinary/image/upload/v1760799914/images_i5lbsq.jpg'}"
                                             th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
-                                            th:data-event-start-time="${opportunity.startTime != null ? #temporals.formatISO(opportunity.startTime) : ''}"
+                                            th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-opp-id="${opportunity.oppId}"
                                             th:disabled="${record.checkinTime == null}"
-                                            onclick="openCheckOutModal(this)">
-                                        Check Out
+
+                                            onclick="openCheckOutModal(this)"
+                                            th:text="${record.checkoutTime != null ? 'Update checkout' : 'Check Out'}"
+                                            th:data-type="${record.checkoutTime != null ? 'Update' : 'CheckOut'}">
                                     </button>
 
                                     <button class="btn btn-detail"
@@ -319,7 +329,7 @@
                     </button>
                 </th:block>
 
-                <th:block th:if="${(endPage + 1) < totalPages}">
+                <th:block th:if="${(endPage + 2) < totalPages}">
                     <button class="page-btn" disabled>...</button>
                     <button class="page-btn"
                             th:onclick="|window.location.href='@{/organization/attendance-details(page=${totalPages}, num=${num},status=${status}, keyword=${keyword}, opportunityId=${opportunity.oppId})}'|">
@@ -347,7 +357,7 @@
               th:action="@{/organization/attendance-details/check-in}">
 
             <div class="modal-header">
-                <h2 id="modalTitle">XÁC NHẬN CHECK IN</h2>
+                <h2 id="modalTitleCheckIn">XÁC NHẬN CHECK IN</h2>
             </div>
             <div class="modal-body">
                 <img src="https://i.pravatar.cc/150?u=sarah" alt="Avatar" class="modal-avatar" id="modalAvatar">
@@ -380,7 +390,7 @@
               th:action="@{/organization/attendance-details/check-out}">
 
             <div class="modal-header">
-                <h2 id="modalTitle2">XÁC NHẬN CHECK OUT</h2>
+                <h2 id="modalTitleCheckOut">XÁC NHẬN CHECK OUT</h2>
             </div>
             <div class="modal-body">
                 <img src="https://i.pravatar.cc/150?u=sarah" alt="Avatar" class="modal-avatar" id="modalAvatar2">

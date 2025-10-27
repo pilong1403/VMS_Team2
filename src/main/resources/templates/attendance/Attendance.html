@@ -184,7 +184,7 @@
                     </button>
                 </th:block>
 
-                <th:block th:if="${(endPage + 1) < totalPages}">
+                <th:block th:if="${(endPage + 2) < totalPages}">
                     <button class="page-btn" disabled>...</button>
                     <button class="page-btn"
                             th:onclick="|window.location.href='@{/organization/attendance(page=${totalPages}, num=${num}, status=${status}, keyword=${keyword}, timeOrder=${timeOrder})}'|">

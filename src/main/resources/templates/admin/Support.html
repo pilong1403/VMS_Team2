@@ -156,10 +156,6 @@
 
                             <span th:if="${ticket.createdAt != null}"
                                   th:text="${'[Thời gian gửi]: ' + #temporals.format(ticket.createdAt, 'dd/MM/yyyy - HH:mm:ss')}">
-                            </span> |
-
-                            <span th:if="${ticket.updatedAt != null}"
-                                  th:text="${'[Thời gian phản hồi]: ' + #temporals.format(ticket.updatedAt, 'dd/MM/yyyy - HH:mm:ss')}">
                             </span>
 
                         </div>
@@ -331,27 +327,6 @@
                     </div>
                 </div>
 
-                <!-- Pagination for Responses -->
-                <!--                <div class="pagination" th:if="${totalPagesResponses >= 1}">-->
-                <!--                    <button class="page-btn prev"-->
-                <!--                            th:disabled="${currentPageResponse == 1}"-->
-                <!--                            th:onclick="|window.location.href='@{/admin/support-responses(page=${currentPageResponse - 1}, size=${numResponse != null ? numResponse : 5}, keyword=${keywordResponse})}'|">-->
-                <!--                        &laquo;-->
-                <!--                    </button>-->
-                <!--                    <th:block th:each="i : ${#numbers.sequence(1, totalPagesResponses)}">-->
-                <!--                        <button class="page-btn"-->
-                <!--                                th:text="${i}"-->
-                <!--                                th:classappend="${i == currentPageResponse} ? ' active' : ''"-->
-                <!--                                th:onclick="|window.location.href='@{/admin/support-responses(page=${i}, size=${numResponse != null ? numResponse : 5}, keyword=${keywordResponse})}'|">-->
-                <!--                        </button>-->
-                <!--                    </th:block>-->
-                <!--                    <button class="page-btn next"-->
-                <!--                            th:disabled="${currentPageResponse == totalPagesResponses}"-->
-                <!--                            th:onclick="|window.location.href='@{/admin/support-responses(page=${currentPageResponse + 1}, size=${numResponse != null ? numResponse : 5}, keyword=${keywordResponse})}'|">-->
-                <!--                        &raquo;-->
-                <!--                    </button>-->
-                <!--                </div>-->
-
                 <div class="pagination">
                     <button class="page-btn prev"
                             th:disabled="${currentPageResponse == 1}"
@@ -389,8 +364,6 @@
                         &raquo;
                     </button>
                 </div>
-
-
             </div>
         </div>
     </main>
