@@ -60,9 +60,9 @@ public class HomeController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String time,
-            Model model) {
+            Model model, HttpSession session) {
 
-        return opportunities(page, size, categoryId, location, status, search, time, model);
+        return opportunities(page, size, categoryId, location, status, search, time, model, session);
     }
 
     @GetMapping("/opportunities")
@@ -74,9 +74,14 @@ public class HomeController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String time,
-            Model model) {
+            Model model, HttpSession session) {
 
         try {
+            Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (currentUserId != null) {
+                model.addAttribute("currentUserId", currentUserId);
+                model.addAttribute("currentUser", userService.getUserById(currentUserId));
+            }
             Pageable pageable = PageRequest.of(page, size);
 
             Page<OpportunityCardDto> opportunityPage;

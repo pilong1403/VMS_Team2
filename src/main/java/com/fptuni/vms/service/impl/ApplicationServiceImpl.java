@@ -64,7 +64,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         @Override
         public Application apply(Integer oppId, Integer volunteerId, String reason,
-                                 String fullName, String phone, String address) {
+                        String fullName, String phone, String address) {
                 var user = repo.findUserById(volunteerId);
                 if (user == null)
                         throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
@@ -94,27 +94,28 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
-                                                                   String q,
-                                                                   String status,
-                                                                   LocalDate from,
-                                                                   LocalDate to,
-                                                                   int page,
-                                                                   int size) {
+                        String q,
+                        String status,
+                        LocalDate from,
+                        LocalDate to,
+                        int page,
+                        int size) {
                 var pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
 
                 Application.ApplicationStatus st = null;
                 if (status != null && !status.isBlank()) {
                         try {
                                 st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
-                        } catch (IllegalArgumentException ignored) { /* keep null */ }
+                        } catch (IllegalArgumentException ignored) {
+                                /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
                 List<Application> rows = repo.findOrgApplications(
-                        orgId, q, st, fromDT, toDT,
-                        pageable.getPageNumber() * pageable.getPageSize(),
-                        pageable.getPageSize());
+                                orgId, q, st, fromDT, toDT,
+                                pageable.getPageNumber() * pageable.getPageSize(),
+                                pageable.getPageSize());
                 long total = repo.countOrgApplications(orgId, q, st, fromDT, toDT);
 
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
@@ -122,12 +123,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                         var volunteer = a.getVolunteer();
                         var opp = a.getOpportunity();
                         vms.add(new ApplicationRowVM(
-                                a.getAppId(),
-                                volunteer != null ? volunteer.getFullName() : "—",
-                                volunteer != null ? volunteer.getAvatarUrl() : null,
-                                opp != null ? opp.getTitle() : "—",
-                                a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
-                                a.getStatus() != null ? a.getStatus().name() : "PENDING"));
+                                        a.getAppId(),
+                                        volunteer != null ? volunteer.getFullName() : "—",
+                                        volunteer != null ? volunteer.getAvatarUrl() : null,
+                                        opp != null ? opp.getTitle() : "—",
+                                        a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
+                                        a.getStatus() != null ? a.getStatus().name() : "PENDING"));
                 }
 
                 return new PageImpl<>(vms, pageable, total);
@@ -143,7 +144,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 case PENDING -> pending = e.getValue();
                                 case APPROVED -> approved = e.getValue();
                                 case REJECTED -> rejected = e.getValue();
-                                default -> {}
+                                default -> {
+                                }
                         }
                 }
                 Map<String, Integer> out = new LinkedHashMap<>();
@@ -200,5 +202,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         @Override
         public List<User> findApprovedUsersByOppId(Integer oppId) {
                 return repo.findApprovedVolunteersByOppId(oppId);
+        }
+
+        // Số đơn đã DUYỆT (APPROVED/COMPLETED) của 1 cơ hội PhiLong
+        @Override
+        public long countApprovedByOppId(Integer oppId) {
+                return repo.countApprovedByOppId(oppId);
         }
 }

@@ -29,28 +29,34 @@ public interface ApplicationRepository {
 
         // ====== Truy vấn theo tổ chức (list + count + stats) ======
         List<Application> findOrgApplications(Integer orgId,
-                                              String q,
-                                              Application.ApplicationStatus status,
-                                              LocalDateTime from,
-                                              LocalDateTime to,
-                                              int offset,
-                                              int limit);
+                        String q,
+                        Application.ApplicationStatus status,
+                        LocalDateTime from,
+                        LocalDateTime to,
+                        int offset,
+                        int limit);
 
         long countOrgApplications(Integer orgId,
-                                  String q,
-                                  Application.ApplicationStatus status,
-                                  LocalDateTime from,
-                                  LocalDateTime to);
+                        String q,
+                        Application.ApplicationStatus status,
+                        LocalDateTime from,
+                        LocalDateTime to);
 
         Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId);
 
         // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
         Application findByIdAndOrgId(Integer appId, Integer orgId);
 
-        // ======  phục vụ gửi mail/thông báo khi opp hủy/sửa ======
+        // ====== phục vụ gửi mail/thông báo khi opp hủy/sửa ======
         /** Trả về danh sách User đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
         List<User> findApprovedVolunteersByOppId(Integer oppId);
 
-        /** Trả về Application (đã duyệt) của 1 cơ hội, có fetch opportunity & organization (tiện build nội dung mail). */
+        /**
+         * Trả về Application (đã duyệt) của 1 cơ hội, có fetch opportunity &
+         * organization (tiện build nội dung mail).
+         */
         List<Application> findApprovedApplicationsByOppId(Integer oppId);
+
+        long countApprovedByOppId(Integer oppId); // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED)
+                                                  // PhiLong
 }

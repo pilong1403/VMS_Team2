@@ -47,21 +47,35 @@
                                 Phụ đề</div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <!-- Form apply: POST /applications/apply -->
-                            <form th:action="@{/applications/apply}" method="post" class="d-inline" th:if="${canApply}">
+                            <!-- ĐÃ GỬI ĐƠN -->
+                            <button th:if="${alreadyApplied}" type="button"
+                                class="btn btn-outline-secondary btn-rounded px-4" disabled>
+                                <i class="bi bi-check2-circle"></i> Đã gửi đơn, đợi xét duyệt
+                            </button>
+
+                            <!-- Cho phép đăng ký -->
+                            <form th:if="${canApply}" th:action="@{/applications/apply}" method="post" class="d-inline">
                                 <input type="hidden" name="oppId" th:value="${opp.oppId}" />
                                 <input type="hidden" name="userId" th:value="${currentUserId}" />
-                                <!-- Button mở modal -->
-                                <button type="button" class="btn btn-primary btn-rounded px-4" th:if="${canApply}"
-                                    data-bs-toggle="modal" data-bs-target="#applyModal">
+                                <button type="button" class="btn btn-primary btn-rounded px-4" data-bs-toggle="modal"
+                                    data-bs-target="#applyModal">
                                     <i class="bi bi-person-plus"></i> Đăng ký tham gia
                                 </button>
-
                             </form>
 
+                            <!-- Quá hạn đăng ký (ưu tiên nếu đã tới/qua startTime, kể cả chưa đủ người) -->
+                            <button th:if="${!canApply and isExpired}" type="button"
+                                class="btn btn-secondary btn-rounded px-4" disabled>
+                                <i class="bi bi-hourglass-split"></i> Quá hạn đăng ký
+                            </button>
 
-
+                            <!-- Đã đủ số lượng (chỉ khi CHƯA tới startTime mà đã đủ số lượng duyệt) -->
+                            <button th:if="${!canApply and !isExpired and isFull}" type="button"
+                                class="btn btn-secondary btn-rounded px-4" disabled>
+                                <i class="bi bi-people-fill"></i> Đã đủ số lượng đơn đăng ký
+                            </button>
                         </div>
+
 
                     </div>
                 </div>
@@ -142,31 +156,27 @@
 
             <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
                 <div class="card border-0 shadow-soft p-4">
-                    <h5 class="mb-3">Giới thiệu chương trình</h5>
-                    <p
-                        th:text="${intro != null ? intro : 'Chương trình nhằm mang lại cơ hội học tập tốt nhất cho các em nhỏ tại vùng núi xa xôi.'}">
-                        Chương trình nhằm mang lại cơ hội học tập tốt nhất cho các em nhỏ tại vùng núi xa xôi.
-                    </p>
+                    <!-- Section 1 (section_order = 1) -->
+                    <div th:if="${intro != null or detailImageUrl != null}">
+                        <h5 class="mb-3" th:text="${introHeading != null ? introHeading : 'Giới thiệu chương trình'}">
+                            Giới thiệu chương trình</h5>
+                        <p th:if="${intro != null}" th:text="${intro}">...</p>
 
-                    <figure class="mt-3">
-                        <img class="w-100" th:if="${detailImageUrl != null and !#strings.isEmpty(detailImageUrl)}"
-                            th:src="${detailImageUrl}" alt="students" />
+                        <figure class="mt-3" th:if="${detailImageUrl != null and !#strings.isEmpty(detailImageUrl)}">
+                            <img th:src="${detailImageUrl}" alt="Ảnh chi tiết" class="img-fluid d-block me-auto rounded"
+                                style="max-width:500px; height:auto; object-fit:cover;" />
 
-                        <img th:src="${detailImageUrl} ?: @{/images/placeholders/students.jpg}" alt="Ảnh chi tiết"
-                            class="detail-image">
+                            <figcaption class="text-secondary small mt-2" th:text="${imageCaption}">...</figcaption>
+                        </figure>
+                    </div>
 
+                    <!-- Section 2 (section_order = 2) -->
+                    <div class="mt-4" th:if="${requirement != null}">
+                        <h5 class="mb-2" th:text="${reqHeading != null ? reqHeading : 'Yêu cầu tình nguyện viên'}">Yêu
+                            cầu tình nguyện viên</h5>
+                        <p th:text="${requirement}">...</p>
+                    </div>
 
-                        <figcaption class="text-secondary small mt-2"
-                            th:text="${imageCaption != null ? imageCaption : 'Các em học sinh vùng cao hào hứng học tập'}">
-                            Các em học sinh vùng cao hào hứng học tập</figcaption>
-                    </figure>
-
-                    <h5 class="mt-4 mb-2">Yêu cầu tình nguyện viên</h5>
-                    <p
-                        th:text="${requirement != null ? requirement : 'Cần kinh nghiệm giảng dạy, kiên nhẫn và yêu thích trẻ em. Ưu tiên có thể tham gia đủ chương trình.'}">
-                        Cần kinh nghiệm giảng dạy, kiên nhẫn và yêu thích trẻ em. Ưu tiên có thể tham gia đủ chương
-                        trình.
-                    </p>
 
                     <div th:if="${sections != null}">
                         <div class="mt-4" th:each="sec : ${sections}">
@@ -183,17 +193,39 @@
 
             <div class="tab-pane fade" id="organization" role="tabpanel" aria-labelledby="org-tab">
                 <div class="card border-0 shadow-soft p-4 d-flex gap-3 flex-md-row flex-column align-items-start">
-                    <img th:src="${orgOwnerAvatar != null && !#strings.isEmpty(orgOwnerAvatar)} ? ${orgOwnerAvatar} : @{/images/placeholders/avatar-org.png}"
-                        alt="org" class="rounded" style="width:84px;height:84px;object-fit:cover;" />
+
                     <div>
                         <h5 class="mb-1" th:text="${org != null ? org.name : 'Tên tổ chức'}">Tên tổ chức</h5>
                         <div class="text-secondary small mb-2"
-                            th:text="${org != null ? org.description : 'Mô tả về tổ chức...'}">Mô tả</div>
-                        <a class="btn btn-outline-primary btn-sm btn-rounded"
-                            th:href="@{/organizations/{id}(id=${opp.organization.orgId})}">Xem trang tổ chức</a>
+                            th:text="${org != null && org.description != null ? org.description : 'Mô tả về tổ chức...'}">
+                            Mô tả
+                        </div>
+                        <div class="mt-3" th:if="${orgOwner != null}">
+                            <h6 class="fw-semibold mb-1">Trưởng ban Tổ chức:</h6>
+                            <ul class="list-unstyled mb-0 text-secondary small">
+                                <li>
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    <span th:text="${orgOwner.fullName}">Nguyễn Văn A</span>
+                                </li>
+                                <li>
+                                    <i class="bi bi-envelope me-1"></i>
+                                    <a th:href="'mailto:' + ${orgOwner.email}"
+                                        th:text="${orgOwner.email}">a@example.com</a>
+                                </li>
+                                <li th:if="${orgOwner.phone != null}">
+                                    <i class="bi bi-telephone me-1"></i>
+                                    <span th:text="${orgOwner.phone}">0123456789</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <a class="btn btn-outline-primary btn-sm btn-rounded" th:if="${org != null}"
+                            th:href="@{/organizations/{id}(id=${org.orgId})}">
+                            Xem trang tổ chức
+                        </a>
                     </div>
                 </div>
             </div>
+
 
             <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
                 <div class="card border-0 shadow-soft p-4">

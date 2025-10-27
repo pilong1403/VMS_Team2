@@ -108,9 +108,9 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
     // ================== Query theo tổ chức ==================
     @Override
     public List<Application> findOrgApplications(Integer orgId, String q,
-                                                 Application.ApplicationStatus status,
-                                                 LocalDateTime from, LocalDateTime to,
-                                                 int offset, int limit) {
+            Application.ApplicationStatus status,
+            LocalDateTime from, LocalDateTime to,
+            int offset, int limit) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT a
                   FROM Application a
@@ -152,8 +152,8 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public long countOrgApplications(Integer orgId, String q,
-                                     Application.ApplicationStatus status,
-                                     LocalDateTime from, LocalDateTime to) {
+            Application.ApplicationStatus status,
+            LocalDateTime from, LocalDateTime to) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT COUNT(a.appId)
                   FROM Application a
@@ -251,7 +251,10 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
-    /** Danh sách Application đã duyệt (kèm fetch opp & org) để build nội dung mail chi tiết. */
+    /**
+     * Danh sách Application đã duyệt (kèm fetch opp & org) để build nội dung mail
+     * chi tiết.
+     */
     @Override
     public List<Application> findApprovedApplicationsByOppId(Integer oppId) {
         return em.createQuery("""
@@ -268,5 +271,21 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .setParameter("s1", Application.ApplicationStatus.APPROVED)
                 .setParameter("s2", Application.ApplicationStatus.COMPLETED)
                 .getResultList();
+    }
+
+    // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED) PhiLong
+    @Override
+    public long countApprovedByOppId(Integer oppId) {
+        Long cnt = em.createQuery("""
+                SELECT COUNT(a.appId)
+                FROM Application a
+                WHERE a.opportunity.oppId = :oppId
+                  AND a.status IN (:s1, :s2)
+                """, Long.class)
+                .setParameter("oppId", oppId)
+                .setParameter("s1", Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
+                .getSingleResult();
+        return cnt == null ? 0L : cnt;
     }
 }
