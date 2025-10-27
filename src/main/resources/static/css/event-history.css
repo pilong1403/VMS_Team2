@@ -1,0 +1,234 @@
+/* Event History Page Styles - Desktop Only */
+
+/* Rating Modal Styles */
+.rating-modal .star-rating {
+  display: flex;
+  gap: 5px;
+  margin: 10px 0;
+  justify-content: center;
+}
+
+.rating-modal .star {
+  font-size: 28px;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.rating-modal .star.active,
+.rating-modal .star:hover {
+  color: #ffc107;
+  transform: scale(1.1);
+}
+
+.rating-modal .star:hover ~ .star {
+  color: #ddd;
+}
+
+/* Star Display */
+.star-display {
+  font-size: 16px;
+  color: #ffc107;
+  letter-spacing: 1px;
+}
+
+/* Event Card Rating Info */
+.event-card .rating-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 14px;
+  border-left: 3px solid #28a745;
+}
+
+.event-card .rating-info.no-rating {
+  border-left-color: #6c757d;
+  background: #f1f3f4;
+}
+
+.event-card .rating-info .rating-text {
+  font-weight: 500;
+  color: #495057;
+}
+
+.event-card .rating-info .rating-comment {
+  margin-top: 6px;
+  font-style: italic;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+/* Action Buttons */
+.rate-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.rate-btn:hover {
+  background: linear-gradient(135deg, #218838, #1ea085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.edit-rating-btn {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(23, 162, 184, 0.2);
+}
+
+.edit-rating-btn:hover {
+  background: linear-gradient(135deg, #138496, #117a8b);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
+}
+
+/* Event Card History Enhancement */
+.event-card.history::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #28a745, #20c997);
+}
+
+.event-card.history.no-attendance::before {
+  background: linear-gradient(to bottom, #6c757d, #5a6268);
+}
+
+/* Pagination */
+.pagination .page-link {
+  color: #2563eb;
+  border-color: #e5e7eb;
+  padding: 8px 12px;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.pagination .page-link:hover {
+  color: #1d4ed8;
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+/* Modal Styling */
+.modal-content.rating-modal {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid #f1f3f4;
+  padding: 20px 24px 16px;
+}
+
+.modal-body {
+  padding: 20px 24px;
+}
+
+.modal-footer {
+  border-top: 1px solid #f1f3f4;
+  padding: 16px 24px 20px;
+}
+
+/* Form Styling */
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Organization Rating */
+.org-rating-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #e8f4fd;
+  border-radius: 8px;
+  font-size: 14px;
+  border-left: 3px solid #0d6efd;
+}
+
+.org-rating-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #0d6efd;
+}
+
+.org-rating-header .bi {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.org-rating-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.org-rating-content {
+  margin-left: 22px;
+}
+
+.org-rating-stars {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.org-rating-stars .star-display {
+  color: #ffc107;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.org-rating-text {
+  color: #495057 !important;
+  font-weight: 500;
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+.org-rating-comment {
+  font-style: italic;
+  color: #6c757d;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 4px 0;
+}

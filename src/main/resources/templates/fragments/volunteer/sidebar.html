@@ -40,7 +40,22 @@
           </li>
 
           <li class="nav-item">
-            <a th:href="@{/volunteer/applications}" class="nav-link">
+            <a
+              th:href="@{/profile/event-history}"
+              class="nav-link"
+              th:classappend="${activePage == 'event-history'} ? 'active' : ''"
+            >
+              <i class="bi bi-clock-history nav-icon"></i>
+              <span class="nav-text">Lịch sử hoạt động</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a
+              th:href="@{/profile/applications}"
+              class="nav-link"
+              th:classappend="${activePage == 'applications'} ? 'active' : ''"
+            >
               <i class="bi bi-file-text nav-icon"></i>
               <span class="nav-text">Đơn đăng ký</span>
             </a>

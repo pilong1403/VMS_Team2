@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>Lịch sử hoạt động</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/schedule.css}" rel="stylesheet" />
+    <link th:href="@{/css/volunteer-sidebar.css}" rel="stylesheet" />
+    <link th:href="@{/css/event-history.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Toast Container -->
+    <div th:replace="~{fragments/toast-container :: toasts}"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-3 p-0">
+          <div th:replace="~{fragments/volunteer/sidebar :: volunteer-sidebar(${activePage})}"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-9">
+          <div class="schedule-container">
+            <!-- Header -->
+            <div class="page-header">
+              <h1>Lịch sử hoạt động</h1>
+              <p>Xem lại các hoạt động tình nguyện bạn đã tham gia và đánh giá trải nghiệm</p>
+            </div>
+
+            <!-- Event History -->
+            <div class="section" th:if="${eventHistory != null and !eventHistory.empty}">
+              <h2 class="section-title" th:text="'Đã hoàn thành (' + ${totalEvents} + ')'">Đã hoàn thành</h2>
+              <div class="events-list">
+                <div
+                  th:each="event : ${eventHistory}"
+                  class="event-card completed history"
+                  th:classappend="${!event.hasAttended} ? 'no-attendance' : ''"
+                >
+                  <div class="event-date">
+                    <span class="day" th:text="${#temporals.day(event.startTime)}">15</span>
+                    <span class="month" th:text="'Th' + ${#temporals.month(event.startTime)}">Th10</span>
+                  </div>
+                  <div class="event-info">
+                    <h3 th:text="${event.opportunityTitle}">Tên hoạt động</h3>
+                    <p th:text="${event.organizationName}">Tổ chức</p>
+                    <div class="event-details">
+                      <span>
+                        <i class="bi bi-clock"></i>
+                        <span
+                          th:text="${#temporals.format(event.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(event.endTime, 'HH:mm')}"
+                          >06:00 - 10:00</span
+                        >
+                      </span>
+                      <span>
+                        <i class="bi bi-geo-alt"></i>
+                        <span th:text="${event.location ?: 'Chưa cập nhật'}">Địa điểm</span>
+                      </span>
+                    </div>
+
+                    <!-- Rating Section -->
+                    <div th:if="${event.hasAttended}">
+                      <div th:if="${event.hasRated}" class="rating-info">
+                        <div class="rating-text">
+                          <span class="stars star-display" th:data-rating="${event.existingRating}"></span>
+                          <span th:text="${event.existingRating} + ' sao'">5 sao</span>
+                          <button
+                            class="edit-rating-btn"
+                            th:data-feedback-id="${event.existingFeedbackId}"
+                            th:data-rating="${event.existingRating}"
+                            th:data-content="${event.existingContent ?: ''}"
+                            onclick="editFeedbackFromData(this)"
+                          >
+                            Chỉnh sửa
+                          </button>
+                        </div>
+                        <div th:if="${event.existingContent}" class="rating-comment" th:text="${event.existingContent}">
+                          Hoạt động rất ý nghĩa và bổ ích
+                        </div>
+                      </div>
+                      <div th:unless="${event.hasRated}">
+                        <button
+                          class="rate-btn"
+                          th:data-opp-id="${event.oppId}"
+                          th:data-event-title="${event.opportunityTitle}"
+                          onclick="openRatingModalFromData(this)"
+                        >
+                          <i class="bi bi-star"></i> Đánh giá hoạt động
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Organization Rating Section -->
+                    <div th:if="${event.hasAttended and event.hasOrgRating}" class="org-rating-info">
+                      <div class="org-rating-header">
+                        <i class="bi bi-building"></i>
+                        <span class="org-rating-label">Đánh giá từ tổ chức:</span>
+                      </div>
+                      <div class="org-rating-content">
+                        <div class="org-rating-stars">
+                          <span class="stars star-display" th:data-rating="${event.orgRatingStars}"></span>
+                          <span class="org-rating-text" th:text="${event.orgRatingStars} + ' sao'">5 sao</span>
+                        </div>
+                        <div
+                          th:if="${event.orgRatingComment}"
+                          class="org-rating-comment"
+                          th:text="${event.orgRatingComment}"
+                        >
+                          Tình nguyện viên rất tích cực và nhiệt tình
+                        </div>
+                      </div>
+                    </div>
+
+                    <div th:unless="${event.hasAttended}" class="rating-info no-rating">
+                      <small class="text-muted">
+                        <i class="bi bi-exclamation-circle"></i> Chưa điểm danh - không thể đánh giá
+                      </small>
+                    </div>
+                  </div>
+                  <div class="event-status completed">Đã hoàn thành</div>
+                </div>
+              </div>
+
+              <!-- Pagination -->
+              <div th:if="${totalPages > 1}" class="d-flex justify-content-center mt-4">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                      <a
+                        class="page-link"
+                        th:href="@{/profile/event-history(page=${currentPage - 1}, size=${pageSize})}"
+                        >Trước</a
+                      >
+                    </li>
+                    <li
+                      th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                      class="page-item"
+                      th:classappend="${i == currentPage} ? 'active'"
+                    >
+                      <a
+                        class="page-link"
+                        th:href="@{/profile/event-history(page=${i}, size=${pageSize})}"
+                        th:text="${i + 1}"
+                        >1</a
+                      >
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                      <a
+                        class="page-link"
+                        th:href="@{/profile/event-history(page=${currentPage + 1}, size=${pageSize})}"
+                        >Sau</a
+                      >
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${eventHistory == null or eventHistory.empty}">
+              <i class="bi bi-clock-history"></i>
+              <h3>Chưa có lịch sử hoạt động</h3>
+              <p>Bạn chưa tham gia hoạt động tình nguyện nào. Hãy đăng ký tham gia để tích lũy kinh nghiệm!</p>
+              <a href="/opportunities" class="btn btn-primary">Tìm cơ hội tình nguyện</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal fade" id="ratingModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content rating-modal">
+          <div class="modal-header">
+            <h5 class="modal-title">Đánh giá hoạt động</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <h6 id="modalEventTitle">Tên hoạt động</h6>
+            <div class="mb-3">
+              <label class="form-label">Đánh giá của bạn:</label>
+              <div class="star-rating" id="starRating">
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+                <span class="star" data-rating="4">★</span>
+                <span class="star" data-rating="5">★</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="ratingComment" class="form-label">Nhận xét (tùy chọn):</label>
+              <textarea
+                class="form-control"
+                id="ratingComment"
+                rows="3"
+                maxlength="1000"
+                placeholder="Chia sẻ trải nghiệm của bạn về hoạt động này..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" id="submitRating">Gửi đánh giá</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/toast-utils.js}"></script>
+    <script th:src="@{/js/event-history.js}"></script>
+  </body>
+</html>
