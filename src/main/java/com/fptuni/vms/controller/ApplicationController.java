@@ -7,7 +7,6 @@ import com.fptuni.vms.service.ApplicationService;
 
 import jakarta.servlet.http.HttpSession;
 
-import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -84,7 +83,7 @@ public class ApplicationController {
             ra.addFlashAttribute("success",
                     "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
             // chuyển tới trang danh sách đơn
-            return "redirect:/volunteer/applications";
+            return "redirect:/profile/applications";
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
@@ -92,17 +91,6 @@ public class ApplicationController {
         }
         // lỗi thì quay lại chi tiết cơ hội
         return "redirect:/opportunities/" + oppId;
-    }
-
-    // Danh sách đơn của volunteer
-    @GetMapping("/volunteer/applications")
-    public String myApplications(Model model, HttpSession session) {
-        // lấy current user id từ session
-        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        if (currentUserId == null)
-            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-        model.addAttribute("items", service.listMyApplications(currentUserId));
-        return "volunteer/my-applications";
     }
 
     // Danh sách đơn theo tổ chức (với filter, paging) - Phi Long iter 2

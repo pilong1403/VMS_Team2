@@ -6,26 +6,6 @@
     <link rel="stylesheet" th:href="@{/css/styleUser.css}" />
 </head>
 <body data-page="reports">
-
-<!--<aside class="sidebar">-->
-<!--    <div class="sidebar-header">-->
-<!--        <div class="sidebar-logo">-->
-<!--            <div class="logo-icon">📊</div>-->
-<!--            <div class="logo-text">-->
-<!--                <h2>Quản Lý Admin</h2>-->
-<!--                <p>Hệ thống quản trị</p>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <nav class="sidebar-nav">-->
-<!--        <div class="nav-label">MENU CHÍNH</div>-->
-<!--        <ul class="nav-menu">-->
-<!--            <li><a th:href="@{/admin/users}" class="nav-item">Quản lý Người dùng</a></li>-->
-<!--            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>-->
-<!--            <li><a th:href="@{/admin/reports}" class="nav-item active">Báo cáo</a></li>-->
-<!--        </ul>-->
-<!--    </nav>-->
-<!--</aside>-->
 <div th:replace="~{fragments/admin/sidebar :: sidebar}"></div>
 
 
@@ -62,7 +42,7 @@
 
             <div class="search-wrapper">
 
-                <input type="search" placeholder="Tìm theo tên/email..." />
+<!--                <input type="search" placeholder="Tìm theo tên/email..." />-->
             </div>
         </form>
 
@@ -88,25 +68,25 @@
         </div>
 
         <!-- ====== BẢNG DỮ LIỆU TỔNG HỢP (nếu cần thêm thống kê chi tiết) ====== -->
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                <tr>
-                    <th>Tên</th>
-                    <th>Email</th>
-                    <th>Ngày tạo</th>
-                    <th>Trạng thái</th>
-                </tr>
-                </thead>
-                <tbody id="reportTableBody">
-                <tr th:if="${userStats.labels == null or userStats.labels.size() == 0}">
-                    <td colspan="4" class="muted">Không có dữ liệu trong khoảng thời gian này.</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
-</div>
+<!--        <div class="table-wrapper">-->
+<!--            <table>-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                    <th>Tên</th>-->
+<!--                    <th>Email</th>-->
+<!--                    <th>Ngày tạo</th>-->
+<!--                    <th>Trạng thái</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody id="reportTableBody">-->
+<!--                <tr th:if="${userStats.labels == null or userStats.labels.size() == 0}">-->
+<!--                    <td colspan="4" class="muted">Không có dữ liệu trong khoảng thời gian này.</td>-->
+<!--                </tr>-->
+<!--                </tbody>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--    </main>-->
+<!--</div>-->
 
 <div class="toast" id="toast">
     <div class="toast-content">

@@ -1,87 +1,120 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đơn ứng tuyển của tôi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/application-list.css}">
-</head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/schedule.css}" rel="stylesheet" />
+    <link th:href="@{/css/volunteer-sidebar.css}" rel="stylesheet" />
+    <link th:href="@{/css/application-list.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Toast Container -->
+    <div th:replace="~{fragments/toast-container :: toasts}"></div>
 
-<body class="bg-light">
-
-    <div class="container py-4">
-        <!-- Flash -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${success}">Thành công</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-3 p-0">
+          <div th:replace="~{fragments/volunteer/sidebar :: volunteer-sidebar(${activePage})}"></div>
         </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}">Có lỗi</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
 
-        <h4 class="mb-3">Danh sách đơn ứng tuyển của tôi</h4>
+        <!-- Main Content -->
+        <div class="col-9">
+          <div class="schedule-container">
+            <!-- Header -->
+            <div class="page-header">
+              <h1>Đơn ứng tuyển của tôi</h1>
+              <p>Quản lý và theo dõi trạng thái các đơn ứng tuyển hoạt động tình nguyện</p>
+            </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+              <span th:text="${success}">Thành công</span>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+              <span th:text="${error}">Có lỗi</span>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Applications Table -->
+            <div class="section">
+              <div class="card border-0 shadow-sm">
+                <div class="table-responsive">
+                  <table class="table align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width:20%">Tổ chức</th>
-                            <th style="width:22%">Cơ hội</th>
-                            <th style="width:33%">Mô tả ngắn</th>
-                            <th style="width:12%">Trạng thái</th>
-                            <th style="width:13%">Hành động</th>
-                        </tr>
+                      <tr>
+                        <th style="width: 20%">Tổ chức</th>
+                        <th style="width: 22%">Cơ hội</th>
+                        <th style="width: 33%">Mô tả ngắn</th>
+                        <th style="width: 12%">Trạng thái</th>
+                        <th style="width: 13%">Hành động</th>
+                      </tr>
                     </thead>
                     <tbody>
-                        <tr th:if="${#lists.isEmpty(items)}">
-                            <td colspan="5" class="text-center text-secondary py-4">Bạn chưa có đơn ứng tuyển nào.</td>
-                        </tr>
+                      <tr th:if="${#lists.isEmpty(items)}">
+                        <td colspan="5" class="text-center text-secondary py-4">Bạn chưa có đơn ứng tuyển nào.</td>
+                      </tr>
 
-                        <tr th:each="a : ${items}">
-                            <td th:text="${a.opportunity.organization.name}">Tên tổ chức</td>
-                            <td>
-                                <div class="fw-semibold" th:text="${a.opportunity.title}">Tiêu đề</div>
-                                <div class="text-secondary small">
-                                    Nộp ngày
-                                    <span th:text="${#temporals.format(a.appliedAt,'dd/MM/yyyy HH:mm')}">01/01/2025
-                                        10:00</span>
-                                </div>
-                            </td>
-                            <td th:text="${a.opportunity.subtitle}">Mô tả ngắn...</td>
-                            <td>
-                                <span class="badge" th:classappend="${a.status.name()=='PENDING'   ? ' bg-secondary'
-                                 : a.status.name()=='APPROVED'  ? ' bg-primary'
-                                 : a.status.name()=='REJECTED'  ? ' bg-danger'
-                                 : a.status.name()=='COMPLETED' ? ' bg-success'
-                                 : a.status.name()=='CANCELLED' ? ' bg-dark'
-                                 : ' bg-light text-dark'}" th:text="${a.status.name()=='PENDING'   ? 'Đang chờ'
-                           : a.status.name()=='APPROVED'  ? 'Đã duyệt'
-                           : a.status.name()=='REJECTED'  ? 'Từ chối'
-                           : a.status.name()=='COMPLETED' ? 'Hoàn thành'
-                           : a.status.name()=='CANCELLED' ? 'Đã hủy'
-                           : a.status}">Đang chờ</span>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                        th:href="@{/opportunities/{id}(id=${a.opportunity.oppId})}">Chi tiết</a>
-                                    <button class="btn btn-sm btn-danger" th:disabled="${a.status.name()!='PENDING'}"
-                                        type="button">
-                                        Hủy bỏ
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                      <tr th:each="a : ${items}">
+                        <td th:text="${a.opportunity.organization.name}">Tên tổ chức</td>
+                        <td>
+                          <div class="fw-semibold" th:text="${a.opportunity.title}">Tiêu đề</div>
+                          <div class="text-secondary small">
+                            Nộp ngày
+                            <span th:text="${#temporals.format(a.appliedAt,'dd/MM/yyyy HH:mm')}">01/01/2025 10:00</span>
+                          </div>
+                        </td>
+                        <td th:text="${a.opportunity.subtitle}">Mô tả ngắn...</td>
+                        <td>
+                          <span
+                            class="badge"
+                            th:classappend="${a.status.name()=='PENDING'   ? ' bg-secondary'
+                                   : a.status.name()=='APPROVED'  ? ' bg-primary'
+                                   : a.status.name()=='REJECTED'  ? ' bg-danger'
+                                   : a.status.name()=='COMPLETED' ? ' bg-success'
+                                   : a.status.name()=='CANCELLED' ? ' bg-dark'
+                                   : ' bg-light text-dark'}"
+                            th:text="${a.status.name()=='PENDING'   ? 'Đang chờ'
+                             : a.status.name()=='APPROVED'  ? 'Đã duyệt'
+                             : a.status.name()=='REJECTED'  ? 'Từ chối'
+                             : a.status.name()=='COMPLETED' ? 'Hoàn thành'
+                             : a.status.name()=='CANCELLED' ? 'Đã hủy'
+                             : a.status}"
+                            >Đang chờ</span
+                          >
+                        </td>
+                        <td>
+                          <div class="d-flex gap-2">
+                            <a
+                              class="btn btn-sm btn-outline-secondary"
+                              th:href="@{/opportunities/{id}(id=${a.opportunity.oppId})}"
+                              >Chi tiết</a
+                            >
+                            <button
+                              class="btn btn-sm btn-danger"
+                              th:disabled="${a.status.name()!='PENDING'}"
+                              type="button"
+                            >
+                              Hủy bỏ
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     </tbody>
-                </table>
+                  </table>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/toast-utils.js}"></script>
+  </body>
 </html>

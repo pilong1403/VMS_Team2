@@ -15,7 +15,9 @@ public enum AuthErrorCode {
     INVALID_INPUT,
     INVALID_EMAIL,
     EMAIL_EXISTS,
-    WEAK_PASSWORD;
+    WEAK_PASSWORD,
+    ORG_PENDING,   // hồ sơ tổ chức đang chờ duyệt
+    ORG_REJECTED;
 
     /** Trả về chuỗi mã (dùng cho query param, logging, v.v.). */
     public String code() {

@@ -53,19 +53,20 @@
                 <div class="card" th:each="o : ${opportunities}">
                     <div class="card-head">
                         <div class="info">
-                            <div class="name" th:text="${o.opportunityTitle}">Tên hoạt động</div>
+                            <div  class="name" th:text="${'Tên tổ chức sự kiện: '+o.opportunityTitle}">Tên hoạt động</div>
 
                             <div class="muted">
+                                <span> Thời gian bắt đầu: </span>
                                 <span th:text="${#temporals.format(o.startTime, 'dd/MM/yyyy HH:mm')}"></span>
-                                <span> - </span>
+                                <span>--- Thời gian kết thúc:  </span>
                                 <span th:text="${#temporals.format(o.endTime, 'dd/MM/yyyy HH:mm')}"></span>
                             </div>
 
                             <div class="meta">
-                                <span>📍</span>
+                                <span>Địa điểm: </span>
                                 <span th:text="${o.location}">Địa điểm</span>
-                                <span class="dot"></span>
-                                <span th:text="${o.participantCount + ' TNV'}">0 TNV</span>
+                                <span class="dot"> </span>
+                                <span th:text="${o.participantCount + ' Tình Nguyện Viên'}">0 TNV</span>
                             </div>
                         </div>
 
@@ -80,7 +81,8 @@
 
                     <div class="actions">
                         <a class="btn primary"
-                           th:href="@{'/organization/attendance/opportunity/' + ${o.opportunityId}}">
+
+                           th:href="@{'/organization/attendance-details?opportunityId=' + ${o.opportunityId}}">
                             Điểm danh
                         </a>
 

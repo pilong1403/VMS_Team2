@@ -68,18 +68,20 @@ public class Opportunity {
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    // DB trigger set on UPDATE; cho phép NULL
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
     @PrePersist
     private void prePersist() {
         if (status == null) status = OpportunityStatus.OPEN;
     }
 
-    /**
-     * Phương thức này được gọi sau khi một entity được tải từ cơ sở dữ liệu.
-     * Nó sẽ tự động cập nhật trạng thái của cơ hội dựa trên thời gian kết thúc.
-     */
+    /** Sau khi load từ DB, nếu quá hạn thì tự cập nhật trạng thái ở bộ nhớ (không ghi DB). */
     @PostLoad
     private void updateStatusBasedOnTime() {
-        if (this.status == OpportunityStatus.OPEN && this.endTime != null && LocalDateTime.now().isAfter(this.endTime)) {
+        if (this.status == OpportunityStatus.OPEN && this.endTime != null
+                && LocalDateTime.now().isAfter(this.endTime)) {
             this.status = OpportunityStatus.CLOSED;
         }
     }
@@ -120,4 +122,7 @@ public class Opportunity {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

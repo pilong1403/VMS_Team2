@@ -6,6 +6,7 @@ import com.fptuni.vms.service.RoleService;
 import com.fptuni.vms.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -210,5 +211,9 @@ public class UserController {
     }
 
 
+    @GetMapping("/download-file")
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("url") String fileUrl) {
+        return userService.downloadFileFromUrl(fileUrl);
+    }
 
 }

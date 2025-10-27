@@ -1,5 +1,6 @@
 package com.fptuni.vms.service.impl;
 
+import com.fptuni.vms.dto.EventHistoryDto;
 import com.fptuni.vms.dto.response.OpportunitySummaryDto;
 import com.fptuni.vms.dto.response.OpportunityVolunteerRatingDto;
 import com.fptuni.vms.model.Opportunity;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class VolunteerRatingServiceImpl implements VolunteerRatingService {
@@ -30,8 +30,8 @@ public class VolunteerRatingServiceImpl implements VolunteerRatingService {
     // ===================== HOẠT ĐỘNG =====================
     @Override
     public List<OpportunitySummaryDto> findOpportunitiesByOrg(int orgId, String keyword,
-                                                              String eventStatus, String sort,
-                                                              int offset, int limit) {
+            String eventStatus, String sort,
+            int offset, int limit) {
         return ratingRepo.findOpportunitiesByOrg(orgId, keyword, eventStatus, sort, offset, limit);
     }
 
@@ -43,9 +43,10 @@ public class VolunteerRatingServiceImpl implements VolunteerRatingService {
     // ===================== TÌNH NGUYỆN VIÊN TRONG HOẠT ĐỘNG =====================
     @Override
     public List<OpportunityVolunteerRatingDto> getVolunteersForOpportunity(int orgId, int opportunityId,
-                                                                           String keyword, String statusFilter,
-                                                                           String sort, int offset, int limit) {
-        return ratingRepo.findVolunteersForOpportunity(orgId, opportunityId, keyword, statusFilter, sort, offset, limit);
+            String keyword, String statusFilter,
+            String sort, int offset, int limit) {
+        return ratingRepo.findVolunteersForOpportunity(orgId, opportunityId, keyword, statusFilter, sort, offset,
+                limit);
     }
 
     @Override
@@ -103,6 +104,69 @@ public class VolunteerRatingServiceImpl implements VolunteerRatingService {
         // 6. Lưu
         ratingRepo.save(rating);
     }
+
+    // ===================== VOLUNTEER EVENT HISTORY =====================
+    @Override
+    public List<EventHistoryDto> getVolunteerEventHistory(int volunteerId, int page, int size) {
+        int offset = page * size;
+        return ratingRepo.findVolunteerEventHistory(volunteerId, offset, size);
+    }
+
+    @Override
+    public long countVolunteerEventHistory(int volunteerId) {
+        return ratingRepo.countVolunteerEventHistory(volunteerId);
+    }
+
+    // ===================== VOLUNTEER RATING =====================
+    @Override
+    public void createVolunteerRating(int oppId, int volunteerId, Short stars, String comment) {
+        if (!canVolunteerRate(oppId, volunteerId)) {
+            throw new IllegalStateException("Bạn không thể đánh giá hoạt động này!");
+        }
+
+        Opportunity opportunity = opportunityRepository.findById(oppId);
+        if (opportunity == null) {
+            throw new IllegalArgumentException("Hoạt động không tồn tại!");
+        }
+
+        User volunteer = userRepository.findById(volunteerId)
+                .orElseThrow(() -> new IllegalArgumentException("Tình nguyện viên không tồn tại!"));
+
+        VolunteerRating rating = new VolunteerRating();
+        rating.setOpportunity(opportunity);
+        rating.setRaterOrg(opportunity.getOrganization());
+        rating.setRateeUser(volunteer);
+        rating.setStars(stars);
+        rating.setComment(comment);
+        rating.setCreatedAt(LocalDateTime.now());
+
+        ratingRepo.save(rating);
+    }
+
+    @Override
+    public void updateVolunteerRating(int ratingId, Short stars, String comment) {
+        VolunteerRating rating = ratingRepo.findById(ratingId);
+        if (rating == null) {
+            throw new IllegalArgumentException("Đánh giá không tồn tại!");
+        }
+
+        // Check if rating is within 3 days of creation
+        if (rating.getCreatedAt().isBefore(LocalDateTime.now().minusDays(3))) {
+            throw new IllegalStateException("Không thể chỉnh sửa đánh giá sau 3 ngày!");
+        }
+
+        rating.setStars(stars);
+        rating.setComment(comment);
+        rating.setUpdatedAt(LocalDateTime.now());
+
+        ratingRepo.update(rating);
+    }
+
+    @Override
+    public boolean canVolunteerRate(int oppId, int volunteerId) {
+        return ratingRepo.canVolunteerRate(oppId, volunteerId);
+    }
+
     // ===================== CRUD =====================
     @Override
     public VolunteerRating findById(int id) {
