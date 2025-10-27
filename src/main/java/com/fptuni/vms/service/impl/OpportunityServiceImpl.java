@@ -143,8 +143,12 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Override
     @Transactional
     public Opportunity save(Opportunity o) {
+        if (o.getStatus() == null) {
+            o.setStatus(Opportunity.OpportunityStatus.OPEN); // Đặt mặc định nếu chưa có
+        }
         return opportunityRepository.save(o);
     }
+
 
     @Override
     public Page<Opportunity> searchByOrg(int orgId, String q,
