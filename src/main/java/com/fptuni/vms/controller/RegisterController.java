@@ -70,7 +70,7 @@ public class RegisterController {
             String normalizedEmail = form.getEmail().trim().toLowerCase();
 
             // 1) Gửi OTP
-            otpService.generateAndSendOtp(normalizedEmail, "REGISTER");
+            otpService.generateAndSendOtp(normalizedEmail, "VERIFY_EMAIL");
 
             // 2) Lưu form tạm vào session
             HttpSession ss = req.getSession(true);
@@ -121,7 +121,7 @@ public class RegisterController {
 
         try {
             // 1) Xác minh OTP
-            otpService.verifyOtp(normalizedEmail, "REGISTER", otp);
+            otpService.verifyOtp(normalizedEmail, "VERIFY_EMAIL", otp);
 
             // 2) Tạo tài khoản thực trong DB
             authService.registerVolunteer(
