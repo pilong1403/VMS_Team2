@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 public class OtpVerification {
 
     public enum Purpose {
-        LOGIN,
         VERIFY_EMAIL,
         RESET_PASSWORD,
         ORG_REGISTER
