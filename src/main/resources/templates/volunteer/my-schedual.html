@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lịch trình của tôi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/schedule.css}" rel="stylesheet" />
+    <link th:href="@{/css/volunteer-sidebar.css}" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-3 p-0">
+          <div th:replace="~{fragments/volunteer/sidebar :: volunteer-sidebar(${activePage})}"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-9">
+          <div class="schedule-container">
+            <!-- Header -->
+            <div class="page-header">
+              <h1>Lịch trình của tôi</h1>
+              <p>Theo dõi các hoạt động tình nguyện bạn đã đăng ký</p>
+            </div>
+
+            <!-- Upcoming Events -->
+            <div
+              class="section"
+              th:if="${scheduleData.upcomingApplications != null and !scheduleData.upcomingApplications.empty}"
+            >
+              <h2 class="section-title" th:text="'Sắp diễn ra (' + ${scheduleData.upcomingCount} + ')'">Sắp diễn ra</h2>
+              <div class="events-list">
+                <div th:each="app : ${scheduleData.upcomingApplications}" class="event-card upcoming">
+                  <div class="event-date">
+                    <span class="day" th:text="${#temporals.day(app.startTime)}">15</span>
+                    <span class="month" th:text="'Th' + ${#temporals.month(app.startTime)}">Th11</span>
+                  </div>
+                  <div class="event-info">
+                    <h3 th:text="${app.opportunityTitle}">Tên hoạt động</h3>
+                    <p th:text="${app.organizationName}">Tổ chức</p>
+                    <div class="event-details">
+                      <span
+                        ><i class="bi bi-clock"></i>
+                        <span
+                          th:text="${#temporals.format(app.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(app.endTime, 'HH:mm')}"
+                          >07:00 - 11:00</span
+                        ></span
+                      >
+                      <span
+                        ><i class="bi bi-geo-alt"></i>
+                        <span th:text="${app.location ?: 'Chưa cập nhật'}">Địa điểm</span></span
+                      >
+                    </div>
+                  </div>
+                  <div class="event-status upcoming">Sắp diễn ra</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Past Events -->
+            <div
+              class="section"
+              th:if="${scheduleData.pastApplications != null and !scheduleData.pastApplications.empty}"
+            >
+              <h2 class="section-title" th:text="'Đã hoàn thành (' + ${scheduleData.completedCount} + ')'">
+                Đã hoàn thành
+              </h2>
+              <div class="events-list">
+                <div th:each="app : ${scheduleData.pastApplications}" class="event-card completed">
+                  <div class="event-date">
+                    <span class="day" th:text="${#temporals.day(app.startTime)}">15</span>
+                    <span class="month" th:text="'Th' + ${#temporals.month(app.startTime)}">Th10</span>
+                  </div>
+                  <div class="event-info">
+                    <h3 th:text="${app.opportunityTitle}">Tên hoạt động</h3>
+                    <p th:text="${app.organizationName}">Tổ chức</p>
+                    <div class="event-details">
+                      <span
+                        ><i class="bi bi-clock"></i>
+                        <span
+                          th:text="${#temporals.format(app.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(app.endTime, 'HH:mm')}"
+                          >06:00 - 10:00</span
+                        ></span
+                      >
+                      <span
+                        ><i class="bi bi-geo-alt"></i>
+                        <span th:text="${app.location ?: 'Chưa cập nhật'}">Địa điểm</span></span
+                      >
+                    </div>
+                  </div>
+                  <div class="event-status completed">Đã hoàn thành</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              class="empty-state"
+              th:if="${(scheduleData.upcomingApplications == null or scheduleData.upcomingApplications.empty) and (scheduleData.pastApplications == null or scheduleData.pastApplications.empty)}"
+            >
+              <i class="bi bi-calendar3"></i>
+              <h3>Chưa có lịch trình nào</h3>
+              <p>Hãy đăng ký tham gia các cơ hội tình nguyện để xem lịch trình của bạn</p>
+              <a href="/opportunities" class="btn btn-primary">Tìm cơ hội tình nguyện</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

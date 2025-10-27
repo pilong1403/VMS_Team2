@@ -9,6 +9,7 @@ import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.model.User;
 
 public interface ApplicationRepository {
+
         boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
 
         Application save(Application application);
@@ -17,34 +18,39 @@ public interface ApplicationRepository {
 
         User findUserById(Integer userId);
 
-        // đếm số application hợp lệ của 1 opportunity
+        // Đếm số application hợp lệ của 1 opportunity
         long countByOppId(Integer oppId);
 
-        // cho phép lưu (merge) lại thông tin liên hệ của user
+        // Cho phép lưu (merge) lại thông tin liên hệ của user
         User saveUser(User user);
 
         // LẤY DANH SÁCH ĐƠN CỦA VOLUNTEER — trả về Application + fetch join đủ dữ liệu
         List<Application> findAllByVolunteerId(Integer volunteerId);
 
-        // ====== PhiLong iter2 Query theo tổ chức (list + count + stats) ======
+        // ====== Truy vấn theo tổ chức (list + count + stats) ======
         List<Application> findOrgApplications(Integer orgId,
-                        String q,
-                        Application.ApplicationStatus status,
-                        LocalDateTime from,
-                        LocalDateTime to,
-                        int offset,
-                        int limit);
+                                              String q,
+                                              Application.ApplicationStatus status,
+                                              LocalDateTime from,
+                                              LocalDateTime to,
+                                              int offset,
+                                              int limit);
 
         long countOrgApplications(Integer orgId,
-                        String q,
-                        Application.ApplicationStatus status,
-                        LocalDateTime from,
-                        LocalDateTime to);
+                                  String q,
+                                  Application.ApplicationStatus status,
+                                  LocalDateTime from,
+                                  LocalDateTime to);
 
         Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId);
 
-        // ======PhiLong iter2 :lấy 1 application thuộc orgId (kèm fetch
-        // volunteer/opportunity) phê duyệt đơn======
+        // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
         Application findByIdAndOrgId(Integer appId, Integer orgId);
-        // ========================================
+
+        // ======  phục vụ gửi mail/thông báo khi opp hủy/sửa ======
+        /** Trả về danh sách User đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
+        List<User> findApprovedVolunteersByOppId(Integer oppId);
+
+        /** Trả về Application (đã duyệt) của 1 cơ hội, có fetch opportunity & organization (tiện build nội dung mail). */
+        List<Application> findApprovedApplicationsByOppId(Integer oppId);
 }

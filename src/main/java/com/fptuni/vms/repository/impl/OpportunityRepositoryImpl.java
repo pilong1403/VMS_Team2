@@ -261,6 +261,49 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         }
     }
 
+    @Override
+    public Page<Opportunity> searchByOrg(int orgId, String q,
+            Opportunity.OpportunityStatus status, Pageable pageable) {
+
+        StringBuilder where = new StringBuilder(" WHERE org.orgId = :orgId ");
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", orgId);
+
+        if (q != null && !q.isBlank()) {
+            where.append(" AND (LOWER(o.title) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                    "  OR LOWER(o.location) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                    "  OR LOWER(o.subtitle) LIKE LOWER(CONCAT('%', :q, '%'))) ");
+            params.put("q", q.trim());
+        }
+        if (status != null) {
+            where.append(" AND o.status = :st ");
+            params.put("st", status);
+        }
+
+        String order = " ORDER BY o.createdAt DESC ";
+
+        String dataJpql = "SELECT o FROM Opportunity o " +
+                "JOIN o.organization org " +
+                "LEFT JOIN FETCH o.category c " +
+                where + order;
+
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o " +
+                "JOIN o.organization org " +
+                where;
+
+        TypedQuery<Opportunity> dataQ = em.createQuery(dataJpql, Opportunity.class);
+        params.forEach(dataQ::setParameter);
+        dataQ.setFirstResult((int) pageable.getOffset());
+        dataQ.setMaxResults(pageable.getPageSize());
+        List<Opportunity> content = dataQ.getResultList();
+
+        TypedQuery<Long> cntQ = em.createQuery(countJpql, Long.class);
+        params.forEach(cntQ::setParameter);
+        Long total = cntQ.getSingleResult();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
     // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
     @Override
     public Page<Opportunity> findOrgOpportunitiesWithFilters(

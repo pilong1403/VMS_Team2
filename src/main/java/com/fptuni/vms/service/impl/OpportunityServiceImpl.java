@@ -140,6 +140,22 @@ public class OpportunityServiceImpl implements OpportunityService {
         return opportunityRepository.findByOrganization(orgId);
     }
 
+    @Override
+    @Transactional
+    public Opportunity save(Opportunity o) {
+        if (o.getStatus() == null) {
+            o.setStatus(Opportunity.OpportunityStatus.OPEN); // Đặt mặc định nếu chưa có
+        }
+        return opportunityRepository.save(o);
+    }
+
+    @Override
+    public Page<Opportunity> searchByOrg(int orgId, String q,
+            Opportunity.OpportunityStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return opportunityRepository.searchByOrg(orgId, q, status, pageable);
+    }
+
     // @Override
     // public Opportunity findById(int id) {
     // return opportunityRepository.findById(id);

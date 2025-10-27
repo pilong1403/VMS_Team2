@@ -23,11 +23,32 @@ body{
     background:var(--bg);
 }
 
-/* Layout */
-.app{
-    display:grid;
-    grid-template-columns: 260px 1fr;
-    min-height:100vh;
+.app {
+    display: grid;
+    grid-template-columns: 256px 1fr; /* 256px khớp với width của sidebar.html */
+    height: 100vh;
+    overflow: hidden;
+}
+
+.content-wrapper {
+    display: grid;
+    grid-template-rows: auto 1fr; /* Hàng 1 (header) tự co, Hàng 2 (main) lấp đầy */
+    height: 100vh;
+    overflow: hidden;
+}
+
+.header-container {
+    background: var(--panel); /* var(--panel) là #ffffff */
+    border-bottom: 1px solid var(--line); /* var(--line) là #e5e7eb */
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0;   /* Bỏ margin-bottom: 16px cũ */
+    padding: 20px 0;    /* Thêm padding dọc */
 }
 
 .sidebar{
@@ -62,14 +83,17 @@ body{
 }
 .user-mini img{width:32px;height:32px;border-radius:999px}
 
-.main{
-    padding:20px 28px 40px;
+.main {
+    padding: 20px 28px 40px;
+    overflow-y: auto;   /* <<<< ĐÂY LÀ CHÌA KHÓA */
+    background: var(--bg); /* var(--bg) là #f6f7fb */
 }
 
-.header{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    margin-bottom:16px;
-}
+/*.header{*/
+/*    display:flex; align-items:center; justify-content:space-between; gap:12px;*/
+/*    margin-bottom:16px;*/
+/*}*/
+
 .badges{
     display:flex; gap:8px; align-items:center;
 }

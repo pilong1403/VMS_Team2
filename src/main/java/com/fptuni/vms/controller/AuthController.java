@@ -88,6 +88,7 @@ public class AuthController {
     }
 
     // Map mã lỗi -> thông điệp hiển thị
+// src/main/java/com/fptuni/vms/controller/AuthController.java
     private String map(String code) {
         if (code == null) return null;
         switch (code) {
@@ -103,10 +104,16 @@ public class AuthController {
                 return "Bạn đã đăng xuất.";
             case "RESET_OK":
                 return "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.";
+            case "ORG_PENDING":
+                return "Tài khoản của bạn chưa thể đăng nhập vì hồ sơ tổ chức đang chờ duyệt.";
+            case "ORG_REJECTED":
+                return "Hồ sơ tổ chức của bạn đã bị từ chối. Vui lòng đăng ký lại.";
+
             default:
                 return null;
         }
     }
+
 
     private String url(String s) {
         try {

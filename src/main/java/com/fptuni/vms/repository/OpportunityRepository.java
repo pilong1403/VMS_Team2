@@ -49,4 +49,7 @@ public interface OpportunityRepository {
             String quick, // upcoming | ongoing | past | null
             String sortBy,
             Pageable pageable);
+
+    Page<Opportunity> searchByOrg(int orgId, String q,
+            Opportunity.OpportunityStatus status, Pageable pageable);
 }
