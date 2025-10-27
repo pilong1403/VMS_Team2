@@ -222,4 +222,107 @@ public class FAQRepositoryImpl implements FAQRepository {
 
         return query.getSingleResult();
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FAQ> filterFAQsPublic(String category, Integer num, String keyword, int page, int size) {
+        String vietnameseCategory = null;
+        if (category != null && !category.trim().isEmpty()) {
+            switch (category.trim().toLowerCase()) {
+                case "account":
+                    vietnameseCategory = "Tài khoản";
+                    break;
+                case "event":
+                    vietnameseCategory = "Sự kiện";
+                    break;
+                case "org":
+                    vietnameseCategory = "Tổ chức";
+                    break;
+                case "donation":
+                    vietnameseCategory = "Quyên góp";
+                    break;
+                case "common":
+                    vietnameseCategory = "Chung";
+                    break;
+            }
+        }
+
+        StringBuilder jpql = new StringBuilder("SELECT f FROM FAQ f WHERE f.status = true");
+
+        if (vietnameseCategory != null) {
+            jpql.append(" AND f.category = :categoryValue");
+        }
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            jpql.append(" AND LOWER(f.question) LIKE LOWER(:kw)");
+        }
+
+        TypedQuery<FAQ> query = em.createQuery(jpql.toString(), FAQ.class);
+
+        if (vietnameseCategory != null) {
+            query.setParameter("categoryValue", vietnameseCategory);
+        }
+
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            query.setParameter("kw", "%" + keyword.trim().toLowerCase() + "%");
+        }
+
+        int recordsPerPage = (num != null && num > 0) ? num : size;
+        int offset = (page - 1) * recordsPerPage;
+        query.setFirstResult(offset);
+        query.setMaxResults(recordsPerPage);
+
+        return query.getResultList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countFilteredFAQsPublic(String category, String keyword) {
+        String vietnameseCategory = null;
+        if (category != null && !category.trim().isEmpty()) {
+            switch (category.trim().toLowerCase()) {
+                case "account":
+                    vietnameseCategory = "Tài khoản";
+                    break;
+                case "event":
+                    vietnameseCategory = "Sự kiện";
+                    break;
+                case "org":
+                    vietnameseCategory = "Tổ chức";
+                    break;
+                case "donation":
+                    vietnameseCategory = "Quyên góp";
+                    break;
+                case "common":
+                    vietnameseCategory = "Chung";
+                    break;
+            }
+        }
+
+        StringBuilder jpql = new StringBuilder("SELECT COUNT(f.id) FROM FAQ f WHERE f.status = true");
+
+        if (vietnameseCategory != null) {
+            jpql.append(" AND f.category = :categoryValue");
+        }
+
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            jpql.append(" AND LOWER(f.question) LIKE LOWER(:kw)");
+        }
+
+        TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+        if (vietnameseCategory != null) {
+            query.setParameter("categoryValue", vietnameseCategory);
+        }
+
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            query.setParameter("kw", "%" + keyword.trim().toLowerCase() + "%");
+        }
+
+        return query.getSingleResult();
+    }
 }
