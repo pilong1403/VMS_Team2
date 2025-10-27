@@ -40,4 +40,6 @@ public interface OpportunityRepository {
 
     Opportunity findById(int id);
 
+    Page<Opportunity> searchByOrg(int orgId, String q,
+                                  Opportunity.OpportunityStatus status, Pageable pageable);
 }

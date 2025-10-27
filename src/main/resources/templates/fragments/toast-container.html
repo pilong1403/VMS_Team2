@@ -1,134 +1,94 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <body>
-    <!-- Toast Container Fragment -->
-    <div th:fragment="toasts" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200">
-      <div
-        id="successToast"
-        class="toast align-items-center text-bg-success border-0"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="d-flex">
-          <div class="toast-body">
-            <i class="bi bi-check-circle me-2"></i>
-            <span id="successMessage">Success message</span>
-          </div>
-          <button
-            type="button"
-            class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast"
-            aria-label="Close"
-          ></button>
-        </div>
-      </div>
+<!-- templates/fragments/toast-container.html -->
 
-      <div
-        id="errorToast"
-        class="toast align-items-center text-bg-danger border-0"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="d-flex">
-          <div class="toast-body">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <span id="errorMessage">Error message</span>
-          </div>
-          <button
-            type="button"
-            class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast"
-            aria-label="Close"
-          ></button>
-        </div>
+<!-- Toast Container Fragment -->
+<div th:fragment="toasts"
+     class="toast-container position-fixed top-0 end-0 p-3"
+     style="z-index:1200">
+  <!-- Success -->
+  <div id="successToast"
+       class="toast align-items-center text-bg-success border-0"
+       role="alert" aria-live="assertive" aria-atomic="true"
+       data-bs-autohide="true" data-bs-delay="5000">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-check-circle me-2"></i>
+        <span id="successMessage">Success message</span>
       </div>
-
-      <div
-        id="warningToast"
-        class="toast align-items-center text-bg-warning border-0"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="d-flex">
-          <div class="toast-body">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <span id="warningMessage">Warning message</span>
-          </div>
-          <button
-            type="button"
-            class="btn-close btn-close-dark me-2 m-auto"
-            data-bs-dismiss="toast"
-            aria-label="Close"
-          ></button>
-        </div>
-      </div>
-
-      <div
-        id="infoToast"
-        class="toast align-items-center text-bg-info border-0"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="d-flex">
-          <div class="toast-body">
-            <i class="bi bi-info-circle me-2"></i>
-            <span id="infoMessage">Info message</span>
-          </div>
-          <button
-            type="button"
-            class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast"
-            aria-label="Close"
-          ></button>
-        </div>
-      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
+  </div>
 
-    <!-- Toast Scripts Fragment for Server-side Messages -->
-    <script th:fragment="toast-scripts" th:inline="javascript">
-      document.addEventListener("DOMContentLoaded", function () {
-        // Show toast messages based on server-side attributes
-        /*[# th:if="${success}"]*/
-        showSuccessToast(/*[[${success}]]*/ "Thành công!");
-        /*[/]*/
-
-        /*[# th:if="${error}"]*/
-        showErrorToast(/*[[${error}]]*/ "Có lỗi xảy ra!");
-        /*[/]*/
-
-        /*[# th:if="${warning}"]*/
-        showWarningToast(/*[[${warning}]]*/ "Cảnh báo!");
-        /*[/]*/
-
-        /*[# th:if="${info}"]*/
-        showInfoToast(/*[[${info}]]*/ "Thông tin!");
-        /*[/]*/
-
-        // Handle Spring Security parameter-based messages
-        /*[# th:if="${param.error}"]*/
-        showErrorToast("Email hoặc mật khẩu không đúng.");
-        /*[/]*/
-
-        /*[# th:if="${param.logout}"]*/
-        showInfoToast("Bạn đã đăng xuất thành công.");
-        /*[/]*/
-      });
-    </script>
-
-    <!-- Complete Toast System Fragment (includes container + scripts + utils) -->
-    <div th:fragment="toast-system">
-      <!-- Include toast container -->
-      <div th:replace="~{fragments/toast-container :: toasts}"></div>
-
-      <!-- Include toast utilities -->
-      <script th:src="@{/js/toast-utils.js}"></script>
-
-      <!-- Include server-side message handling -->
-      <script th:replace="~{fragments/toast-container :: toast-scripts}"></script>
+  <!-- Error -->
+  <div id="errorToast"
+       class="toast align-items-center text-bg-danger border-0"
+       role="alert" aria-live="assertive" aria-atomic="true"
+       data-bs-autohide="true" data-bs-delay="5000">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span id="errorMessage">Error message</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
-  </body>
-</html>
+  </div>
+
+  <!-- Warning -->
+  <div id="warningToast"
+       class="toast align-items-center text-bg-warning border-0"
+       role="alert" aria-live="assertive" aria-atomic="true"
+       data-bs-autohide="true" data-bs-delay="5000">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        <span id="warningMessage">Warning message</span>
+      </div>
+      <button type="button" class="btn-close btn-close-dark me-2 m-auto"
+              data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div id="infoToast"
+       class="toast align-items-center text-bg-info border-0"
+       role="alert" aria-live="assertive" aria-atomic="true"
+       data-bs-autohide="true" data-bs-delay="5000">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-info-circle me-2"></i>
+        <span id="infoMessage">Info message</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Scripts Fragment for Server-side Messages -->
+<!-- Block comment processor của Thymeleaf. -->
+<script th:fragment="toast-scripts" th:inline="javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // Hiển thị toast theo attribute server-side
+    /*[# th:if="${success}"]*/ showSuccessToast(/*[[${success}]]*/ "Thành công!"); /*[/]*/
+    /*[# th:if="${error}"]*/   showErrorToast(/*[[${error}]]*/   "Có lỗi xảy ra!"); /*[/]*/
+    /*[# th:if="${warning}"]*/ showWarningToast(/*[[${warning}]]*/ "Cảnh báo!");    /*[/]*/
+    /*[# th:if="${info}"]*/    showInfoToast(/*[[${info}]]*/    "Thông tin!");      /*[/]*/
+
+    // Xử lý tham số Spring Security (mặc định formLogin)
+    /*[# th:if="${param.error}"]*/  showErrorToast("Email hoặc mật khẩu không đúng."); /*[/]*/
+    /*[# th:if="${param.logout}"]*/ showInfoToast("Bạn đã đăng xuất thành công.");     /*[/]*/
+  });
+</script>
+
+<!-- Complete Toast System Fragment (container + utils + scripts) -->
+<div th:fragment="toast-system">
+  <!-- Container -->
+  <div th:replace="~{fragments/toast-container :: toasts}"></div>
+
+  <!-- Utilities: định nghĩa showSuccessToast/showErrorToast/... -->
+  <script th:src="@{/js/toast-utils.js}"></script>
+
+  <!-- Server-side trigger -->
+  <script th:replace="~{fragments/toast-container :: toast-scripts}"></script>
+</div>
