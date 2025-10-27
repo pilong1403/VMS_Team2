@@ -8,11 +8,43 @@
 
     <link rel="stylesheet" th:href="@{/css/support/stylesSP-volunteer.css}"/>
     <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css}"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link th:href="@{/css/volunteer-sidebar.css}" rel="stylesheet" />
 
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .app-container {
+            display: flex;
+        }
+
+        .volunteer-sidebar {
+            width: 25%;
+            min-width: 280px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 
 <body>
 <div class="app-container">
+
+    <div th:replace="~{fragments/volunteer/sidebar :: volunteer-sidebar(${activePage})}"></div>
+
     <main class="main-content">
         <div class="page-header">
             <h1>Đơn yêu cầu hỗ trợ</h1>
