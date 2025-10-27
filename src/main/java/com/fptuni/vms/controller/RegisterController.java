@@ -63,8 +63,6 @@ public class RegisterController {
                                  BindingResult binding,
                                  HttpServletRequest req,
                                  Model model) {
-        // KHÔNG kiểm tra confirm password ở đây nữa vì đã có @AssertTrue trong DTO
-
         if (binding.hasErrors()) return "auth/register";
 
         try {
@@ -76,7 +74,6 @@ public class RegisterController {
 
             // 2) Lưu form tạm vào session
             HttpSession ss = req.getSession(true);
-            // Lưu lại email đã chuẩn hoá để verify khớp
             form.setEmail(normalizedEmail);
             ss.setAttribute("PENDING_REG", form);
 
@@ -115,7 +112,6 @@ public class RegisterController {
         }
         RegisterForm form = (RegisterForm) ss.getAttribute("PENDING_REG");
 
-        // So sánh với email đã chuẩn hoá trong session
         String normalizedEmail = email.trim().toLowerCase();
         if (!form.getEmail().equalsIgnoreCase(normalizedEmail)) {
             model.addAttribute("email", form.getEmail());
@@ -127,14 +123,22 @@ public class RegisterController {
             // 1) Xác minh OTP
             otpService.verifyOtp(normalizedEmail, "VERIFY_EMAIL", otp);
 
-            // 2) Xoá session tạm
+            // 2) Tạo tài khoản thực trong DB
+            authService.registerVolunteer(
+                    form.getFullName(),
+                    normalizedEmail,
+                    form.getPhone(),
+                    form.getPassword()
+            );
+
+            // 3) Xóa session tạm
             ss.removeAttribute("PENDING_REG");
 
-            // 3) Thông báo thành công
+            // 4) Thông báo thành công
             redirectAttributes.addFlashAttribute("success",
                     "Đăng ký thành công. Vui lòng đăng nhập để tiếp tục.");
 
-            // 4) Chuyển về /login
+            // 5) Chuyển về /login
             return "redirect:/login";
 
         } catch (OtpVerificationService.OtpException ex) {
@@ -149,6 +153,7 @@ public class RegisterController {
             return "redirect:/register?e=" + url(ex.getMessage());
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             return "redirect:/register?e=SYSTEM_ERROR";
         }
     }
@@ -157,9 +162,9 @@ public class RegisterController {
         if (code == null) return null;
         return switch (code) {
             case "SESSION_EXPIRED" -> "Phiên đăng ký đã hết hạn. Vui lòng bắt đầu lại.";
-            case "SYSTEM_ERROR"    -> "Đăng ký thất bại do lỗi hệ thống. Vui lòng thử lại sau.";
-            case "DATA_VIOLATION"  -> "Dữ liệu vi phạm ràng buộc CSDL (ví dụ: email đã dùng hoặc độ dài vượt giới hạn).";
-            case "REGISTER_OK"     -> "Đăng ký thành công. Vui lòng đăng nhập.";
+            case "SYSTEM_ERROR" -> "Đăng ký thất bại do lỗi hệ thống. Vui lòng thử lại sau.";
+            case "DATA_VIOLATION" -> "Dữ liệu vi phạm ràng buộc CSDL (ví dụ: email đã dùng hoặc độ dài vượt giới hạn).";
+            case "REGISTER_OK" -> "Đăng ký thành công. Vui lòng đăng nhập.";
             default -> null;
         };
     }

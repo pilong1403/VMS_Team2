@@ -31,6 +31,7 @@ public class OpportunityForm {
 
     @NotNull(message = "Số tình nguyện viên cần là bắt buộc")
     @Min(value = 1, message = "Số tình nguyện viên cần tối thiểu là 1")
+    @Max(value = 1000, message = "Số tình nguyện viên tối đa là 1000")
     private Integer neededVolunteers;
 
     @NotNull(message = "Trạng thái là bắt buộc")
@@ -60,13 +61,22 @@ public class OpportunityForm {
     @Size(min = 1, message = "Cần ít nhất 1 phần nội dung")
     private List<OpportunitySectionForm> sections = new ArrayList<>();
 
-    // Rule thời gian để đảm bảo end > start
+    // Rule: kết thúc phải sau bắt đầu
     @AssertTrue(message = "Ngày/giờ kết thúc phải sau thời điểm bắt đầu")
     public boolean isEndAfterStart() {
         if (startDate == null || startTime == null || endDate == null || endTime == null) return true;
         LocalDateTime s = LocalDateTime.of(startDate, startTime);
         LocalDateTime e = LocalDateTime.of(endDate, endTime);
         return e.isAfter(s);
+    }
+
+    // Rule: thời điểm bắt đầu phải cách hiện tại ít nhất 24 giờ
+    @AssertTrue(message = "Thời điểm bắt đầu phải sau ít nhất 24 giờ kể từ hiện tại")
+    public boolean isStartNotInPast() {
+        if (startDate == null || startTime == null) return true;
+        LocalDateTime start = LocalDateTime.of(startDate, startTime);
+        LocalDateTime now = LocalDateTime.now();
+        return !start.isBefore(now.plusHours(24));
     }
 
     // Getters & Setters
@@ -98,11 +108,4 @@ public class OpportunityForm {
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
     public List<OpportunitySectionForm> getSections() { return sections; }
     public void setSections(List<OpportunitySectionForm> sections) { this.sections = sections; }
-
-    @AssertTrue(message = "Thời điểm bắt đầu phải lớn hơn hoặc bằng thời điểm hiện tại")
-    public boolean isStartNotInPast() {
-        if (startDate == null || startTime == null) return true; // để các lỗi khác xử lý
-        LocalDateTime start = LocalDateTime.of(startDate, startTime);
-        return !start.isBefore(LocalDateTime.now()); // cho phép bằng (≥)
-    }
 }

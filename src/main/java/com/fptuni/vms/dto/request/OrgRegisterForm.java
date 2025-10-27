@@ -31,8 +31,10 @@ public class OrgRegisterForm {
     private String email;
 
     @NotBlank(message = "Vui lòng nhập số điện thoại.")
-    @Size(max = 20, message = "Số điện thoại không vượt quá 20 ký tự.")
-    @Pattern(regexp = "^[0-9+\\- ]{8,20}$", message = "Số điện thoại không hợp lệ.")
+    @Pattern(
+            regexp = "^0\\d{9}$",
+            message = "Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số."
+    )
     private String phone;
 
     @Size(max = 500, message = "Địa chỉ không vượt quá 500 ký tự.")
