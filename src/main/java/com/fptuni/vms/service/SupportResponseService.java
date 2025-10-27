@@ -15,4 +15,8 @@ public interface SupportResponseService {
     List<SupportResponse> filterAndPaginateResponses(String keyword, Integer num, int page, int size);
     long countFilteredResponses(String keyword);
     boolean addAdminResponse(int ticketId, String message, User admin, MultipartFile attachment);
+
+    List<SupportResponse> findResponsesBySenderId(Integer userId, String keyword, Integer num, int page, int size);
+    long countResponsesBySenderId(Integer userId, String keyword);
+
 }

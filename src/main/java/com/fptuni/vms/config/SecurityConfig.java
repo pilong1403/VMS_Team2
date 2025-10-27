@@ -78,6 +78,11 @@ public class SecurityConfig {
                                                 // Vùng tự phục vụ
                                                 .requestMatchers("/vol/**")
                                                 .hasAnyAuthority("VOLUNTEER", "ORG_OWNER", "ADMIN")
+
+                                                // Volunteer specific paths
+                                                .requestMatchers("/volunteer/**")
+                                                .hasAnyAuthority("VOLUNTEER", "ADMIN")
+
                                                 // Các URL còn lại yêu cầu đăng nhập
                                                 .anyRequest().authenticated());
 

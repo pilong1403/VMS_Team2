@@ -127,4 +127,51 @@ public class SupportResponseRepositoryImpl implements SupportResponseRepository 
         return query.getSingleResult();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupportResponse> findResponsesBySenderId(Integer userId, String keyword, Integer num, int page, int size) {
+        StringBuilder jpql = new StringBuilder("SELECT r FROM SupportResponse r JOIN r.ticket t WHERE t.user.userId = :userId");
+
+        if (StringUtils.hasText(keyword)) {
+            jpql.append(" AND (LOWER(t.subject) LIKE :kw OR CAST(t.ticketId AS string) LIKE :kw)");
+        }
+
+        jpql.append(" ORDER BY r.createdAt DESC");
+
+        TypedQuery<SupportResponse> query = em.createQuery(jpql.toString(), SupportResponse.class);
+
+        query.setParameter("userId", userId);
+        if (StringUtils.hasText(keyword)) {
+            query.setParameter("kw", "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%");
+        }
+
+        int recordsPerPage = (num != null && num > 0) ? num : size;
+        int offset = (page - 1) * recordsPerPage;
+        query.setFirstResult(offset);
+        query.setMaxResults(recordsPerPage);
+
+        return query.getResultList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countResponsesBySenderId(Integer userId, String keyword) {
+        StringBuilder jpql = new StringBuilder("SELECT COUNT(DISTINCT r) FROM SupportResponse r JOIN r.ticket t WHERE t.user.userId = :userId");
+
+        if (StringUtils.hasText(keyword)) {
+            jpql.append(" AND (LOWER(t.subject) LIKE :kw OR CAST(t.ticketId AS string) LIKE :kw)");
+        }
+
+        TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+        query.setParameter("userId", userId);
+        if (StringUtils.hasText(keyword)) {
+            query.setParameter("kw", "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%");
+        }
+
+        return query.getSingleResult();
+    }
+
+
+
 }

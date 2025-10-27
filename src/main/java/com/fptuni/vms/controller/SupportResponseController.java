@@ -75,7 +75,6 @@ public class SupportResponseController {
             model.addAttribute("keywordResponse", keyword);
             model.addAttribute("numResponse", num);
             model.addAttribute("activeTab", "responses");
-            model.addAttribute("activePage", "support");
         }
 
         // data mặc định cho tab support tickets

@@ -151,3 +151,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+const reason = document.querySelector('.textarea-reason');
+function validateReason() {
+    if (!reason.value.trim()) {
+        reason.classList.add('is-invalid');
+        reason.classList.remove('is-valid');
+    } else {
+        reason.classList.remove('is-invalid');
+        reason.classList.add('is-valid');
+    }
+}

@@ -14,7 +14,7 @@
 <!-- Global Error Popup -->
         <div th:if="${errorMessage}" id="errorPopup" class="error-popup">
             <div class="error-content">
-                <strong>⚠ Lỗi!</strong>
+                <strong> Lỗi!</strong>
                 <p th:text="${errorMessage}"></p>
             </div>
         </div>
@@ -25,26 +25,7 @@
                 <p th:text="${successMessage}"></p>
             </div>
         </div>
-<!-- Sidebar -->
-<!--<aside class="sidebar" id="sidebar">-->
-<!--    <div class="sidebar-header">-->
-<!--        <div class="sidebar-logo">-->
-<!--            <div class="logo-icon">👥</div>-->
-<!--            <div class="logo-text">-->
-<!--                <h2>Quản Lý Admin</h2>-->
-<!--                <p>Hệ thống quản trị</p>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <nav class="sidebar-nav">-->
-<!--        <div class="nav-label">MENU CHÍNH</div>-->
-<!--        <ul class="nav-menu">-->
-<!--            <li><a th:href="@{/admin/users}" class="nav-item active">Quản lý Người dùng</a></li>-->
-<!--            <li><a th:href="@{/admin/organizations}" class="nav-item">Hồ sơ tổ chức</a></li>-->
-<!--            <li><a th:href="@{/admin/reports}" class="nav-item">Báo cáo</a></li>-->
-<!--        </ul>-->
-<!--    </nav>-->
-<!--</aside>-->
+
 <div th:replace="~{fragments/admin/sidebar :: sidebar}"></div>
 
 
@@ -181,7 +162,7 @@
                     <td th:text="${u.phone}">SĐT</td>
                     <td th:text="${u.role.roleName}">Vai trò</td>
                     <td>
-                          <span th:classappend="${u.status=='ACTIVE' ? 'status-active':'status-locked'}"
+                          <span th:classappend="${#strings.trim(u.status).equalsIgnoreCase('ACTIVE') ? 'status-active' : 'status-locked'}"
                                 th:text="${u.status}">Trạng thái</span>
                     </td>
                     <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">Ngày</td>

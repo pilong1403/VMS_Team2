@@ -30,12 +30,21 @@ function openCheckinModal(button) {
     const eventStartTimeString = button.dataset.eventStartTime;
     const eventEndTimeString = button.dataset.eventEndTime;
     const checkoutTimeString = button.dataset.checkoutTime;
+    const typeButton = button.dataset.type;
+    const checkinTimeString = button.dataset.checkinTime;
 
     const modalAvatar = document.getElementById('modalAvatar');
     const modalVolunteerName = document.getElementById('modalVolunteerName');
     const modalTimeInput = document.getElementById('modalTimeInput');
     const applicationIdInput = document.getElementById('applicationIdInput');
     const oppIdInput = document.getElementById('oppId');
+    const modalTitle = document.getElementById('modalTitleCheckIn');
+
+    if(typeButton === 'CheckIn') {
+        modalTitle.textContent = 'XÁC NHẬN CHECK-IN';
+    } else{
+        modalTitle.textContent = 'CHỈNH SỬA THỜI GIAN CHECK-IN';
+    }
 
     applicationIdInput.value = applicationId;
     modalAvatar.src = avatarUrl;
@@ -65,18 +74,28 @@ function openCheckinModal(button) {
         modalTimeInput.max = formatToLocalString(finalMaxDate);
     }
 
-    // lấy ra tgian hiện tại theo múi giờ máy người dùng
-    // nhưng Date luôn lưu giá trị theo UTC, nên cần trừ đi timezone offset để hiển thị đúng
-    const now = new Date();
+    // TH: UPDATE CHECK-IN
+    if(checkinTimeString) {
+        const checkinDate = new Date(checkinTimeString);
+        modalTimeInput.value = formatToLocalString(checkinDate);
+    } else{
+        // TH: NEW CHECK-IN
 
-    // getTimezoneOffset trả về sự khác biệt về phút giữa UTC và giờ địa phương (VN) -> -420p ( ~7 tiếng)
-    // set lại phút của now bằng cách trừ đi sự khác biệt này
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        // lấy ra tgian hiện tại theo múi giờ máy người dùng
+        // nhưng Date luôn lưu giá trị theo UTC, nên cần trừ đi timezone offset để hiển thị đúng
+        const now = new Date();
 
-    // now.ISOString() trả về chuỗi theo định dạng (UTC): YYYY-MM-DDTHH:mm:ss.sssZ
-    // do đã bù trừ timezone ở dòng trên, toISOString() sẽ xuất ra chuỗi có giờ local, nhưng được biểu diễn như UTC.
-    // slice(0,16) để lấy phần YYYY-MM-DDTHH:mm
-    modalTimeInput.value = now.toISOString().slice(0, 16);
+        // getTimezoneOffset trả về sự khác biệt về phút giữa UTC và giờ địa phương (VN) -> -420p ( ~7 tiếng)
+        // set lại phút của now bằng cách trừ đi sự khác biệt này
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+
+        // now.ISOString() trả về chuỗi theo định dạng (UTC): YYYY-MM-DDTHH:mm:ss.sssZ
+        // do đã bù trừ timezone ở dòng trên, toISOString() sẽ xuất ra chuỗi có giờ local, nhưng được biểu diễn như UTC.
+        // slice(0,16) để lấy phần YYYY-MM-DDTHH:mm
+        modalTimeInput.value = now.toISOString().slice(0, 16);
+    }
+
+
 
     document.getElementById("attendanceModal").classList.add("active");
 }
@@ -135,14 +154,23 @@ function openCheckOutModal(button) {
     const avatarUrl = button.dataset.avatar;
     const oppId = button.dataset.oppId;
     const checkinTimeString = button.dataset.checkinTime;
-    const eventStartTimeString = button.dataset.eventStartTime;
     const eventEndTimeString = button.dataset.eventEndTime;
+    const typeButton = button.dataset.type;
+    const checkoutTimeString = button.dataset.checkoutTime;
 
     const modalAvatar = document.getElementById('modalAvatar2');
     const modalVolunteerName = document.getElementById('modalVolunteerName2');
     const modalTimeInput = document.getElementById('modalTimeInput2');
     const applicationIdInput = document.getElementById('applicationIdInput2');
     const oppIdInput = document.getElementById('oppIdOut');
+    const modalTitle = document.getElementById('modalTitleCheckOut');
+
+    if(typeButton === 'CheckOut') {
+        modalTitle.textContent = 'XÁC NHẬN CHECK-OUT';
+    } else{
+        modalTitle.textContent = 'CHỈNH SỬA THỜI GIAN CHECK-OUT';
+    }
+
     oppIdInput.value = oppId;
 
     applicationIdInput.value = applicationId;
@@ -153,7 +181,6 @@ function openCheckOutModal(button) {
     // Set MIN (Thời gian check-out > thời gian check-in)
     if (checkinTimeString) {
         const checkinDate = new Date(checkinTimeString);
-        // checkinDate.setMinutes(checkinDate.getMinutes() + 1);
         const minTimeForCheckout = formatToLocalString(checkinDate);
         modalTimeInput.min = minTimeForCheckout;
     }
@@ -165,9 +192,14 @@ function openCheckOutModal(button) {
         modalTimeInput.max = maxTimeForCheckout;
     }
 
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    modalTimeInput.value = now.toISOString().slice(0, 16);
+    if(checkoutTimeString) {
+        const checkoutDate = new Date(checkoutTimeString);
+        modalTimeInput.value = formatToLocalString(checkoutDate);
+    } else{
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        modalTimeInput.value = now.toISOString().slice(0, 16);
+    }
 
     document.getElementById("attendanceModal2").classList.add("active");
 }
@@ -194,7 +226,7 @@ document
     .getElementById("attendanceModal2")
     .addEventListener("click", function (event) {
         if (event.target === this) {
-            closeModal();
+            closeCheckModal2();
         }
     });
 
@@ -336,21 +368,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // header profile

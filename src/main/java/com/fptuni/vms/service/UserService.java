@@ -3,6 +3,8 @@ package com.fptuni.vms.service;
 import com.fptuni.vms.dto.response.ChangePasswordForm;
 import com.fptuni.vms.dto.response.ProfileForm;
 import com.fptuni.vms.model.User;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
@@ -57,5 +59,6 @@ public interface UserService {
     void exportUserToExcel(User user, OutputStream outputStream) throws IOException;
     List<User> getUsersByRole(Integer roleId);
 //    User findByEmail(String email);
+ResponseEntity<InputStreamResource> downloadFileFromUrl(String fileUrl);
 
 }

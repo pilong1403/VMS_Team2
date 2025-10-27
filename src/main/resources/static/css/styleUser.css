@@ -93,8 +93,8 @@ tbody tr:last-child td{border-bottom:none}
 .badge-staff{background:hsl(38 92% 95%);color:hsl(38 92% 35%);border-color:hsl(38 92% 85%)}
 .status-cell{display:flex;align-items:center;gap:.5rem}
 .status-text{font-size:.9rem;font-weight:500}
-.status-active{color:var(--success)}
-.status-locked{color:var(--danger)}
+.status-active{color:var(--success)  !important}
+.status-locked{color:var(--danger)  !important}
 .actions{display:flex;justify-content:flex-end;gap:.5rem}
 
 /* Switch */
@@ -670,3 +670,46 @@ input.error-border {
     color: #fff;
 }
 
+/* Ô nhập lý do trong modal */
+.textarea-reason {
+    width: 100%;
+    min-height: 120px;
+    padding: .75rem 1rem;
+    font-size: .95rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: #fff;
+    color: var(--foreground);
+    resize: vertical;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.textarea-reason::placeholder {
+    color: var(--muted-foreground);
+    opacity: .8;
+}
+
+.textarea-reason:hover {
+    border-color: hsl(220, 13%, 80%);
+    background-color: hsl(0, 0%, 100%);
+}
+
+.textarea-reason:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    background-color: #fff;
+}
+
+/* Nếu cần trạng thái lỗi hoặc hợp lệ (JS thêm class vào) */
+.textarea-reason.is-invalid {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px hsl(0, 84%, 95%);
+}
+
+.textarea-reason.is-valid {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px hsl(142, 76%, 90%);
+}
