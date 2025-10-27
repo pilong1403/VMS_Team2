@@ -12,4 +12,7 @@ public interface SupportTicketRepository {
     List<SupportTicket> filterTickets(String status, String priority, Integer num, String keyword, int page, int size);
     long countFilteredTickets(String status, String priority, String keyword);
     SupportTicket update(SupportTicket ticket);
+    void create(SupportTicket ticket);
+    List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId ,String keyword, int page, int size);
+    long countFilteredTicketsWithUserId(Integer userId, String status, String priority,  String keyword);
 }

@@ -37,13 +37,11 @@ public class SupportTicketController {
         model.addAttribute("listSupportTickets", supportTicketService.findAllWithPagination(page, size));
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentPage", page);
-
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        model.addAttribute("activePage", "support");
+        model.addAttribute("activeTab", "tickets");
 
         // Dữ liệu mặc định cho tab 'Đơn phản hồi'
-        model.addAttribute("activeTab", "tickets");
         model.addAttribute("listSupportResponses", Collections.emptyList());
         model.addAttribute("totalPagesResponses", 1);
         model.addAttribute("currentPageResponse", 1);
@@ -51,7 +49,6 @@ public class SupportTicketController {
         model.addAttribute("endPageResponse", 1);
         model.addAttribute("numResponse", size);
         model.addAttribute("keywordResponse", "");
-
 
 
         return "admin/Support";
@@ -77,7 +74,18 @@ public class SupportTicketController {
             model.addAttribute("keyword", keyword);
             model.addAttribute("priority", null);
             model.addAttribute("error", "There are no support tickets found !!");
-            model.addAttribute("activePage", "support");
+            model.addAttribute("startPage", 1);
+            model.addAttribute("endPage", 1);
+            model.addAttribute("activeTab", "tickets");
+
+            // Dữ liệu mặc định cho tab 'Đơn phản hồi'
+            model.addAttribute("listSupportResponses", Collections.emptyList());
+            model.addAttribute("totalPagesResponses", 1);
+            model.addAttribute("currentPageResponse", 1);
+            model.addAttribute("startPageResponse", 1);
+            model.addAttribute("endPageResponse", 1);
+            model.addAttribute("numResponse", num);
+            model.addAttribute("keywordResponse", "");
             return "admin/Support";
         }
 
@@ -90,7 +98,6 @@ public class SupportTicketController {
 
 
         // Dữ liệu mặc định cho tab 'Đơn phản hồi'
-        model.addAttribute("activeTab", "tickets");
         model.addAttribute("listSupportResponses", Collections.emptyList());
         model.addAttribute("totalPagesResponses", 1);
         model.addAttribute("currentPageResponse", 1);
@@ -100,6 +107,7 @@ public class SupportTicketController {
         model.addAttribute("keywordResponse", "");
         // --------------------------------------------------------
 
+        model.addAttribute("activeTab", "tickets");
         model.addAttribute("listSupportTickets", ticketListFiltered);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentPage", page);
@@ -107,10 +115,8 @@ public class SupportTicketController {
         model.addAttribute("num", num);
         model.addAttribute("priority", priority);
         model.addAttribute("keyword", keyword.trim());
-
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-        model.addAttribute("activePage", "support");
 
         return "admin/Support";
 

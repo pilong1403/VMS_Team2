@@ -34,6 +34,11 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
     }
 
     @Override
+    public void create(SupportTicket ticket) {
+        em.persist(ticket);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<SupportTicket> findAllWithPagination(int page, int size) {
         int offset = (page - 1) * size;
@@ -116,7 +121,6 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
         }
 
         int recordsPerPage = (num != null && num > 0) ? num : size;
-//        int offset = Math.max(0, (page - 1) * recordsPerPage);
         int offset = (page - 1) * recordsPerPage;
         query.setFirstResult(offset);
         query.setMaxResults(recordsPerPage);
@@ -168,6 +172,167 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
         }
 
         TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+        if (statusEnum != null) {
+            query.setParameter("statusVal", statusEnum);
+        }
+        if (priorityEnum != null) {
+            query.setParameter("priorityVal", priorityEnum);
+        }
+        if (kw != null) {
+            query.setParameter("kw", kw);
+        }
+        if (idExact != null) {
+            query.setParameter("idExact", idExact);
+        }
+
+        return query.getSingleResult();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId ,String keyword, int page, int size) {
+
+        StringBuilder jpql = new StringBuilder("SELECT t FROM SupportTicket t WHERE 1=1");
+
+        if (userId != null) {
+            jpql.append(" AND t.user.id = :userId");
+        }
+
+        // Status (enum)
+        SupportTicket.TicketStatus statusEnum = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                statusEnum = SupportTicket.TicketStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
+                jpql.append(" AND t.status = :statusVal");
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        // Priority (enum)
+        SupportTicket.TicketPriority priorityEnum = null;
+        if (priority != null && !priority.trim().isEmpty()) {
+            try {
+                priorityEnum = SupportTicket.TicketPriority.valueOf(priority.trim().toUpperCase(Locale.ROOT));
+                jpql.append(" AND t.priority = :priorityVal");
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        // Keyword on id/email/subject
+        Integer idExact = null;
+        String kw = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String trimmed = keyword.trim();
+            // try numeric id
+            try {
+                idExact = Integer.valueOf(trimmed);
+            } catch (NumberFormatException ignored) {
+                // not a number
+            }
+            kw = "%" + trimmed.toLowerCase(Locale.ROOT) + "%";
+
+            jpql.append(" AND (");
+            jpql.append(" function('str', t.ticketId) LIKE :kw");
+            jpql.append(" OR LOWER(t.contactEmail) LIKE :kw");
+            jpql.append(" OR LOWER(t.subject) LIKE :kw");
+            if (idExact != null) {
+                jpql.append(" OR t.ticketId = :idExact");
+            }
+            jpql.append(")");
+        }
+
+        TypedQuery<SupportTicket> query = em.createQuery(jpql.toString(), SupportTicket.class);
+
+        // 3. Set tham số userId (nếu tồn tại)
+        if (userId != null) {
+            query.setParameter("userId", userId);
+        }
+
+        if (statusEnum != null) {
+            query.setParameter("statusVal", statusEnum);
+        }
+        if (priorityEnum != null) {
+            query.setParameter("priorityVal", priorityEnum);
+        }
+        if (kw != null) {
+            query.setParameter("kw", kw);
+        }
+        if (idExact != null) {
+            query.setParameter("idExact", idExact);
+        }
+
+        int recordsPerPage = (num != null && num > 0) ? num : size;
+        int offset = (page - 1) * recordsPerPage;
+        query.setFirstResult(offset);
+        query.setMaxResults(recordsPerPage);
+
+        return query.getResultList();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countFilteredTicketsWithUserId(
+            Integer userId,
+            String status,
+            String priority,
+            String keyword
+    ) {
+        StringBuilder jpql = new StringBuilder("SELECT COUNT(t) FROM SupportTicket t WHERE 1=1");
+
+        if (userId != null) {
+            jpql.append(" AND t.user.id = :userId");
+        }
+
+        // Status (enum)
+        SupportTicket.TicketStatus statusEnum = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                statusEnum = SupportTicket.TicketStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
+                jpql.append(" AND t.status = :statusVal");
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        // Priority (enum)
+        SupportTicket.TicketPriority priorityEnum = null;
+        if (priority != null && !priority.trim().isEmpty()) {
+            try {
+                priorityEnum = SupportTicket.TicketPriority.valueOf(priority.trim().toUpperCase(Locale.ROOT));
+                jpql.append(" AND t.priority = :priorityVal");
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        // Keyword on id/email/subject
+        Integer idExact = null;
+        String kw = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String trimmed = keyword.trim();
+            try {
+                idExact = Integer.valueOf(trimmed);
+            } catch (NumberFormatException ignored) { }
+            kw = "%" + trimmed.toLowerCase(Locale.ROOT) + "%";
+
+            jpql.append(" AND (");
+            jpql.append(" function('str', t.ticketId) LIKE :kw");
+            jpql.append(" OR LOWER(t.contactEmail) LIKE :kw");
+            jpql.append(" OR LOWER(t.subject) LIKE :kw");
+            if (idExact != null) {
+                jpql.append(" OR t.ticketId = :idExact");
+            }
+            jpql.append(")");
+        }
+
+        TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+        if (userId != null) {
+            query.setParameter("userId", userId);
+        }
 
         if (statusEnum != null) {
             query.setParameter("statusVal", statusEnum);

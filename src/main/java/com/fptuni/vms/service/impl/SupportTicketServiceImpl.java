@@ -35,6 +35,21 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     }
 
     @Override
+    public void create(SupportTicket supportTicket) {
+            supportTicketRepository.create(supportTicket);
+    }
+
+    @Override
+    public List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId, String keyword, int page, int size) {
+        return supportTicketRepository.filterTicketsWithUserId(status, priority, num, userId, keyword, page, size);
+    }
+
+    @Override
+    public long countFilteredTicketsWithUserId(Integer userId, String status, String priority, String keyword) {
+        return supportTicketRepository.countFilteredTicketsWithUserId(userId, status, priority, keyword);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<SupportTicket> findById(Integer id) {
         return supportTicketRepository.findById(id);
