@@ -1,8 +1,7 @@
 
-
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ========== 1Hiển thị popup thông báo ========== */
+    /* ========== 1. Hiển thị popup thông báo ========== */
     const successPopup = document.getElementById("successPopup");
     const errorPopup = document.getElementById("errorPopup");
 
@@ -15,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    /* ========== 2️Mở modal duyệt / từ chối ========== */
+    /* ========== 2. Mở modal duyệt / từ chối (Hàm chính) ========== */
     window.openDecisionModal = function (btn, actionType) {
         const orgId = btn.dataset.id;
         const orgName = btn.dataset.name;
@@ -27,11 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const label = document.getElementById("reasonLabel");
         const placeholder = document.getElementById("reason");
 
-        // cập nhật form action theo loại
+        // Cập nhật form action theo loại
         form.action = `/admin/organizations/${orgId}/${actionType}`;
         document.getElementById("orgName").textContent = `Tổ chức: ${orgName}`;
 
-        // tùy chỉnh UI
+        // Tùy chỉnh UI
         if (actionType === "approve") {
             title.textContent = "Lý do duyệt hồ sơ";
             label.textContent = "Ghi chú khi duyệt:";
@@ -47,13 +46,13 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add("show");
     };
 
-    /* ========== 3️ Đóng modal quyết định ========== */
+    /* ========== 3. Đóng modal quyết định (Hàm chính) ========== */
     window.closeDecisionModal = function () {
         const modal = document.getElementById("decisionModal");
         if (modal) modal.classList.remove("show");
     };
 
-    /* ========== 4️ Xác nhận submit form duyệt/từ chối ========== */
+    /* ========== 4. Xác nhận submit form duyệt/từ chối ========== */
     const decisionForm = document.getElementById("decisionForm");
     if (decisionForm) {
         decisionForm.addEventListener("submit", e => {
@@ -74,14 +73,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* ========== 5. (Mục 8 cũ) Các hàm gọi modal quyết định ========== */
+    // Đặt vào đây để chúng có thể "thấy" các hàm ở mục 2 và 3
+    window.openRejectModal = function (btn) {
+        window.openDecisionModal(btn, "reject");
+    };
 
-    /* ========== 6️ Modal xem chi tiết bằng chứng (server-rendered) ========== */
+    window.openApproveModal = function (btn) {
+        window.openDecisionModal(btn, "approve");
+    };
+
+    // Gán hàm đã tồn tại
+    window.closeRejectModal = window.closeDecisionModal;
+    window.closeApproveModal = window.closeDecisionModal;
+
+
+    /* ========== 6. Modal xem chi tiết (server-rendered) ========== */
     const detailModal = document.getElementById("orgDetailModal");
     if (detailModal && detailModal.classList.contains("show")) {
         detailModal.style.display = "flex";
     }
 
-    /* ========== 7️⃣ Toast thông báo nhanh (runtime) ========== */
+    // (Gom từ DOMContentLoaded thứ 2)
+    const userDetailModal = document.getElementById("userDetailModal");
+    if (userDetailModal && userDetailModal.classList.contains("show")) {
+        userDetailModal.style.display = "flex";
+    }
+
+    /* ========== 7. Toast thông báo nhanh (runtime) ========== */
     window.showToast = function (title, message) {
         const toast = document.getElementById("toast");
         if (!toast) return;
@@ -92,28 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
         toast.classList.add("show");
         setTimeout(() => toast.classList.remove("show"), 3500);
     };
-});
-document.addEventListener("DOMContentLoaded", () => {
-    const modal = document.getElementById("userDetailModal");
-    if (modal && modal.classList.contains("show")) {
-        modal.style.display = "flex";
-    }
-});
 
-/* ========== 8️ Modal quyết định chung ========== */
-window.openRejectModal = function (btn) {
-    openDecisionModal(btn, "reject");
-};
-
-window.openApproveModal = function (btn) {
-    openDecisionModal(btn, "approve");
-};
-
-window.closeRejectModal = closeDecisionModal;
-window.closeApproveModal = closeDecisionModal;
-
-// header profile
-document.addEventListener('DOMContentLoaded', function () {
+    /* ========== 8. Header profile dropdown ========== */
     const profileDropdown = document.getElementById('profileDropdown');
     const dropdownMenu = document.getElementById('dropdownMenu');
 
@@ -124,15 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Đóng dropdown khi click ra ngoài
-    window.addEventListener('click', function (event) {
-        if (dropdownMenu && dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.remove('show');
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function () {
+    /* ========== 9. Sidebar profile dropdown ========== */
     const sidebarProfile = document.getElementById('sidebarProfile');
     const sidebarDropdownMenu = document.getElementById('sidebarDropdownMenu');
 
@@ -143,21 +134,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Đóng dropdown khi click ra ngoài
+    /* ========== 10. Đóng dropdown khi click bên ngoài ========== */
+    // Gộp 2 hàm click bên ngoài làm một cho gọn
     window.addEventListener('click', function (event) {
+        if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.remove('show');
+        }
         if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) {
             sidebarDropdownMenu.classList.remove('show');
         }
     });
-});
 
-const reason = document.querySelector('.textarea-reason');
-function validateReason() {
-    if (!reason.value.trim()) {
-        reason.classList.add('is-invalid');
-        reason.classList.remove('is-valid');
-    } else {
-        reason.classList.remove('is-invalid');
-        reason.classList.add('is-valid');
+    /* ========== 11. Validate reason textarea ========== */
+    const reason = document.querySelector('.textarea-reason');
+
+    // Định nghĩa hàm
+    function validateReason() {
+        if (!reason) return; // Kiểm tra nếu không tìm thấy
+
+        if (!reason.value.trim()) {
+            reason.classList.add('is-invalid');
+            reason.classList.remove('is-valid');
+        } else {
+            reason.classList.remove('is-invalid');
+            reason.classList.add('is-valid');
+        }
     }
-}
+
+    // Gán sự kiện 'input' cho nó (an toàn hơn là gọi từ HTML)
+    if (reason) {
+        reason.addEventListener('input', validateReason);
+    }
+
+    // Gán vào window để HTML (nếu có) vẫn gọi được
+    window.validateReason = validateReason;
+
+}); // <-- ĐÓNG DOMContentLoaded DUY NHẤT
