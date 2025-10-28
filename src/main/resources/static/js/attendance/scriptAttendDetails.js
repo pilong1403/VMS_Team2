@@ -80,18 +80,8 @@ function openCheckinModal(button) {
         modalTimeInput.value = formatToLocalString(checkinDate);
     } else{
         // TH: NEW CHECK-IN
-
-        // lấy ra tgian hiện tại theo múi giờ máy người dùng
-        // nhưng Date luôn lưu giá trị theo UTC, nên cần trừ đi timezone offset để hiển thị đúng
         const now = new Date();
-
-        // getTimezoneOffset trả về sự khác biệt về phút giữa UTC và giờ địa phương (VN) -> -420p ( ~7 tiếng)
-        // set lại phút của now bằng cách trừ đi sự khác biệt này
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-
-        // now.ISOString() trả về chuỗi theo định dạng (UTC): YYYY-MM-DDTHH:mm:ss.sssZ
-        // do đã bù trừ timezone ở dòng trên, toISOString() sẽ xuất ra chuỗi có giờ local, nhưng được biểu diễn như UTC.
-        // slice(0,16) để lấy phần YYYY-MM-DDTHH:mm
         modalTimeInput.value = now.toISOString().slice(0, 16);
     }
 
@@ -321,12 +311,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         const file = fileInput.files[0];
 
-        // const MAX_FILES = 3;
-        // if (filesList.length > MAX_FILES) {
-        //     alert(`Lỗi: Bạn chỉ được tải lên tối đa ${MAX_FILES} file.`);
-        //     event.preventDefault();
-        //     return;
-        // }
 
         const ALLOWED_TYPES = [
             "image/jpeg",
@@ -351,20 +335,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Lỗi: Dung lượng file không được vượt quá 50MB.');
             event.preventDefault();
         }
-
-        // for (const file of filesList) {
-        //     if (!ALLOWED_TYPES.includes(file.type)) {
-        //         alert(`Lỗi: File "${file.name}" không được hỗ trợ.\nVui lòng chỉ tải lên ảnh (jpeg, png), video (mp4, mov), hoặc tài liệu (doc, docx, pdf).`);
-        //         event.preventDefault();
-        //         return;
-        //     }
-        //
-        //     if (file.size > MAX_SIZE_BYTES) {
-        //         alert(`Lỗi: File "${file.name}" vượt quá dung lượng 50MB.`);
-        //         event.preventDefault();
-        //         return;
-        //     }
-        // }
 
     });
 });
