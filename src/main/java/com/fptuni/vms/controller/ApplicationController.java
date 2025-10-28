@@ -65,6 +65,7 @@ public class ApplicationController {
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         model.addAttribute("currentUserId", currentUserId);
 
+
         if (currentUserId != null) {
             model.addAttribute("items", service.listMyApplications(currentUserId));
             User currentUser = applicationRepository.findUserById(currentUserId);
@@ -84,9 +85,12 @@ public class ApplicationController {
         boolean alreadyApplied = currentUserId != null
                 && applicationRepository.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
 
+
+
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
+                && currentUserId != null
                 && !alreadyApplied;
 
         model.addAttribute("isExpired", isExpired);
