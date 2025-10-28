@@ -268,11 +268,15 @@ public class AttendanceDetailsController {
             attendance.setNotes(notes);
         }
 
-        String proofFileUrlStr = cloudStorageService.uploadFile(proofFileUrl);
-        if(proofFileUrlStr == null) {
-            attendance.setProofFileUrl(null);
+        if(proofFileUrl != null && !proofFileUrl.isEmpty()) {
+            String proofFileUrlStr = cloudStorageService.uploadFile(proofFileUrl);
+            if(proofFileUrlStr == null) {
+                redirectAttributes.addFlashAttribute("error", "Lỗi: Đã xảy ra lỗi khi upload file!!");
+                return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+            }
+            attendance.setProofFileUrl(proofFileUrlStr);
         }
-        attendance.setProofFileUrl(proofFileUrlStr);
+
         attendanceService.updateAttendance(attendance);
         redirectAttributes.addFlashAttribute("success", "Cập nhật chi tiết điểm danh thành công !!");
         return "redirect:/organization/attendance-details?opportunityId=" + oppId;
