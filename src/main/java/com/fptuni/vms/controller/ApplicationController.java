@@ -51,12 +51,13 @@ public class ApplicationController {
         }
 
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        if (currentUserId == null)
-            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-        model.addAttribute("items", service.listMyApplications(currentUserId));
         model.addAttribute("currentUserId", currentUserId);
 
-        User currentUser = applicationRepository.findUserById(currentUserId);
+        User currentUser = null;
+        if (currentUserId != null) {
+            model.addAttribute("items", service.listMyApplications(currentUserId));
+            currentUser = applicationRepository.findUserById(currentUserId);
+        }
         model.addAttribute("currentUser", currentUser);
 
         // ====== NÚT ĐĂNG KÝ: logic hết hạn/đủ số lượng/đã apply ======
@@ -71,9 +72,10 @@ public class ApplicationController {
         boolean alreadyApplied = currentUserId != null
                 && applicationRepository.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
 
-        // Chỉ cho phép đăng ký khi: OPEN, chưa đến giờ bắt đầu, chưa đủ người, và chưa
-        // apply
-        boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
+        // Chỉ cho phép đăng ký khi: đã đăng nhập, OPEN, chưa đến giờ bắt đầu, chưa đủ
+        // người, và chưa apply
+        boolean canApply = currentUserId != null
+                && (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
                 && !alreadyApplied;
