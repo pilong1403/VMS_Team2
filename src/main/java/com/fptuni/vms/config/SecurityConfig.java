@@ -54,13 +54,14 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 // PUBLIC (không cần đăng nhập)
                                                 .requestMatchers(
-                                                                "/", "/home", "/opportunities", "/about",
+                                                                "/", "/home", "/opportunities", "/opportunities/**",
+                                                                "/about",
                                                                 "/login", "/403",
                                                                 "/register", "/register/**",
                                                                 "/auth/org-register", "/auth/org-register/**",
                                                                 "/assets/**", "/css/**", "/js/**", "/images/**",
                                                                 "/forgot-password", "/forgot-password/**",
-                                                                "/webjars/**", "/favicon.ico",  "/faqPublic")
+                                                                "/webjars/**", "/favicon.ico", "/faqPublic")
 
                                                 .permitAll()
                                                 .requestMatchers("/org/register", "/org/register/**").anonymous()

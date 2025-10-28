@@ -2,10 +2,13 @@ package com.fptuni.vms.controller;
 
 import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.model.OpportunitySection;
+import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.OpportunitySectionService;
+import com.fptuni.vms.service.OpportunityService;
+import com.fptuni.vms.service.OrganizationService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -15,8 +18,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,15 +32,22 @@ public class ApplicationController {
     private final ApplicationService service;
     private final ApplicationRepository applicationRepository;
     private final OpportunitySectionService sectionService;
+    private final OrganizationService organizationService;
+    private final OpportunityService opportunityService;
 
     public ApplicationController(ApplicationService service,
-            ApplicationRepository applicationRepository, OpportunitySectionService sectionService) {
+            ApplicationRepository applicationRepository,
+            OpportunitySectionService sectionService,
+            OrganizationService organizationService,
+            OpportunityService opportunityService) {
         this.service = service;
         this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
+        this.organizationService = organizationService;
+        this.opportunityService = opportunityService;
     }
 
-    /** Trang chi tiết cơ hội */
+    /** Trang chi tiết cơ hội: cho phép Guest và user đã đăng nhập xem */
     @GetMapping("/opportunities/{id}")
     public String view(@PathVariable Integer id, Model model, HttpSession session) {
         Opportunity opp = applicationRepository.findOpportunityById(id);
@@ -44,26 +57,26 @@ public class ApplicationController {
         }
         model.addAttribute("opp", opp);
         model.addAttribute("org", opp.getOrganization());
-        // Lấy trưởng ban tổ chức (owner user của org)
+
         if (opp.getOrganization() != null && opp.getOrganization().getOwner() != null) {
-            User orgOwner = opp.getOrganization().getOwner();
-            model.addAttribute("orgOwner", orgOwner);
+            model.addAttribute("orgOwner", opp.getOrganization().getOwner());
         }
 
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        if (currentUserId == null)
-            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-        model.addAttribute("items", service.listMyApplications(currentUserId));
         model.addAttribute("currentUserId", currentUserId);
 
-        User currentUser = applicationRepository.findUserById(currentUserId);
-        model.addAttribute("currentUser", currentUser);
+        if (currentUserId != null) {
+            model.addAttribute("items", service.listMyApplications(currentUserId));
+            User currentUser = applicationRepository.findUserById(currentUserId);
+            model.addAttribute("currentUser", currentUser);
+        } else {
+            model.addAttribute("items", Collections.emptyList());
+            model.addAttribute("currentUser", null);
+        }
 
-        // ====== NÚT ĐĂNG KÝ: logic hết hạn/đủ số lượng/đã apply ======
         boolean isExpired = opp.getStartTime() != null
-                && !opp.getStartTime().isAfter(LocalDateTime.now()); // now >= startTime -> hết hạn đăng ký
+                && !opp.getStartTime().isAfter(LocalDateTime.now());
 
-        // Số đơn đã DUYỆT (APPROVED/COMPLETED)
         long approvedCount = service.findApprovedUsersByOppId(opp.getOppId()).size();
         int need = (opp.getNeededVolunteers() != null) ? opp.getNeededVolunteers() : 0;
         boolean isFull = approvedCount >= need;
@@ -71,35 +84,27 @@ public class ApplicationController {
         boolean alreadyApplied = currentUserId != null
                 && applicationRepository.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
 
-        // Chỉ cho phép đăng ký khi: OPEN, chưa đến giờ bắt đầu, chưa đủ người, và chưa
-        // apply
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
                 && !alreadyApplied;
 
-        // Đưa biến ra view
         model.addAttribute("isExpired", isExpired);
         model.addAttribute("isFull", isFull);
         model.addAttribute("canApply", canApply);
         model.addAttribute("alreadyApplied", alreadyApplied);
-        // Hiển thị số người đã duyệt / cần
         model.addAttribute("appliedCount", approvedCount);
 
-        // NẠP SECTION từ DB
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
 
-        // Lấy section_order = 1
         OpportunitySection s1 = sections.stream()
                 .filter(s -> s.getSectionOrder() != null && s.getSectionOrder() == 1)
                 .findFirst().orElse(null);
 
-        // Lấy section_order = 2
         OpportunitySection s2 = sections.stream()
                 .filter(s -> s.getSectionOrder() != null && s.getSectionOrder() == 2)
                 .findFirst().orElse(null);
 
-        // Đổ ra model cho view dùng
         if (s1 != null) {
             model.addAttribute("introHeading", s1.getHeading());
             model.addAttribute("intro", s1.getContent());
@@ -114,7 +119,7 @@ public class ApplicationController {
         return "opportunity/opportunity-detail";
     }
 
-    // Submit đơn đăng ký -> redirect danh sách đơn của volunteer
+    /** Submit đơn đăng ký -> redirect danh sách đơn của volunteer */
     @PostMapping("/applications/apply")
     public String apply(@RequestParam("oppId") Integer oppId,
             @RequestParam("userId") Integer userId,
@@ -125,20 +130,32 @@ public class ApplicationController {
             RedirectAttributes ra) {
         try {
             service.apply(oppId, userId, reason, fullName, phone, address);
-            ra.addFlashAttribute("success",
-                    "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
-            // chuyển tới trang danh sách đơn
+            ra.addFlashAttribute("success", "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
             return "redirect:/profile/applications";
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi không mong muốn. Vui lòng thử lại.");
         }
-        // lỗi thì quay lại chi tiết cơ hội
         return "redirect:/opportunities/" + oppId;
     }
 
-    // Danh sách đơn theo tổ chức (với filter, paging) - Phi Long iter 2
+    /** Route tiện lợi: không cần orgId trong URL, tự tìm theo user và redirect */
+    @GetMapping("/organization/applications")
+    public String redirectMyOrgApplications(@RequestParam Map<String, String> allParams, HttpSession session) {
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (currentUserId == null) {
+            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+        }
+        Organization myOrg = organizationService.findByOwnerId(currentUserId);
+        if (myOrg == null) {
+            return "redirect:/?e=ORG_NOT_FOUND_FOR_OWNER";
+        }
+        String qs = buildQueryString(allParams);
+        return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
+    }
+
+    /** Danh sách đơn theo tổ chức (filter, paging) */
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
@@ -148,9 +165,24 @@ public class ApplicationController {
             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "5") int size,
-            Model model, HttpSession session) {
+            Model model, HttpSession session,
+            @RequestParam Map<String, String> allParams) {
 
-        // chuẩn hoá input
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        if (currentUserId == null) {
+            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+        }
+
+        Organization myOrg = organizationService.findByOwnerId(currentUserId);
+        if (myOrg == null) {
+            return "redirect:/?e=ORG_NOT_FOUND_FOR_OWNER";
+        }
+
+        if (!myOrg.getOrgId().equals(orgId)) {
+            String qs = buildQueryString(allParams);
+            return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
+        }
+
         if (q != null && q.isBlank())
             q = null;
         if (status != null && status.isBlank())
@@ -161,30 +193,28 @@ public class ApplicationController {
             to = t;
         }
 
-        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to, Math.max(page, 0),
-                Math.max(size, 1));
+        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to,
+                Math.max(page, 0), Math.max(size, 1));
         var stats = service.computeOrgAppStats(orgId);
 
-        var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        if (currentUserId == null)
-            return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-        model.addAttribute("currentUserId", currentUserId);
+        List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
+        var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        model.addAttribute("currentUserId", currentUserId);
+        model.addAttribute("orgId", orgId);
+        model.addAttribute("myOpps", myOpps);
         model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
         model.addAttribute("toStr", to != null ? to.format(fmt) : "");
-
         model.addAttribute("page", result);
         model.addAttribute("stats", stats);
-        model.addAttribute("orgId", orgId);
         model.addAttribute("q", q);
         model.addAttribute("status", status);
+
         return "organization/application-list";
     }
 
-    // ===== helpers để giữ query khi quay lại list =====
+    // ===== helpers =====
     private String keepListParams(Map<String, String> params) {
-        // chỉ pick các khóa được sử dụng
         String[] keys = { "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
         try {
@@ -193,9 +223,9 @@ public class ApplicationController {
                 if (v != null && !v.isBlank()) {
                     if (!sb.isEmpty())
                         sb.append('&');
-                    sb.append(java.net.URLEncoder.encode(k, java.nio.charset.StandardCharsets.UTF_8))
+                    sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                             .append('=')
-                            .append(java.net.URLEncoder.encode(v, java.nio.charset.StandardCharsets.UTF_8));
+                            .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
                 }
             }
         } catch (Exception ignored) {
@@ -203,7 +233,23 @@ public class ApplicationController {
         return sb.toString();
     }
 
-    // Duyệt đơn - Phi Long iter2
+    private String buildQueryString(Map<String, String> params) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> e : params.entrySet()) {
+            String k = e.getKey();
+            String v = e.getValue();
+            if (v != null && !v.isBlank()) {
+                if (!sb.isEmpty())
+                    sb.append('&');
+                sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
+                        .append('=')
+                        .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+            }
+        }
+        return sb.toString();
+    }
+
+    /** Duyệt đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/approve")
     public String approveApplication(@PathVariable Integer orgId,
             @PathVariable Integer appId,
@@ -226,7 +272,7 @@ public class ApplicationController {
         return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    // Từ chối đơn - Phi Long iter2
+    /** Từ chối đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/reject")
     public String rejectApplication(@PathVariable Integer orgId,
             @PathVariable Integer appId,
@@ -248,5 +294,4 @@ public class ApplicationController {
         String qs = keepListParams(allParams);
         return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
-
 }

@@ -6,6 +6,7 @@
     <meta charset="UTF-8" />
     <title>Danh sách đơn ứng tuyển</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap assets của trang này vẫn giữ nguyên -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
@@ -53,225 +54,263 @@
             height: 42px;
             white-space: nowrap;
         }
+
+        /* Phù hợp khung layout mới */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f6f7fb;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            padding: 20px;
+        }
     </style>
 </head>
 
 <body class="bg-light">
-    <div class="container py-4">
+    <div class="app-container">
+        <!-- Sidebar giống file điểm danh -->
+        <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
-        <!-- Flash -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${success}">Thành công</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}">Có lỗi</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <div class="main-content">
+            <!-- Header giống file điểm danh -->
+            <div th:replace="~{fragments/organization/header :: header}"></div>
 
-        <h4 class="mb-3">Danh sách đơn ứng tuyển</h4>
+            <!-- Toàn bộ nội dung trang chuyển vào content-wrapper -->
+            <div class="content-wrapper">
 
-        <!-- ===== Stats ===== -->
-        <div class="row g-3 mb-3" th:if="${stats != null}">
-            <div class="col-6 col-md-3" th:each="s : ${stats.entrySet()}">
-                <div class="card card-stat shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small" th:switch="${s.key}">
-                                    <span th:case="'total'">Tổng số đơn</span>
-                                    <span th:case="'pending'">Đang chờ</span>
-                                    <span th:case="'approved'">Đã duyệt</span>
-                                    <span th:case="'rejected'">Từ chối</span>
-                                    <span th:case="'completed'">Hoàn thành</span>
-                                    <span th:case="'cancelled'">Đã hủy</span>
-                                    <span th:case="*" th:text="${s.key}">Khác</span>
+                <!-- Flash -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${success}">Thành công</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${error}">Có lỗi</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <h4 class="mb-3">Danh sách đơn ứng tuyển</h4>
+
+                <!-- ===== Stats ===== -->
+                <div class="row g-3 mb-3" th:if="${stats != null}">
+                    <div class="col-6 col-md-3" th:each="s : ${stats.entrySet()}">
+                        <div class="card card-stat shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="text-muted small" th:switch="${s.key}">
+                                            <span th:case="'total'">Tổng số đơn</span>
+                                            <span th:case="'pending'">Đang chờ</span>
+                                            <span th:case="'approved'">Đã duyệt</span>
+                                            <span th:case="'rejected'">Từ chối</span>
+                                            <span th:case="'completed'">Hoàn thành</span>
+                                            <span th:case="'cancelled'">Đã hủy</span>
+                                            <span th:case="*" th:text="${s.key}">Khác</span>
+                                        </div>
+                                        <div class="value" th:text="${s.value}">0</div>
+                                    </div>
+                                    <div class="text-muted"><i class="bi bi-clipboard-check"></i></div>
                                 </div>
-                                <div class="value" th:text="${s.value}">0</div>
                             </div>
-                            <div class="text-muted"><i class="bi bi-clipboard-check"></i></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- ===== Filters ===== -->
-        <form class="card shadow-sm mb-3 search-bar" method="get" th:action="@{|/organization/${orgId}/applications|}">
-            <div class="card-body">
-                <div class="row g-2 align-items-center">
-                    <div class="col-12 col-md-5">
-                        <input type="text" name="q" class="form-control"
-                            placeholder="Tìm kiếm tình nguyện viên, cơ hội..." th:value="${param.q}" />
+                <!-- ===== Filters ===== -->
+                <form class="card shadow-sm mb-3 search-bar" method="get"
+                    th:action="@{|/organization/${orgId}/applications|}">
+                    <div class="card-body">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-md-5">
+                                <input type="text" name="q" class="form-control"
+                                    placeholder="Tìm kiếm tình nguyện viên, cơ hội..." th:value="${param.q}" />
+                            </div>
+
+                            <!-- Filter trạng thái -->
+                            <div class="col-6 col-md-2"
+                                th:with="curStatus=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''}">
+                                <select class="form-select" name="status">
+                                    <option value="" th:selected="${curStatus == ''}">Tất cả trạng thái đơn</option>
+                                    <option value="PENDING" th:selected="${curStatus == 'PENDING'}">Đang chờ</option>
+                                    <option value="APPROVED" th:selected="${curStatus == 'APPROVED'}">Đã chấp nhận
+                                    </option>
+                                    <option value="REJECTED" th:selected="${curStatus == 'REJECTED'}">Đã từ chối
+                                    </option>
+                                    <option value="COMPLETED" th:selected="${curStatus == 'COMPLETED'}">Hoàn thành
+                                    </option>
+                                    <option value="CANCELLED" th:selected="${curStatus == 'CANCELLED'}">Đã hủy</option>
+                                </select>
+                            </div>
+
+                            <!-- Date range -->
+                            <div class="col-6 col-md-2">
+                                <input type="text" name="from" id="fromDate" class="form-control"
+                                    placeholder="Từ: ngày/tháng/năm"
+                                    th:value="${param.from != null ? param.from[0] : (fromStr ?: '')}" />
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <input type="text" name="to" id="toDate" class="form-control"
+                                    placeholder="Đến: ngày/tháng/năm"
+                                    th:value="${param.to != null ? param.to[0] : (toStr ?: '')}" />
+                            </div>
+
+                            <input type="hidden" name="size" value="5" />
+
+                            <div class="col-6 col-md-1">
+                                <button class="btn btn-primary px-4" type="submit">Lọc</button>
+                            </div>
+                        </div>
                     </div>
+                </form>
 
-                    <!-- Filter trạng thái -->
-                    <div class="col-6 col-md-2"
-                        th:with="curStatus=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''}">
-                        <select class="form-select" name="status">
-                            <option value="" th:selected="${curStatus == ''}">Tất cả trạng thái đơn</option>
-                            <option value="PENDING" th:selected="${curStatus == 'PENDING'}">Đang chờ</option>
-                            <option value="APPROVED" th:selected="${curStatus == 'APPROVED'}">Đã chấp nhận</option>
-                            <option value="REJECTED" th:selected="${curStatus == 'REJECTED'}">Đã từ chối</option>
-                            <option value="COMPLETED" th:selected="${curStatus == 'COMPLETED'}">Hoàn thành</option>
-                            <option value="CANCELLED" th:selected="${curStatus == 'CANCELLED'}">Đã hủy</option>
-                        </select>
-                    </div>
+                <!-- ===== List ===== -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fw-semibold">Tất cả đơn ứng tuyển</div>
+                            <div class="text-muted small" th:text="'Tổng: ' + ${page.totalElements}">Tổng: 0</div>
+                        </div>
 
-                    <!-- Date range -->
-                    <div class="col-6 col-md-2">
-                        <input type="text" name="from" id="fromDate" class="form-control"
-                            placeholder="Từ: ngày/tháng/năm"
-                            th:value="${param.from != null ? param.from[0] : (fromStr ?: '')}" />
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <input type="text" name="to" id="toDate" class="form-control" placeholder="Đến: ngày/tháng/năm"
-                            th:value="${param.to != null ? param.to[0] : (toStr ?: '')}" />
-                    </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="min-width:260px">Tình nguyện viên</th>
+                                        <th style="width:30%">Cơ hội</th>
+                                        <th style="min-width:160px">Ngày ứng tuyển</th>
+                                        <th style="min-width:140px">Trạng thái</th>
+                                        <th class="text-end" style="min-width:220px">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="row : ${page.content}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img class="avatar" th:src="${#strings.isEmpty(row.volunteerAvatar) ?
+                                          'https://ui-avatars.com/api/?name=' + #uris.escapePath(row.volunteerName) :
+                                          row.volunteerAvatar}" alt="avatar" />
+                                                <div class="fw-semibold" th:text="${row.volunteerName}">Nguyễn Thị Hoa
+                                                </div>
+                                            </div>
+                                        </td>
 
-                    <input type="hidden" name="size" value="5" />
+                                        <td>
+                                            <div class="fw-semibold" th:text="${row.opportunityTitle}">Dạy học miễn phí
+                                                cho trẻ em vùng cao</div>
+                                        </td>
 
-                    <div class="col-6 col-md-1">
-                        <button class="btn btn-primary px-4" type="submit">Lọc</button>
-                    </div>
-                </div>
-            </div>
-        </form>
+                                        <td th:text="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">01/01/2025</td>
 
-        <!-- ===== List ===== -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="fw-semibold">Tất cả đơn ứng tuyển</div>
-                    <div class="text-muted small" th:text="'Tổng: ' + ${page.totalElements}">Tổng: 0</div>
-                </div>
+                                        <td
+                                            th:with="st=${row.status}, ns=${st == null ? 'UNKNOWN' : #strings.toUpperCase(#strings.trim(st))}">
+                                            <span class="badge badge-pill"
+                                                th:classappend="${
+                                      #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? ' text-bg-secondary' :
+                                      (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? ' text-bg-primary'   :
+                                      (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? ' text-bg-danger'    :
+                                      (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? ' text-bg-success'   :
+                                      (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? ' text-bg-dark'      :
+                                                                                                             ' text-bg-light'))))}"
+                                                th:text="${
+                                      #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? 'Đang chờ'    :
+                                      (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? 'Đã duyệt'    :
+                                      (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? 'Từ chối'     :
+                                      (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? 'Hoàn thành' :
+                                      (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? 'Đã hủy'      :
+                                                                                                            (st == null ? 'Khác' : st)))))}">
+                                                Đang chờ
+                                            </span>
+                                        </td>
 
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="min-width:260px">Tình nguyện viên</th>
-                                <th style="width:30%">Cơ hội</th>
-                                <th style="min-width:160px">Ngày ứng tuyển</th>
-                                <th style="min-width:140px">Trạng thái</th>
-                                <th class="text-end" style="min-width:220px">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="row : ${page.content}">
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <img class="avatar" th:src="${#strings.isEmpty(row.volunteerAvatar) ?
-                  'https://ui-avatars.com/api/?name=' + #uris.escapePath(row.volunteerName) :
-                  row.volunteerAvatar}" alt="avatar" />
-                                        <div class="fw-semibold" th:text="${row.volunteerName}">Nguyễn Thị Hoa</div>
-                                    </div>
-                                </td>
+                                        <td class="text-end sticky-actions" th:with="st=${row.status}">
+                                            <a class="btn btn-ghost btn-sm me-1"
+                                                th:href="@{|/organization/${orgId}/applications/${row.appId}|}">
+                                                Xem chi tiết
+                                            </a>
 
-                                <td>
-                                    <div class="fw-semibold" th:text="${row.opportunityTitle}">Dạy học miễn phí cho trẻ
-                                        em vùng cao</div>
-                                </td>
+                                            <!-- Chỉ hiện khi PENDING -->
+                                            <th:block th:if="${#strings.equalsIgnoreCase(st,'PENDING')}">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-primary me-1 btn-open-review"
+                                                    data-bs-toggle="modal" data-bs-target="#reviewModal"
+                                                    data-action="approve" th:data-app-id="${row.appId}"
+                                                    th:data-vol-name="${row.volunteerName}"
+                                                    th:data-opp-title="${row.opportunityTitle}"
+                                                    th:data-applied-at="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">
+                                                    Đồng ý
+                                                </button>
 
-                                <td th:text="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">01/01/2025</td>
+                                                <button type="button" class="btn btn-sm btn-danger btn-open-review"
+                                                    data-bs-toggle="modal" data-bs-target="#reviewModal"
+                                                    data-action="reject" th:data-app-id="${row.appId}"
+                                                    th:data-vol-name="${row.volunteerName}"
+                                                    th:data-opp-title="${row.opportunityTitle}"
+                                                    th:data-applied-at="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">
+                                                    Từ chối
+                                                </button>
+                                            </th:block>
+                                        </td>
+                                    </tr>
 
-                                <td
-                                    th:with="st=${row.status}, ns=${st == null ? 'UNKNOWN' : #strings.toUpperCase(#strings.trim(st))}">
-                                    <span class="badge badge-pill" th:classappend="${
-                  #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? ' text-bg-secondary' :
-                  (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? ' text-bg-primary'   :
-                  (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? ' text-bg-danger'    :
-                  (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? ' text-bg-success'   :
-                  (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? ' text-bg-dark'      :
-                                                                                         ' text-bg-light'))))}"
-                                        th:text="${
-                  #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? 'Đang chờ'    :
-                  (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? 'Đã duyệt'    :
-                  (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? 'Từ chối'     :
-                  (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? 'Hoàn thành' :
-                  (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? 'Đã hủy'      :
-                                                                                        (st == null ? 'Khác' : st)))))}">
-                                        Đang chờ
-                                    </span>
-                                </td>
+                                    <tr th:if="${page == null or #lists.isEmpty(page.content)}">
+                                        <td colspan="5" class="text-center text-secondary py-4">
+                                            Chưa có đơn ứng tuyển nào khớp bộ lọc.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-                                <td class="text-end sticky-actions" th:with="st=${row.status}">
-                                    <a class="btn btn-ghost btn-sm me-1"
-                                        th:href="@{|/organization/${orgId}/applications/${row.appId}|}">
-                                        Xem chi tiết
+                        <!-- ===== Pagination ===== -->
+                        <nav th:if="${page.totalPages > 1}" class="mt-2">
+                            <ul class="pagination pagination-sm mb-0 justify-content-end">
+                                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                  status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
+                                  from=${param.from}, to=${param.to}, page=${page.number-1}, size=${page.size})}">
+                                        Trước
                                     </a>
+                                </li>
 
-                                    <!-- Chỉ hiện khi PENDING -->
-                                    <th:block th:if="${#strings.equalsIgnoreCase(st,'PENDING')}">
-                                        <button type="button" class="btn btn-sm btn-primary me-1 btn-open-review"
-                                            data-bs-toggle="modal" data-bs-target="#reviewModal" data-action="approve"
-                                            th:data-app-id="${row.appId}" th:data-vol-name="${row.volunteerName}"
-                                            th:data-opp-title="${row.opportunityTitle}"
-                                            th:data-applied-at="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">
-                                            Đồng ý
-                                        </button>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
+                                    th:classappend="${i == page.number} ? 'active'">
+                                    <a class="page-link" th:text="${i + 1}" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                  status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
+                                  from=${param.from}, to=${param.to}, page=${i}, size=${page.size})}">
+                                        1
+                                    </a>
+                                </li>
 
-                                        <button type="button" class="btn btn-sm btn-danger btn-open-review"
-                                            data-bs-toggle="modal" data-bs-target="#reviewModal" data-action="reject"
-                                            th:data-app-id="${row.appId}" th:data-vol-name="${row.volunteerName}"
-                                            th:data-opp-title="${row.opportunityTitle}"
-                                            th:data-applied-at="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">
-                                            Từ chối
-                                        </button>
-                                    </th:block>
-                                </td>
-
-                            </tr>
-
-                            <tr th:if="${page == null or #lists.isEmpty(page.content)}">
-                                <td colspan="5" class="text-center text-secondary py-4">
-                                    Chưa có đơn ứng tuyển nào khớp bộ lọc.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                  status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
+                                  from=${param.from}, to=${param.to}, page=${page.number+1}, size=${page.size})}">
+                                        Sau
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
 
-                <!-- ===== Pagination ===== -->
-                <nav th:if="${page.totalPages > 1}" class="mt-2">
-                    <ul class="pagination pagination-sm mb-0 justify-content-end">
-                        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
-              status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
-              from=${param.from}, to=${param.to}, page=${page.number-1}, size=${page.size})}">
-                                Trước
-                            </a>
-                        </li>
+                <!-- hidden base url giữ nguyên -->
+                <input type="hidden" id="baseAppUrl" th:value="@{|/organization/${orgId}/applications|}" />
 
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
-                            th:classappend="${i == page.number} ? 'active'">
-                            <a class="page-link" th:text="${i + 1}" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
-              status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
-              from=${param.from}, to=${param.to}, page=${i}, size=${page.size})}">
-                                1
-                            </a>
-                        </li>
+            </div> <!-- /content-wrapper -->
+        </div> <!-- /main-content -->
+    </div> <!-- /app-container -->
 
-                        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
-              status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
-              from=${param.from}, to=${param.to}, page=${page.number+1}, size=${page.size})}">
-                                Sau
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-
-    </div>
-
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-    <input type="hidden" id="baseAppUrl" th:value="@{|/organization/${orgId}/applications|}" />
-
 
     <!-- Init -->
     <script th:inline="javascript">
@@ -325,8 +364,9 @@
             });
 
             // Chặn submit nếu vì lý do nào đó action chưa được set
-            reviewForm.addEventListener('submit', (e) => {
-                if (!reviewForm.getAttribute('action')) {
+            const reviewFormEl = document.getElementById('reviewForm');
+            reviewFormEl && reviewFormEl.addEventListener('submit', (e) => {
+                if (!reviewFormEl.getAttribute('action')) {
                     e.preventDefault();
                     alert('Không xác định được hành động. Vui lòng mở lại popup từ nút Đồng ý/Từ chối.');
                 }
