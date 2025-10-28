@@ -2,6 +2,19 @@ function openCreateFAQModal() {
   document.getElementById("faqModalCreate").classList.add("show");
 }
 
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('faqModalCreate');
+
+    if (modal) {
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeCreateFAQModal();
+            }
+        });
+    }
+});
+
 function closeCreateFAQModal() {
   document.getElementById("faqModalCreate").classList.remove("show");
 }
