@@ -43,4 +43,18 @@ document.addEventListener("DOMContentLoaded", function () {
       submitBtn.disabled = true;
     });
   }
+
+  // Ẩn lỗi khi người dùng focus vào input
+  const inputs = document.querySelectorAll(".register-form input");
+
+  inputs.forEach((input) => {
+    input.addEventListener("focus", function () {
+      const parent = input.closest(".form-group");
+      if (!parent) return;
+      const error = parent.querySelector(".error-message");
+      if (error) {
+        error.style.display = "none";
+      }
+    });
+  });
 });
