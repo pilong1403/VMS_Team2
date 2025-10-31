@@ -19,6 +19,9 @@ public interface FeedbackService {
 
     boolean canVolunteerGiveFeedback(int oppId, int volunteerId);
 
+    List<Feedback> findByOpportunity(int oppId);
+
+    Feedback findByOpportunityAndVolunteer(int oppId, int volunteerId);
     // --------- CRUD ---------
     Feedback findById(int id);
 
