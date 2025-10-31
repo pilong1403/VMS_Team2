@@ -155,10 +155,11 @@ public class ApplicationController {
         return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    /** Danh sách đơn theo tổ chức (filter, paging) */
+    /** Danh sách đơn theo tổ chức (filter, paging) — LỌC THEO oppId nếu có */
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
+            @RequestParam(value = "oppId", required = false) Integer oppId, // <— NEW
             @RequestParam(value = "q", required = false) String q,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
@@ -193,15 +194,17 @@ public class ApplicationController {
             to = t;
         }
 
-        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to,
-                Math.max(page, 0), Math.max(size, 1));
-        var stats = service.computeOrgAppStats(orgId);
+        var result = service.searchOrgApplicationsByOrgId(
+                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1)); // <— NEW
+
+        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to); // <— NEW
 
         List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
         var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("orgId", orgId);
+        model.addAttribute("oppId", oppId); // <— giữ oppId cho view/filter
         model.addAttribute("myOpps", myOpps);
         model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
         model.addAttribute("toStr", to != null ? to.format(fmt) : "");
@@ -215,7 +218,8 @@ public class ApplicationController {
 
     // ===== helpers =====
     private String keepListParams(Map<String, String> params) {
-        String[] keys = { "q", "status", "from", "to", "page", "size" };
+        // <— giữ thêm oppId
+        String[] keys = { "oppId", "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
         try {
             for (String k : keys) {
