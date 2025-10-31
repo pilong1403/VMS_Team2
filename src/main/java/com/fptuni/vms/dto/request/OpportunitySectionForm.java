@@ -17,10 +17,12 @@ public class OpportunitySectionForm {
     @Size(max = 10000, message = "Nội dung tối đa 10000 ký tự")
     private String content;
 
+    // Cho phép nhận để hiển thị/preview; backend sẽ ưu tiên URL từ upload, còn không sẽ fallback ảnh cũ.
     @Size(max = 500, message = "URL hình ảnh tối đa 500 ký tự")
-    private String imageUrl;         // sẽ set sau khi upload
+    private String imageUrl;
 
-    private MultipartFile imageFile; // file người dùng chọn
+    // Người dùng chọn file; server upload, nếu thành công sẽ ghi đè imageUrl
+    private MultipartFile imageFile;
 
     @Size(max = 255, message = "Chú thích tối đa 255 ký tự")
     private String caption;

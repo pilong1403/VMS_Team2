@@ -33,11 +33,11 @@ public class OpportunityController {
     private final NotificationService notificationService;
 
     public OpportunityController(OpportunityService opportunityService,
-            OpportunitySectionService sectionService,
-            CloudStorageService cloudStorage,
-            OrganizationService organizationService,
-            ApplicationService applicationService,
-            NotificationService notificationService) {
+                                 OpportunitySectionService sectionService,
+                                 CloudStorageService cloudStorage,
+                                 OrganizationService organizationService,
+                                 ApplicationService applicationService,
+                                 NotificationService notificationService) {
         this.opportunityService = opportunityService;
         this.sectionService = sectionService;
         this.cloudStorage = cloudStorage;
@@ -51,17 +51,29 @@ public class OpportunityController {
 
     private static Map<String, String> viStatus() {
         return Map.of(
+                "DRAFT", "Bản nháp",
                 "OPEN", "Đang mở",
                 "CANCELLED", "Đã hủy",
-                "CLOSED", "Đã kết thúc");
+                "CLOSED", "Đã kết thúc"
+        );
+    }
+
+    /** Trạng thái hợp lệ theo trạng thái hiện tại. */
+    private List<Opportunity.OpportunityStatus> allowedStatusesFor(Opportunity.OpportunityStatus current) {
+        if (current == null) return List.of(Opportunity.OpportunityStatus.DRAFT); // tạo mới → DRAFT
+        return switch (current) {
+            case DRAFT -> List.of(Opportunity.OpportunityStatus.DRAFT, Opportunity.OpportunityStatus.OPEN);
+            case OPEN, CANCELLED -> List.of(Opportunity.OpportunityStatus.OPEN, Opportunity.OpportunityStatus.CANCELLED, Opportunity.OpportunityStatus.CLOSED);
+            case CLOSED -> List.of(Opportunity.OpportunityStatus.CLOSED);
+        };
     }
 
     @GetMapping
     public String listForOwner(@RequestParam(value = "q", required = false) String q,
-            @RequestParam(value = "status", required = false) Opportunity.OpportunityStatus status,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            Model model) {
+                               @RequestParam(value = "status", required = false) Opportunity.OpportunityStatus status,
+                               @RequestParam(value = "page", defaultValue = "0") int page,
+                               @RequestParam(value = "size", defaultValue = "10") int size,
+                               Model model) {
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {
@@ -86,7 +98,7 @@ public class OpportunityController {
         var s0 = new OpportunitySectionForm();
         s0.setSectionOrder(1);
         form.getSections().add(s0);
-        form.setStatus(Opportunity.OpportunityStatus.OPEN);
+        form.setStatus(Opportunity.OpportunityStatus.DRAFT); // tạo mới = DRAFT
         populateCommon(model, form, "Tạo cơ hội mới");
         return "organization/opportunity-form";
     }
@@ -94,8 +106,7 @@ public class OpportunityController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Integer id, Model model) {
         Opportunity opp = opportunityService.findById(id);
-        if (opp == null)
-            return "redirect:/org/opps";
+        if (opp == null) return "redirect:/org/opps";
         OpportunityForm form = mapToForm(opp, sectionService.findByOpportunity(id));
         populateCommon(model, form, "Chỉnh sửa cơ hội");
         return "organization/opportunity-form";
@@ -103,37 +114,63 @@ public class OpportunityController {
 
     @PostMapping("/save")
     public String save(@Valid @ModelAttribute("form") OpportunityForm form,
-            BindingResult binding,
-            RedirectAttributes ra,
-            Model model) {
+                       BindingResult binding,
+                       RedirectAttributes ra,
+                       Model model) {
 
+        // ===== Validate thời gian =====
         if (form.getStartDate() != null && form.getStartTime() != null &&
                 form.getEndDate() != null && form.getEndTime() != null) {
             var start = LocalDateTime.of(form.getStartDate(), form.getStartTime());
             var end = LocalDateTime.of(form.getEndDate(), form.getEndTime());
-            if (!end.isAfter(start))
+
+            if (!end.isAfter(start)) {
                 binding.rejectValue("endDate", "invalid", "Ngày/giờ kết thúc phải sau thời điểm bắt đầu");
+            }
+            var minStart = LocalDateTime.now().plusHours(24);
+            if (start.isBefore(minStart)) {
+                binding.rejectValue("startDate", "invalid.soon",
+                        "Thời điểm bắt đầu phải sau ít nhất 24 giờ kể từ hiện tại");
+            }
         }
 
-        // Validate file thumbnail
+        // ===== Validate file thumbnail =====
         if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
             MultipartFile f = form.getThumbnailFile();
-            if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType()))
-                binding.rejectValue("thumbnailFile", "upload.type", "Chỉ chấp nhận tệp hình ảnh (jpg, png, gif, webp)");
-            else if (f.getSize() > MAX_IMAGE_BYTES)
+            if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType())) {
+                binding.rejectValue("thumbnailFile", "upload.type",
+                        "Chỉ chấp nhận tệp hình ảnh (jpg, png, gif, webp)");
+            } else if (f.getSize() > MAX_IMAGE_BYTES) {
                 binding.rejectValue("thumbnailFile", "upload.tooLarge", "Ảnh đại diện tối đa 5MB");
+            }
         }
 
+        // ===== Validate ảnh từng section =====
         for (int i = 0; i < form.getSections().size(); i++) {
             var sf = form.getSections().get(i);
             if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
                 MultipartFile f = sf.getImageFile();
-                if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType()))
+                if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType())) {
                     binding.rejectValue("sections[" + i + "].imageFile", "upload.type",
                             "Ảnh trong phần phải là hình (jpg, png, gif, webp)");
-                else if (f.getSize() > MAX_IMAGE_BYTES)
+                } else if (f.getSize() > MAX_IMAGE_BYTES) {
                     binding.rejectValue("sections[" + i + "].imageFile", "upload.tooLarge",
                             "Ảnh trong phần tối đa 5MB");
+                }
+            }
+        }
+
+        // ===== Validate section order (server) =====
+        Set<Integer> seen = new HashSet<>();
+        for (int i = 0; i < form.getSections().size(); i++) {
+            var sf = form.getSections().get(i);
+            Integer ord = sf.getSectionOrder();
+            if (ord == null || ord < 1) {
+                binding.rejectValue("sections[" + i + "].sectionOrder", "order.invalid", "Thứ tự phải là số dương (>=1)");
+                continue;
+            }
+            if (!seen.add(ord)) {
+                binding.rejectValue("sections[" + i + "].sectionOrder", "order.dup", "Thứ tự bị trùng. Vui lòng chọn số khác.");
             }
         }
 
@@ -143,6 +180,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
+        // ===== Kiểm tra tổ chức =====
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {
@@ -152,6 +190,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
+        // ===== Upload thumbnail nếu có =====
         if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
             String url = cloudStorage.uploadFile(form.getThumbnailFile());
             if (url == null) {
@@ -163,7 +202,33 @@ public class OpportunityController {
             form.setThumbnailUrl(url);
         }
 
+        // ===== Load opp cũ + ràng buộc trạng thái =====
         Opportunity old = (form.getOppId() != null) ? opportunityService.findById(form.getOppId()) : null;
+
+        if (old != null && old.getStatus() == Opportunity.OpportunityStatus.CLOSED) {
+            model.addAttribute("err", "Sự kiện đã ở trạng thái ĐÃ KẾT THÚC (CLOSED) nên không thể chỉnh sửa.");
+            form.setStatus(Opportunity.OpportunityStatus.CLOSED);
+            populateCommon(model, form, "Chi tiết cơ hội (đã khóa)");
+            return "organization/opportunity-form";
+        }
+
+        Opportunity.OpportunityStatus oldStatus = (old == null)
+                ? Opportunity.OpportunityStatus.DRAFT
+                : old.getStatus();
+
+        var allowed = allowedStatusesFor(oldStatus);
+        var requested = form.getStatus();
+        if (requested == null || !allowed.contains(requested)) {
+            model.addAttribute("err", switch (oldStatus) {
+                case DRAFT -> "Bản nháp chỉ có thể giữ DRAFT hoặc chuyển sang OPEN.";
+                case OPEN, CANCELLED -> "Chỉ được chọn OPEN, CANCELLED hoặc CLOSED (không thể quay về DRAFT).";
+                case CLOSED -> "Sự kiện CLOSED đã bị khóa, không thể chỉnh sửa.";
+            });
+            form.setStatus(oldStatus);
+            populateCommon(model, form, form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội");
+            return "organization/opportunity-form";
+        }
+
         OppSnapshot oldSnap = (old == null) ? null : OppSnapshot.from(old);
 
         var start = LocalDateTime.of(form.getStartDate(), form.getStartTime());
@@ -181,27 +246,61 @@ public class OpportunityController {
         opp.setStatus(form.getStatus());
         opp.setStartTime(start);
         opp.setEndTime(end);
-        if (form.getThumbnailUrl() != null)
+        if (form.getThumbnailUrl() != null) {
             opp.setThumbnailUrl(form.getThumbnailUrl());
+        }
 
+        // ===== Chuẩn bị sections: GIỮ ảnh cũ nếu không upload ảnh mới =====
         List<OpportunitySection> toSave = new ArrayList<>();
         int idx = 1;
+
+        // Lấy danh sách section hiện có (nếu đang edit) để fallback imageUrl theo sectionOrder
+        Map<Integer, OpportunitySection> oldByOrder = Collections.emptyMap();
+        if (old != null) {
+            List<OpportunitySection> existing = sectionService.findByOpportunity(old.getOppId());
+            oldByOrder = new HashMap<>();
+            for (OpportunitySection ex : existing) {
+                Integer ord = (ex.getSectionOrder() != null ? ex.getSectionOrder() : 0);
+                oldByOrder.put(ord, ex);
+            }
+        }
+
         for (int i = 0; i < form.getSections().size(); i++) {
             var sf = form.getSections().get(i);
+
+            // 1) Thứ tự phần
+            int order = (sf.getSectionOrder() != null ? sf.getSectionOrder() : idx);
+
+            // 2) Upload mới (nếu có)
+            String finalImageUrl = null;
             if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
-                String imgUrl = cloudStorage.uploadFile(sf.getImageFile());
-                if (imgUrl == null)
+                String uploaded = cloudStorage.uploadFile(sf.getImageFile());
+                if (uploaded == null) {
                     binding.rejectValue("sections[" + i + "].imageFile", "upload.fail", "Upload ảnh thất bại");
-                else
-                    sf.setImageUrl(imgUrl);
+                } else {
+                    finalImageUrl = uploaded; // ưu tiên ảnh mới
+                }
             }
+
+            // 3) Không có ảnh mới → giữ ảnh cũ theo sectionOrder; nếu không có, dùng imageUrl post từ hidden
+            if (finalImageUrl == null) {
+                OpportunitySection oldSec = oldByOrder.get(order);
+                if (oldSec != null && oldSec.getImageUrl() != null && !oldSec.getImageUrl().isBlank()) {
+                    finalImageUrl = oldSec.getImageUrl();
+                } else if (sf.getImageUrl() != null && !sf.getImageUrl().isBlank()) {
+                    finalImageUrl = sf.getImageUrl();
+                }
+            }
+
+            // 4) Tạo entity section
             OpportunitySection s = new OpportunitySection();
             s.setOpportunity(opp);
-            s.setSectionOrder(sf.getSectionOrder() != null ? sf.getSectionOrder() : idx);
+            s.setSectionOrder(order);
             s.setHeading(sf.getHeading());
             s.setContent(sf.getContent());
-            s.setImageUrl(sf.getImageUrl());
             s.setCaption(sf.getCaption());
+            s.setImageUrl(finalImageUrl);
+
             toSave.add(s);
             idx++;
         }
@@ -212,16 +311,19 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
+        // ===== Lưu =====
         try {
             opp = opportunityService.save(opp);
             sectionService.replaceSections(opp, toSave);
         } catch (DataIntegrityViolationException | PersistenceException ex) {
-            binding.reject("db.constraint", "Lưu thất bại do vi phạm ràng buộc dữ liệu.");
-            model.addAttribute("err", "Lưu thất bại do vi phạm dữ liệu.");
+            // Có thể là vi phạm unique (opp_id, section_order)
+            binding.reject("db.constraint", "Lưu thất bại do dữ liệu trùng lặp hoặc vi phạm ràng buộc.");
+            model.addAttribute("err", "Lưu thất bại do dữ liệu không hợp lệ (ví dụ trùng Thứ tự).");
             populateCommon(model, form, form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội");
             return "organization/opportunity-form";
         }
 
+        // ===== Gửi thông báo =====
         String publicLink = "/opportunities/" + opp.getOppId();
         List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
 
@@ -273,9 +375,17 @@ public class OpportunityController {
         return "redirect:/org/opps";
     }
 
+    /** Bổ sung allowedStatuses và readOnly để view render đúng. */
     private void populateCommon(Model model, OpportunityForm form, String title) {
         model.addAttribute("form", form);
         model.addAttribute("pageTitle", title);
+
+        var allowed = allowedStatusesFor(form.getStatus());
+        model.addAttribute("allowedStatuses", allowed);
+
+        boolean readOnly = form.getStatus() == Opportunity.OpportunityStatus.CLOSED;
+        model.addAttribute("readOnly", readOnly);
+
         model.addAttribute("statuses", Opportunity.OpportunityStatus.values());
         model.addAttribute("statusVN", viStatus());
         model.addAttribute("categories", opportunityService.getCategoriesWithOpportunities());
@@ -303,6 +413,7 @@ public class OpportunityController {
             sf.setSectionOrder(s.getSectionOrder() != null ? s.getSectionOrder() : i);
             sf.setHeading(s.getHeading());
             sf.setContent(s.getContent());
+            // Gán URL ảnh cũ vào field imageUrl để hiển thị/giữ lại nếu không upload mới
             sf.setImageUrl(s.getImageUrl());
             sf.setCaption(s.getCaption());
             sfs.add(sf);
@@ -335,8 +446,8 @@ public class OpportunityController {
     }
 
     private record OppSnapshot(String title, String subtitle, String location,
-            Integer neededVolunteers, Opportunity.OpportunityStatus status,
-            LocalDateTime startTime, LocalDateTime endTime) {
+                               Integer neededVolunteers, Opportunity.OpportunityStatus status,
+                               LocalDateTime startTime, LocalDateTime endTime) {
         static OppSnapshot from(Opportunity o) {
             return new OppSnapshot(o.getTitle(), o.getSubtitle(), o.getLocation(),
                     o.getNeededVolunteers(), o.getStatus(), o.getStartTime(), o.getEndTime());
@@ -345,27 +456,20 @@ public class OpportunityController {
 
     private String buildUpdateMessage(OppSnapshot old, Opportunity o, Organization org) {
         List<String> changes = new ArrayList<>();
-        if (!Objects.equals(old.title, o.getTitle()))
-            changes.add("Tiêu đề");
-        if (!Objects.equals(old.subtitle, o.getSubtitle()))
-            changes.add("Mô tả");
-        if (!Objects.equals(old.location, o.getLocation()))
-            changes.add("Địa điểm");
-        if (!Objects.equals(old.neededVolunteers, o.getNeededVolunteers()))
-            changes.add("Số lượng TNV");
-        if (!Objects.equals(old.status, o.getStatus()))
-            changes.add("Trạng thái");
+        if (!Objects.equals(old.title, o.getTitle())) changes.add("Tiêu đề");
+        if (!Objects.equals(old.subtitle, o.getSubtitle())) changes.add("Mô tả");
+        if (!Objects.equals(old.location, o.getLocation())) changes.add("Địa điểm");
+        if (!Objects.equals(old.neededVolunteers, o.getNeededVolunteers())) changes.add("Số lượng TNV");
+        if (!Objects.equals(old.status, o.getStatus())) changes.add("Trạng thái");
         if (!Objects.equals(old.startTime, o.getStartTime()) || !Objects.equals(old.endTime, o.getEndTime()))
             changes.add("Thời gian");
 
-        if (changes.isEmpty())
-            return "";
+        if (changes.isEmpty()) return "";
 
         StringBuilder sb = new StringBuilder();
         sb.append("Cơ hội \"").append(o.getTitle()).append("\" của tổ chức ").append(org.getName())
                 .append(" đã được cập nhật (").append(String.join(", ", changes)).append("):\n")
-                .append("• Từ: ").append(FMT.format(o.getStartTime())).append(" → ").append(FMT.format(o.getEndTime()))
-                .append("\n")
+                .append("• Từ: ").append(FMT.format(o.getStartTime())).append(" → ").append(FMT.format(o.getEndTime())).append("\n")
                 .append("• Trạng thái: ").append(viStatus().getOrDefault(o.getStatus().name(), o.getStatus().name()));
         return sb.toString();
     }
