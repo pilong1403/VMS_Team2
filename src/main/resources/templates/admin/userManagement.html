@@ -376,8 +376,8 @@
                 <p><strong>Địa chỉ:</strong> <span
                         th:text="${selectedUser.address != null ? selectedUser.address : '(Chưa cập nhật)'}"></span></p>
                 <p><strong>Trạng thái:</strong>
-                    <span th:classappend="${selectedUser.status == 'ACTIVE'} ? 'status-active' : 'status-locked'"
-                          th:text="${selectedUser.status}"></span>
+                    <span th:classappend="${#strings.trim(selectedUser.status).equalsIgnoreCase('ACTIVE') ? 'status-active' : 'status-locked'}"
+                          th:text="${selectedUser.status}">Trạng thái</span>
                 </p>
                 <p><strong>Ngày tạo:</strong>
                     <span th:text="${#temporals.format(selectedUser.createdAt, 'dd/MM/yyyy')}"></span>

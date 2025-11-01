@@ -100,3 +100,22 @@ figure img {
     border-radius: 12px;
     margin-bottom: 8px;
 }
+/* Ảnh trong section: luôn cùng tỷ lệ & kích thước hiển thị */
+.section-figure {
+    max-width: 640px;            /* ấn định khung tối đa để đồng bộ */
+}
+
+.section-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;        /* đổi 4/3, 1/1 nếu bạn muốn */
+    height: auto;                /* giữ theo tỉ lệ khung */
+    object-fit: cover;           /* cắt cho đầy khung, không méo */
+    border-radius: 12px;
+    display: block;
+}
+
+/* Mobile tinh chỉnh một chút nếu muốn thấp hơn */
+@media (max-width: 576px) {
+    .section-figure { max-width: 100%; }
+    .section-image { aspect-ratio: 4 / 3; }
+}

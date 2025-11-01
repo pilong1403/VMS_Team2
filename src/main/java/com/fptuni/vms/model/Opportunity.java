@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 )
 public class Opportunity {
 
-    public enum OpportunityStatus { OPEN, CLOSED, CANCELLED }
+    public enum OpportunityStatus { DRAFT, OPEN, CLOSED, CANCELLED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,7 +74,7 @@ public class Opportunity {
 
     @PrePersist
     private void prePersist() {
-        if (status == null) status = OpportunityStatus.OPEN;
+        if (status == null) status = OpportunityStatus.DRAFT;
     }
 
     /** Sau khi load từ DB, nếu quá hạn thì tự cập nhật trạng thái ở bộ nhớ (không ghi DB). */

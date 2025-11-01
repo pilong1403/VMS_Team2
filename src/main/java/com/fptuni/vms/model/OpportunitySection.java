@@ -5,7 +5,11 @@ import org.hibernate.annotations.Nationalized;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "opportunitysections", schema = "dbo")
+@Table(
+        name = "opportunitysections",
+        schema = "dbo",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"opp_id", "section_order"})
+)
 public class OpportunitySection {
 
     @Id

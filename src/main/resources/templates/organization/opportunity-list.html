@@ -89,30 +89,33 @@
                 </tr>
                 </thead>
                 <tbody>
-                <!-- FIX: dùng emptyList() thay {} -->
                 <tr th:each="o : ${page != null ? page.content : T(java.util.Collections).emptyList()}">
                     <td class="fw-semibold" th:text="${o.title}">Tiêu đề</td>
                     <td th:text="${o.location}">Địa điểm</td>
                     <td class="small" th:text="${#temporals.format(o.startTime,'dd/MM/yyyy HH:mm')}">01/01/2025 08:00</td>
                     <td class="small text-muted" th:text="${#temporals.format(o.endTime,'dd/MM/yyyy HH:mm')}">01/01/2025 17:00</td>
                     <td>
-                        <span class="badge"
-                              th:classappend="${
-                                o.status.name() == 'OPEN' ? ' text-bg-primary' :
-                                (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' : ' text-bg-dark')
-                              }"
-                              th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
-                            Đang mở
-                        </span>
+            <span class="badge"
+                  th:classappend="${
+                    o.status.name() == 'OPEN' ? ' text-bg-primary' :
+                    (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' :
+                    (o.status.name() == 'CLOSED' ? ' text-bg-dark' : ' text-bg-warning'))
+                  }"
+                  th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
+              Đang mở
+            </span>
                     </td>
                     <td class="text-end">
+                        <!-- Sửa: cho phép khi KHÔNG phải CLOSED (đúng luật: CLOSED thì không sửa gì) -->
                         <a class="btn btn-sm btn-outline-primary me-1"
-                           th:if="${o.endTime != null and o.endTime.isAfter(T(java.time.LocalDateTime).now())}"
+                           th:if="${o.status.name() != 'CLOSED'}"
                            th:href="@{|/org/opps/${o.oppId}/edit|}">
                             Sửa
                         </a>
 
-                        <form th:if="${o.status.name() == 'OPEN'}" class="d-inline"
+                        <!-- Hủy: chỉ khi đang OPEN và chưa kết thúc -->
+                        <form th:if="${o.status.name() == 'OPEN' and (o.endTime == null or o.endTime.isAfter(T(java.time.LocalDateTime).now()))}"
+                              class="d-inline"
                               th:action="@{|/org/opps/${o.oppId}/cancel|}" method="post"
                               onsubmit="return confirm('Hủy sự kiện này?')">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -126,7 +129,7 @@
                     </td>
                 </tr>
 
-                <!-- Hiển thị khi không có dữ liệu -->
+                <!-- Empty state -->
                 <tr th:if="${page == null or page.totalElements == 0}">
                     <td colspan="6" class="text-center text-muted py-4"
                         th:text="${q != null and !#strings.isEmpty(q) ? 'Không tìm thấy sự kiện nào khớp với từ khóa.' : 'Chưa có sự kiện nào.'}">

@@ -21,6 +21,8 @@ public interface FeedbackRepository {
 
     Feedback findVolunteerFeedback(int oppId, int volunteerId);
 
+    List<Feedback> findByOpportunity(int oppId);
+
     // ================================
     // 3. CRUD FEEDBACK
     // ================================
