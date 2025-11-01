@@ -96,11 +96,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <h4 class="mb-3">Danh sách đơn ứng tuyển</h4>
+                <h4 class="mb-3">Danh sách đơn ứng tuyển </h4>
 
                 <!-- ===== Stats ===== -->
                 <div class="row g-3 mb-3" th:if="${stats != null}">
-                    <div class="col-6 col-md-3" th:each="s : ${stats.entrySet()}">
+                    <div class="col-2" th:each="s : ${stats.entrySet()}">
                         <div class="card card-stat shadow-sm">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
