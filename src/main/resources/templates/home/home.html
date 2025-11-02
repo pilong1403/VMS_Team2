@@ -281,10 +281,12 @@
 
   <!-- Custom JS -->
   <script th:src="@{/js/home.js}"></script>
+
   <!-- [THÊM MỚI] Apply Modal dùng chung cho trang Home -->
   <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
+        <!-- [THÊM VALIDATION] thêm novalidate + needs-validation; tất cả input bắt buộc -->
         <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate>
           <div class="modal-header">
             <h5 class="modal-title">Đăng ký tham gia</h5>
@@ -293,36 +295,50 @@
 
           <div class="modal-body">
             <!-- oppId sẽ được JS gán động khi bấm nút -->
-            <input type="hidden" name="oppId" />
+            <input type="hidden" name="oppId" required />
             <!-- Lấy từ session -->
-            <input type="hidden" name="userId" th:value="${session.AUTH_USER_ID}" />
+            <input type="hidden" name="userId" th:value="${session.AUTH_USER_ID}" required />
 
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Họ tên</label>
+                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="fullName"
-                  th:value="${currentUser != null ? currentUser.fullName : ''}" required>
+                  th:value="${currentUser != null ? currentUser.fullName : ''}" required minlength="2" maxlength="100"
+                  autocomplete="name">
+                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
               </div>
+
               <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" th:value="${currentUser != null ? currentUser.email : ''}"
-                  readonly>
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <!-- readonly nhưng vẫn required để trình duyệt check có giá trị -->
+                <input type="email" class="form-control" name="email"
+                  th:value="${currentUser != null ? currentUser.email : ''}" required readonly>
+                <div class="invalid-feedback">Email không hợp lệ hoặc chưa có trong hồ sơ.</div>
               </div>
+
               <div class="col-md-6">
-                <label class="form-label">Số điện thoại</label>
+                <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                <!-- [THÊM VALIDATION] Số VN: 10 chữ số bắt đầu bằng 0 -->
                 <input type="tel" class="form-control" name="phone"
-                  th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^[0-9+]{9,11}$" required>
-                <div class="form-text">Chỉ điền chữ số, bao gồm 10 ký tự.</div>
+                  th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^0[0-9]{9}$" minlength="10"
+                  maxlength="10" inputmode="numeric" required autocomplete="tel">
+                <div class="form-text">Số Việt Nam 10 chữ số, bắt đầu bằng 0 (ví dụ 0987654321).</div>
+                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0).</div>
               </div>
+
               <div class="col-md-6">
-                <label class="form-label">Địa chỉ</label>
+                <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="address"
-                  th:value="${currentUser != null ? currentUser.address : ''}">
+                  th:value="${currentUser != null ? currentUser.address : ''}" maxlength="255" required
+                  autocomplete="street-address">
+                <div class="invalid-feedback">Vui lòng nhập địa chỉ.</div>
               </div>
+
               <div class="col-12">
-                <label class="form-label">Lý do tham gia</label>
-                <textarea class="form-control" name="reason" maxlength="500"
+                <label class="form-label">Lý do tham gia <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="reason" maxlength="500" required
                   placeholder="Vì sao bạn muốn tham gia?"></textarea>
+                <div class="invalid-feedback">Vui lòng nhập lý do (tối đa 500 ký tự).</div>
               </div>
             </div>
           </div>
