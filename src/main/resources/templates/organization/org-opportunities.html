@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('Cơ Hội Tình Nguyện')}"></head>
+
+<body>
+    <!-- Header -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main>
+        <!-- Hero -->
+        <section class="relative" style="
+      height: 120px;
+      background: linear-gradient(rgba(56,189,248,0.8), rgba(14,165,233,0.8)),
+                  url('https://images.pexels.com/photos/6994982/pexels-photo-6994982.jpeg?auto=compress&cs=tinysrgb&w=1600')
+                  center/cover no-repeat;">
+            <div class="container position-relative h-100 d-flex align-items-center justify-content-center text-center text-white"
+                style="z-index:10">
+                <div>
+                    <h1 class="display-5 fw-bold mb-2" th:text="${org.name}">Tên tổ chức</h1>
+                    <p class="lead opacity-90">Các cơ hội tình nguyện thuộc tổ chức này</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="container py-5">
+            <div class="row g-4">
+                <!-- Sidebar -->
+                <div class="col-12 col-lg-3">
+                    <form id="filterForm" method="get" th:action="@{/organizations/{id}(id=${org.orgId})}">
+                        <div class="filter-sidebar bg-white rounded shadow p-4 sticky-top" style="top:100px">
+                            <h5 class="fw-bold mb-4">Bộ Lọc</h5>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tìm kiếm</label>
+                                <input type="text" name="search" class="form-control" th:value="${searchTerm}"
+                                    placeholder="Nhập từ khóa..." />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Danh mục</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="categoryId" value=""
+                                        th:checked="${selectedCategoryId == null}" />
+                                    <label class="form-check-label">Tất cả</label>
+                                </div>
+                                <div class="form-check" th:each="cat : ${categories}">
+                                    <input class="form-check-input" type="radio" name="categoryId"
+                                        th:id="'cat' + ${cat.categoryId}" th:value="${cat.categoryId}"
+                                        th:checked="${selectedCategoryId == cat.categoryId}" />
+                                    <label class="form-check-label" th:for="'cat' + ${cat.categoryId}"
+                                        th:text="${cat.categoryName}">Tên</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Trạng thái</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" value=""
+                                        th:checked="${selectedStatus == null}" />
+                                    <label class="form-check-label">Tất cả</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" value="OPEN"
+                                        th:checked="${selectedStatus == 'OPEN'}" />
+                                    <label class="form-check-label">Đang mở</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" value="CLOSED"
+                                        th:checked="${selectedStatus == 'CLOSED'}" />
+                                    <label class="form-check-label">Đã đóng</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" value="CANCELLED"
+                                        th:checked="${selectedStatus == 'CANCELLED'}" />
+                                    <label class="form-check-label">Đã hủy</label>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="page" th:value="${currentPage != null ? currentPage : 0}" />
+                            <input type="hidden" name="size" th:value="${pageSize != null ? pageSize : 9}" />
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary-custom" type="submit">Áp dụng</button>
+                                <a th:href="@{/organizations/{id}(id=${org.orgId})}"
+                                    class="btn btn-link text-muted text-decoration-none">Xóa lọc</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- List -->
+                <div class="col-12 col-lg-9">
+                    <h4 class="fw-bold mb-4" th:text="${totalElements} + ' Cơ hội'">0 Cơ hội</h4>
+
+                    <div class="row g-4 mb-5" th:if="${opportunities != null and !opportunities.empty}">
+                        <div class="col-md-6" th:each="o : ${opportunities}">
+                            <div class="card h-100 shadow-sm border-0">
+                                <img class="card-img-top"
+                                    th:src="${o.thumbnailUrl != null ? o.thumbnailUrl : '/images/placeholders/opportunity-card.jpg'}"
+                                    th:alt="${o.title}" />
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="badge bg-info-subtle text-info-emphasis"
+                                            th:text="${categoryNameMap[o.oppId]}">Danh mục</span>
+                                        <span class="badge" th:text="${o.status}" th:classappend="${o.status.name() == 'OPEN'} ? ' bg-success-subtle text-success-emphasis' :
+                                          (${o.status.name() == 'CLOSED'} ? ' bg-secondary-subtle text-secondary-emphasis'
+                                                                          : ' bg-danger-subtle text-danger-emphasis')">
+                                            OPEN
+                                        </span>
+                                    </div>
+
+                                    <h5 class="card-title fw-bold mb-2" th:text="${o.title}">Tên cơ hội</h5>
+                                    <p class="card-text small text-muted mb-3" th:text="${o.subtitle}">Phụ đề cơ hội</p>
+
+                                    <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                                        <div th:if="${o.location}">
+                                            <i class="bi bi-geo-alt me-1"></i>
+                                            <span th:text="${o.location}">Địa điểm</span>
+                                        </div>
+                                        <div th:if="${o.startTime}">
+                                            <i class="bi bi-calendar me-1"></i>
+                                            <span th:text="${#temporals.format(o.startTime, 'dd/MM/yyyy HH:mm')}">Bắt
+                                                đầu</span>
+                                            <span th:if="${o.endTime}" class="mx-1">–</span>
+                                            <span th:if="${o.endTime}"
+                                                th:text="${#temporals.format(o.endTime, 'dd/MM/yyyy HH:mm')}">Kết
+                                                thúc</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span class="text-muted">Tình nguyện viên:</span>
+                                                <span class="fw-semibold text-primary"
+                                                    th:text="${appliedMap[o.oppId]} + ' / ' + ${o.neededVolunteers}">0 /
+                                                    0</span>
+                                            </div>
+                                            <div class="progress progress-custom"
+                                                aria-label="Tiến độ số lượng tình nguyện viên">
+                                                <div class="progress-bar"
+                                                    th:style="'width:' + ${progressMap[o.oppId]} + '%;'"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <a th:href="@{/opportunities/{id}(id=${o.oppId})}"
+                                                class="btn btn-outline-primary-custom flex-fill">
+                                                <i class="bi bi-eye me-1"></i>Chi tiết
+                                            </a>
+
+                                            <button type="button" class="btn btn-primary-custom flex-fill js-apply-btn"
+                                                th:attr="data-opp-id=${o.oppId},
+                                       data-opp-status=${o.status != null ? o.status.name() : 'CLOSED'}">
+                                                <i class="bi bi-person-plus me-1"></i>Đăng ký
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty -->
+                    <div class="text-center py-5" th:if="${opportunities == null or opportunities.empty}">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Không tìm thấy cơ hội nào</h5>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Pagination" th:if="${totalPages > 1}">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{/organizations/{id}(id=${org.orgId}, page=${currentPage - 1}, size=${pageSize}, categoryId=${selectedCategoryId}, search=${searchTerm}, status=${selectedStatus})}">
+                                    &laquo;
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${i == currentPage} ? 'active'">
+                                <a class="page-link"
+                                    th:href="@{/organizations/{id}(id=${org.orgId}, page=${i}, size=${pageSize}, categoryId=${selectedCategoryId}, search=${searchTerm}, status=${selectedStatus})}"
+                                    th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{/organizations/{id}(id=${org.orgId}, page=${currentPage + 1}, size=${pageSize}, categoryId=${selectedCategoryId}, search=${searchTerm}, status=${selectedStatus})}">
+                                    &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true" th:attr="data-full-name=${currentUser != null ? currentUser.fullName : ''},
+                data-email=${currentUser != null ? currentUser.email : ''},
+                data-phone=${currentUser != null ? currentUser.phone : ''},
+                data-address=${currentUser != null ? currentUser.address : ''}">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate
+                    id="applyForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Đăng ký tham gia</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="oppId" />
+                        <input type="hidden" name="userId" th:value="${AUTH_USER_ID}" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="fullName" required minlength="2"
+                                    maxlength="100" />
+                                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" readonly required />
+                                <div class="invalid-feedback">Tài khoản chưa có email. Cập nhật trước khi đăng ký.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" name="phone" pattern="^0[0-9]{9}$" minlength="10"
+                                    maxlength="10" required />
+                                <div class="form-text">10 chữ số, bắt đầu bằng 0 (VD: 0987654321)</div>
+                                <div class="invalid-feedback">Số điện thoại không hợp lệ.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="address" maxlength="255" required />
+                                <div class="invalid-feedback">Vui lòng nhập địa chỉ.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Lý do tham gia <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="reason" maxlength="500" minlength="5"
+                                    required></textarea>
+                                <div class="invalid-feedback">Lý do tối thiểu 5 ký tự.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Gửi đăng ký</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script th:inline="javascript">
+        window.CURRENT_USER_ID = /*[[${AUTH_USER_ID}]]*/ null;
+    </script>
+
+    <script>
+        (function () {
+            'use strict';
+            const applyModalEl = document.getElementById('applyModal');
+            const applyForm = document.getElementById('applyForm');
+            const oppIdInput = applyForm?.querySelector('input[name="oppId"]');
+
+            function prefillFromModalData() {
+                if (!applyModalEl || !applyForm) return;
+                const d = {
+                    fullName: applyModalEl.getAttribute('data-full-name') || '',
+                    email: applyModalEl.getAttribute('data-email') || '',
+                    phone: (applyModalEl.getAttribute('data-phone') || '').replace(/\D/g, '').trim(),
+                    address: applyModalEl.getAttribute('data-address') || ''
+                };
+                applyForm.querySelector('input[name="fullName"]').value = d.fullName;
+                applyForm.querySelector('input[name="email"]').value = d.email;
+                applyForm.querySelector('input[name="phone"]').value = d.phone;
+                applyForm.querySelector('input[name="address"]').value = d.address;
+            }
+
+            document.querySelectorAll('.js-apply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.CURRENT_USER_ID == null) {
+                        window.location.href = '/login?e=USERNAME_PASSWORD_REQUIRED';
+                        return;
+                    }
+                    const oppId = btn.getAttribute('data-opp-id');
+                    const status = (btn.getAttribute('data-opp-status') || 'CLOSED').toUpperCase();
+                    if (status !== 'OPEN') {
+                        alert('Cơ hội này không ở trạng thái mở để đăng ký.');
+                        return;
+                    }
+                    if (oppIdInput) oppIdInput.value = oppId;
+                    applyForm.classList.remove('was-validated');
+                    prefillFromModalData();
+                    new bootstrap.Modal(applyModalEl).show();
+                });
+            });
+
+            applyForm?.addEventListener('submit', e => {
+                const email = applyForm.querySelector('input[name="email"]');
+                if (email && email.hasAttribute('readonly'))
+                    email.setCustomValidity(email.value.trim() ? '' : 'missing');
+                const phone = applyForm.querySelector('input[name="phone"]');
+                if (phone) phone.value = phone.value.replace(/\D/g, '').trim();
+                if (!applyForm.checkValidity()) {
+                    e.preventDefault(); e.stopPropagation();
+                }
+                applyForm.classList.add('was-validated');
+            });
+
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.querySelectorAll('input[name="categoryId"], input[name="status"]').forEach(el => {
+                    el.addEventListener('change', () => {
+                        filterForm.querySelector('input[name="page"]').value = 0;
+                        filterForm.submit();
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>
