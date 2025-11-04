@@ -370,4 +370,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+$('#btnChooseBulk')?.addEventListener('click', () => {
+    $('#bulkFile').click();
+});
+
+$('#bulkFile')?.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+        $('#bulkFilename').textContent = file.name;
+        $('#btnUploadBulk').disabled = false; // bật nút Upload
+    }
+});
+
+
 

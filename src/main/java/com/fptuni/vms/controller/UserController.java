@@ -5,6 +5,7 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.service.RoleService;
 import com.fptuni.vms.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -215,5 +216,70 @@ public class UserController {
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("url") String fileUrl) {
         return userService.downloadFileFromUrl(fileUrl);
     }
+
+    @PostMapping("/upload-volunteer-excel")
+    public String uploadVolunteerExcel(@RequestParam("excelFile") MultipartFile file,
+                                       Model model, HttpSession session,
+                                       RedirectAttributes redirectAttributes) {
+
+        session.removeAttribute("volunteerListSession");
+        session.removeAttribute("errorMap");
+        session.removeAttribute("validCount");
+
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn file Excel!");
+            return "redirect:/admin/users";
+        }
+
+
+
+        Map<Integer, List<String>> errorMap = new HashMap<>();
+        List<User> volunteerList = userService.parseVolunteerExcel(file, errorMap);
+
+        session.setAttribute("volunteerListSession", volunteerList);
+        int totalCount = volunteerList.size();
+        int errorCount = errorMap.size();
+        int validCount = totalCount - errorCount;
+
+        model.addAttribute("userList", volunteerList);
+        model.addAttribute("errorMap", errorMap);
+        model.addAttribute("errorCount", errorCount);
+        model.addAttribute("validCount", validCount);
+        model.addAttribute("totalCount", totalCount);
+
+
+
+        return "admin/check-upload-file-user";
+    }
+
+    @PostMapping("/confirm-volunteer-excel")
+    public String confirmVolunteerExcel(HttpSession session, RedirectAttributes redirectAttributes) {
+        List<User> volunteers = (List<User>) session.getAttribute("volunteerListSession");
+
+        if (volunteers == null || volunteers.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không có dữ liệu volunteer để lưu!");
+            return "redirect:/admin/users";
+        }
+
+        boolean success = userService.saveVolunteerList(volunteers);
+
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Thêm volunteer thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi khi lưu volunteer!");
+        }
+
+        session.removeAttribute("volunteerListSession");
+        return "redirect:/admin/users";
+    }
+
+    @GetMapping("/bulk/template")
+    public void downloadVolunteerTemplate(HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=Volunteer_Template.xlsx");
+        userService.generateVolunteerTemplate(response.getOutputStream());
+    }
+
+
 
 }

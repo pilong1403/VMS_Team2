@@ -324,31 +324,41 @@
             </form>
 
             <!-- Bulk -->
-            <div id="bulkUploadPanel" class="bulk-panel" data-tab-panel="bulk" style="display:none">
-                <div class="note-box">
-                    <h4>Yêu cầu file Excel</h4>
-                    <ul>
-                        <li>Định dạng: <strong>.xlsx</strong></li>
-                        <li>Cột: <strong>Email, Họ tên, SĐT, Vai trò</strong></li>
-                        <li>Vai trò hợp lệ: Admin / Quản lý / Nhân viên</li>
-                        <li>Email trùng sẽ bị bỏ qua và báo cáo</li>
-                        <li>Tối đa 1000 tài khoản/lần</li>
-                    </ul>
-                    <a class="btn btn-outline" href="/admin/users/bulk/template" download>⬇ Tải mẫu Excel</a>
+            <!-- Bulk -->
+            <form th:action="@{/admin/users/upload-volunteer-excel}" method="post" enctype="multipart/form-data" id="bulkUploadForm">
+                <div id="bulkUploadPanel" class="bulk-panel" data-tab-panel="bulk" style="display:none">
+                    <div class="note-box">
+                        <h4>Yêu cầu file Excel</h4>
+                        <ul>
+                            <li>Định dạng: <strong>.xlsx</strong></li>
+                            <li>Cột: <strong>Email, Họ tên, Số Điện Thoại, Địa chỉ</strong></li>
+                            <li>Vai trò hợp lệ: Tình Nguyện Viên</li>
+                            <li>Email trùng sẽ bị bỏ qua và báo cáo</li>
+                            <li>Các cột, tiêu đề đúng như trong mẫu</li>
+                            <li>Tối đa 100 tài khoản/lần</li>
+                        </ul>
+                        <a class="btn btn-outline" href="/admin/users/bulk/template" download>⬇ Tải mẫu Excel</a>
+                    </div>
+                    <div class="dropzone" id="bulkDropzone">
+                        <!-- Quan trọng: phải có name="excelFile" -->
+                        <input type="file" name="excelFile" id="bulkFile" accept=".xlsx" hidden/>
+                        <div class="dz-icon">📄</div>
+                        <p>Kéo thả file Excel vào đây hoặc</p>
+                        <button type="button" class="btn btn-primary" id="btnChooseBulk">Chọn file</button>
+                        <div id="bulkFilename" class="muted mt-8"></div>
+                    </div>
+                    <div class="modal-footer" style="padding-left:0">
+                        <button type="button" class="btn btn-outline" data-close="addUserModal">Hủy</button>
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <!-- Phải là submit -->
+                        <button type="submit" class="btn btn-primary" id="btnUploadBulk" disabled>Tải lên</button>
+                    </div>
                 </div>
-                <div class="dropzone" id="bulkDropzone">
-                    <input type="file" id="bulkFile" accept=".xlsx" hidden/>
-                    <div class="dz-icon">📄</div>
-                    <p>Kéo thả file Excel vào đây hoặc</p>
-                    <button type="button" class="btn btn-primary" id="btnChooseBulk">Chọn file</button>
-                    <div id="bulkFilename" class="muted mt-8"></div>
-                </div>
-                <div class="modal-footer" style="padding-left:0">
-                    <button type="button" class="btn btn-outline" data-close="addUserModal">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="btnUploadBulk" disabled>Tải lên</button>
-                </div>
-            </div>
+            </form>
+
         </div>
+
     </div>
 </div>
 

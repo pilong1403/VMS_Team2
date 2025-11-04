@@ -7,6 +7,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.Optional;
 
 import java.io.IOException;
@@ -60,5 +61,10 @@ public interface UserService {
     List<User> getUsersByRole(Integer roleId);
 //    User findByEmail(String email);
 ResponseEntity<InputStreamResource> downloadFileFromUrl(String fileUrl);
+
+    List<User> parseVolunteerExcel(MultipartFile file, Map<Integer, List<String>> errorMap);
+    boolean saveVolunteerList(List<User> volunteerList);
+    int getVolunteerRoleId();
+    void generateVolunteerTemplate(OutputStream outputStream) throws IOException;
 
 }
