@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -193,4 +194,10 @@ public class OpportunityServiceImpl implements OpportunityService {
         return c == null ? 0L : c;
     }
     // ================= PHI LONG ITER 3 =================//
+    @Override
+    public List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
+                                                LocalDateTime start, LocalDateTime end, int limit) {
+        return opportunityRepository.findOverlapsForOrg(orgId, excludeOppId, start, end, limit);
+    }
+
 }

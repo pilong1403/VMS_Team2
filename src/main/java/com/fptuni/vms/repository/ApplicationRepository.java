@@ -27,8 +27,9 @@ public interface ApplicationRepository {
         // LẤY DANH SÁCH ĐƠN CỦA VOLUNTEER — trả về Application + fetch join đủ dữ liệu
         List<Application> findAllByVolunteerId(Integer volunteerId);
 
-        // ====== Truy vấn theo tổ chức (list + count + stats) ======
+        // ====== Truy vấn theo tổ chức (list + count + stats) — CÓ LỌC OPPID ======
         List<Application> findOrgApplications(Integer orgId,
+                        Integer oppId, // NEW
                         String q,
                         Application.ApplicationStatus status,
                         LocalDateTime from,
@@ -37,12 +38,18 @@ public interface ApplicationRepository {
                         int limit);
 
         long countOrgApplications(Integer orgId,
+                        Integer oppId, // NEW
                         String q,
                         Application.ApplicationStatus status,
                         LocalDateTime from,
                         LocalDateTime to);
 
-        Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId);
+        Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId,
+                        Integer oppId, // NEW
+                        String q,
+                        Application.ApplicationStatus status,
+                        LocalDateTime from,
+                        LocalDateTime to);
 
         // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
         Application findByIdAndOrgId(Integer appId, Integer orgId);
@@ -57,6 +64,6 @@ public interface ApplicationRepository {
          */
         List<Application> findApprovedApplicationsByOppId(Integer oppId);
 
-        long countApprovedByOppId(Integer oppId); // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED)
-                                                  // PhiLong
+        // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED)
+        long countApprovedByOppId(Integer oppId);
 }

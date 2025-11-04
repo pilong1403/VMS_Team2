@@ -4,14 +4,15 @@ import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.model.OpportunitySection;
 import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.model.User;
+import com.fptuni.vms.model.Feedback;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.OpportunitySectionService;
 import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.OrganizationService;
+import com.fptuni.vms.service.FeedbackService;  // ← THÊM
 
 import jakarta.servlet.http.HttpSession;
-
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -34,37 +35,41 @@ public class ApplicationController {
     private final OpportunitySectionService sectionService;
     private final OrganizationService organizationService;
     private final OpportunityService opportunityService;
+    private final FeedbackService feedbackService; // ← THÊM
 
     public ApplicationController(ApplicationService service,
-            ApplicationRepository applicationRepository,
-            OpportunitySectionService sectionService,
-            OrganizationService organizationService,
-            OpportunityService opportunityService) {
+                                 ApplicationRepository applicationRepository,
+                                 OpportunitySectionService sectionService,
+                                 OrganizationService organizationService,
+                                 OpportunityService opportunityService,
+                                 FeedbackService feedbackService   // ← THÊM
+    ) {
         this.service = service;
         this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
         this.organizationService = organizationService;
         this.opportunityService = opportunityService;
+        this.feedbackService = feedbackService;     // ← THÊM
     }
 
-    /** Trang chi tiết cơ hội: cho phép Guest và user đã đăng nhập xem */
     @GetMapping("/opportunities/{id}")
     public String view(@PathVariable Integer id, Model model, HttpSession session) {
         Opportunity opp = applicationRepository.findOpportunityById(id);
         if (opp == null) {
             model.addAttribute("error", "Không tìm thấy cơ hội.");
+            model.addAttribute("reviews", Collections.emptyList());
+            model.addAttribute("sections", Collections.emptyList());
             return "opportunity/opportunity-detail";
         }
+
         model.addAttribute("opp", opp);
         model.addAttribute("org", opp.getOrganization());
-
         if (opp.getOrganization() != null && opp.getOrganization().getOwner() != null) {
             model.addAttribute("orgOwner", opp.getOrganization().getOwner());
         }
 
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         model.addAttribute("currentUserId", currentUserId);
-
 
         if (currentUserId != null) {
             model.addAttribute("items", service.listMyApplications(currentUserId));
@@ -79,13 +84,11 @@ public class ApplicationController {
                 && !opp.getStartTime().isAfter(LocalDateTime.now());
 
         long approvedCount = service.findApprovedUsersByOppId(opp.getOppId()).size();
-        int need = (opp.getNeededVolunteers() != null) ? opp.getNeededVolunteers() : 0;
-        boolean isFull = approvedCount >= need;
+        Integer needVols = opp.getNeededVolunteers();
+        boolean isFull = (needVols != null) && (approvedCount >= needVols);
 
         boolean alreadyApplied = currentUserId != null
                 && applicationRepository.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
-
-
 
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
@@ -99,25 +102,41 @@ public class ApplicationController {
         model.addAttribute("alreadyApplied", alreadyApplied);
         model.addAttribute("appliedCount", approvedCount);
 
+        // sections
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
+        model.addAttribute("sections", sections);
 
-        OpportunitySection s1 = sections.stream()
-                .filter(s -> s.getSectionOrder() != null && s.getSectionOrder() == 1)
-                .findFirst().orElse(null);
+        // ===== chỉ load feedback khi sự kiện kết thúc =====
+        boolean isEventEnded = opp.getEndTime() != null && opp.getEndTime().isBefore(LocalDateTime.now());
+        if (isEventEnded) {
+            List<Feedback> feedbacks = feedbackService.findByOpportunity(opp.getOppId());
+            model.addAttribute("reviews", feedbacks);
 
-        OpportunitySection s2 = sections.stream()
-                .filter(s -> s.getSectionOrder() != null && s.getSectionOrder() == 2)
-                .findFirst().orElse(null);
+            // [THÊM] trạng thái feedback của chính user
+            if (currentUserId != null) {
+                var myFb = feedbackService.findByOpportunityAndVolunteer(opp.getOppId(), currentUserId);
+                model.addAttribute("myFeedback", myFb);
 
-        if (s1 != null) {
-            model.addAttribute("introHeading", s1.getHeading());
-            model.addAttribute("intro", s1.getContent());
-            model.addAttribute("detailImageUrl", s1.getImageUrl());
-            model.addAttribute("imageCaption", s1.getCaption());
-        }
-        if (s2 != null) {
-            model.addAttribute("reqHeading", s2.getHeading());
-            model.addAttribute("requirement", s2.getContent());
+                boolean canCreateMyFeedback = feedbackService.canVolunteerGiveFeedback(opp.getOppId(), currentUserId);
+                model.addAttribute("canCreateMyFeedback", canCreateMyFeedback);
+
+                boolean canEditMyFeedback = false;
+                if (myFb != null && myFb.getCreatedAt() != null) {
+                    canEditMyFeedback = myFb.getCreatedAt()
+                            .isAfter(LocalDateTime.now().minusDays(3));
+                }
+                model.addAttribute("canEditMyFeedback", canEditMyFeedback);
+            } else {
+                model.addAttribute("myFeedback", null);
+                model.addAttribute("canCreateMyFeedback", false);
+                model.addAttribute("canEditMyFeedback", false);
+            }
+
+        } else {
+            model.addAttribute("reviews", Collections.emptyList());
+            model.addAttribute("myFeedback", null);
+            model.addAttribute("canCreateMyFeedback", false);
+            model.addAttribute("canEditMyFeedback", false);
         }
 
         return "opportunity/opportunity-detail";
@@ -126,21 +145,23 @@ public class ApplicationController {
     /** Submit đơn đăng ký -> redirect danh sách đơn của volunteer */
     @PostMapping("/applications/apply")
     public String apply(@RequestParam("oppId") Integer oppId,
-            @RequestParam("userId") Integer userId,
-            @RequestParam(value = "reason", required = false) String reason,
-            @RequestParam(value = "fullName", required = false) String fullName,
-            @RequestParam(value = "phone", required = false) String phone,
-            @RequestParam(value = "address", required = false) String address,
-            RedirectAttributes ra) {
+                        @RequestParam("userId") Integer userId,
+                        @RequestParam(value = "reason", required = false) String reason,
+                        @RequestParam(value = "fullName", required = false) String fullName,
+                        @RequestParam(value = "phone", required = false) String phone,
+                        @RequestParam(value = "address", required = false) String address,
+                        RedirectAttributes ra) {
         try {
             service.apply(oppId, userId, reason, fullName, phone, address);
             ra.addFlashAttribute("success", "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
-            return "redirect:/profile/applications";
+            // quay lại đúng trang cơ hội
+            return "redirect:/opportunities/" + oppId;
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi không mong muốn. Vui lòng thử lại.");
         }
+        // nếu lỗi cũng quay lại trang cơ hội
         return "redirect:/opportunities/" + oppId;
     }
 
@@ -159,10 +180,11 @@ public class ApplicationController {
         return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    /** Danh sách đơn theo tổ chức (filter, paging) */
+    /** Danh sách đơn theo tổ chức (filter, paging) — LỌC THEO oppId nếu có */
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
+            @RequestParam(value = "oppId", required = false) Integer oppId, // <— NEW
             @RequestParam(value = "q", required = false) String q,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
@@ -187,25 +209,23 @@ public class ApplicationController {
             return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
         }
 
-        if (q != null && q.isBlank())
-            q = null;
-        if (status != null && status.isBlank())
-            status = null;
+        if (q != null && q.isBlank()) q = null;
+        if (status != null && status.isBlank()) status = null;
         if (from != null && to != null && from.isAfter(to)) {
-            var t = from;
-            from = to;
-            to = t;
+            var t = from; from = to; to = t;
         }
 
-        var result = service.searchOrgApplicationsByOrgId(orgId, q, status, from, to,
-                Math.max(page, 0), Math.max(size, 1));
-        var stats = service.computeOrgAppStats(orgId);
+        var result = service.searchOrgApplicationsByOrgId(
+                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1)); // <— NEW
+
+        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to); // <— NEW
 
         List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
         var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("orgId", orgId);
+        model.addAttribute("oppId", oppId); // <— giữ oppId cho view/filter
         model.addAttribute("myOpps", myOpps);
         model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
         model.addAttribute("toStr", to != null ? to.format(fmt) : "");
@@ -219,21 +239,20 @@ public class ApplicationController {
 
     // ===== helpers =====
     private String keepListParams(Map<String, String> params) {
-        String[] keys = { "q", "status", "from", "to", "page", "size" };
+        // <— giữ thêm oppId
+        String[] keys = { "oppId", "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
         try {
             for (String k : keys) {
                 String v = params.get(k);
                 if (v != null && !v.isBlank()) {
-                    if (!sb.isEmpty())
-                        sb.append('&');
+                    if (!sb.isEmpty()) sb.append('&');
                     sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                             .append('=')
                             .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
                 }
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return sb.toString();
     }
 
@@ -243,8 +262,7 @@ public class ApplicationController {
             String k = e.getKey();
             String v = e.getValue();
             if (v != null && !v.isBlank()) {
-                if (!sb.isEmpty())
-                    sb.append('&');
+                if (!sb.isEmpty()) sb.append('&');
                 sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                         .append('=')
                         .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
@@ -256,15 +274,14 @@ public class ApplicationController {
     /** Duyệt đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/approve")
     public String approveApplication(@PathVariable Integer orgId,
-            @PathVariable Integer appId,
-            @RequestParam(value = "note", required = false) String note,
-            @RequestParam Map<String, String> allParams,
-            RedirectAttributes ra,
-            HttpSession session) {
+                                     @PathVariable Integer appId,
+                                     @RequestParam(value = "note", required = false) String note,
+                                     @RequestParam Map<String, String> allParams,
+                                     RedirectAttributes ra,
+                                     HttpSession session) {
         try {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null)
-                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            if (processedById == null) return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
             service.approveApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -279,15 +296,14 @@ public class ApplicationController {
     /** Từ chối đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/reject")
     public String rejectApplication(@PathVariable Integer orgId,
-            @PathVariable Integer appId,
-            @RequestParam(value = "note", required = false) String note,
-            @RequestParam Map<String, String> allParams,
-            RedirectAttributes ra,
-            HttpSession session) {
+                                    @PathVariable Integer appId,
+                                    @RequestParam(value = "note", required = false) String note,
+                                    @RequestParam Map<String, String> allParams,
+                                    RedirectAttributes ra,
+                                    HttpSession session) {
         try {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null)
-                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            if (processedById == null) return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
             service.rejectApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã từ chối đơn.");
         } catch (IllegalArgumentException | IllegalStateException e) {

@@ -120,6 +120,21 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    @Override
+    public List<Feedback> findByOpportunity(int oppId) {
+        String jpql = """
+            SELECT fb
+            FROM Feedback fb
+            JOIN FETCH fb.user u
+            WHERE fb.opportunity.oppId = :oppId
+              AND fb.feedbackType = 'VOLUNTEER'
+            ORDER BY fb.createdAt DESC
+            """;
+        return em.createQuery(jpql, Feedback.class)
+                .setParameter("oppId", oppId)
+                .getResultList();
+    }
+
     // ===================== 3. CRUD =====================
     @Override
     public Feedback findById(int id) {

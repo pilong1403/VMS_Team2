@@ -1,410 +1,399 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title th:text="${opp != null ? opp.title : 'Chi tiết cơ hội'}">Chi tiết cơ hội</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <link rel="stylesheet" th:href="@{/css/opportunity-detail.css}" />
-  </head>
 
-  <body class="bg-light">
-    <div class="container py-4">
-      <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <span th:text="${success}">Thành công</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-      <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${error}">Có lỗi</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title th:text="${opp != null ? opp.title : 'Chi tiết cơ hội'}">Chi tiết cơ hội</title>
 
-      <!-- HERO -->
-      <div class="card border-0 shadow-soft p-3 mb-3">
-        <div class="row g-3 align-items-center">
-          <div class="col-12">
-            <!-- Có thumbnailUrl -->
-            <img
-              class="w-100 hero-image"
-              th:if="${opp != null and !#strings.isEmpty(opp.thumbnailUrl)}"
-              th:src="${opp.thumbnailUrl}"
-              alt="banner"
-            />
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 
-            <!-- Không có thumbnailUrl -> dùng ảnh mặc định -->
-            <img
-              class="w-100 hero-image"
-              th:unless="${opp != null and !#strings.isEmpty(opp.thumbnailUrl)}"
-              th:src="@{/images/placeholders/opportunity-hero.jpg}"
-              alt="banner"
-            />
-          </div>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" th:href="@{/css/opportunity-detail.css}" />
 
-          <div class="col-12">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div>
-                <h3 class="mb-1" th:text="${opp != null ? opp.title : 'Dạy học miễn phí cho trẻ em vùng cao'}">
-                  Dạy học miễn phí cho trẻ em vùng cao
-                </h3>
-                <div
-                  class="text-secondary"
-                  th:text="${opp != null && opp.subtitle != null ? opp.subtitle : 'Mang kiến thức đến với các em nhỏ tại vùng núi phía Bắc'}"
-                >
-                  Phụ đề
-                </div>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <!-- ĐÃ GỬI ĐƠN -->
-                <button
-                  th:if="${alreadyApplied}"
-                  type="button"
-                  class="btn btn-outline-secondary btn-rounded px-4"
-                  disabled
-                >
-                  <i class="bi bi-check2-circle"></i> Đã gửi đơn, đợi xét duyệt
-                </button>
+  <!-- Optional: đồng bộ kích thước ảnh section -->
+  <style>
+    .section-image {
+      width: 100%;
+      max-width: 520px;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+    }
+  </style>
+</head>
 
-                <!-- Cho phép đăng ký -->
-                <form th:if="${canApply}" th:action="@{/applications/apply}" method="post" class="d-inline">
-                  <input type="hidden" name="oppId" th:value="${opp.oppId}" />
-                  <input type="hidden" name="userId" th:value="${currentUserId}" />
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-rounded px-4"
-                    data-bs-toggle="modal"
-                    data-bs-target="#applyModal"
-                  >
-                    <i class="bi bi-person-plus"></i> Đăng ký tham gia
-                  </button>
-                </form>
+<body class="bg-light">
 
-                <!-- Quá hạn đăng ký (ưu tiên nếu đã tới/qua startTime, kể cả chưa đủ người) -->
-                <button
-                  th:if="${!canApply and isExpired}"
-                  type="button"
-                  class="btn btn-secondary btn-rounded px-4"
-                  disabled
-                >
-                  <i class="bi bi-hourglass-split"></i> Quá hạn đăng ký
-                </button>
+  <!-- [NEW] Header dùng chung như trang Home -->
+  <div th:replace="~{fragments/header :: header}"></div>
 
-                <!-- Đã đủ số lượng (chỉ khi CHƯA tới startTime mà đã đủ số lượng duyệt) -->
-                <button
-                  th:if="${!canApply and !isExpired and isFull}"
-                  type="button"
-                  class="btn btn-secondary btn-rounded px-4"
-                  disabled
-                >
-                  <i class="bi bi-people-fill"></i> Đã đủ số lượng đơn đăng ký
-                </button>
+  <div class="container py-4">
 
-                <!-- Guest user - cần đăng nhập để đăng ký -->
-                <a
-                  th:if="${currentUserId == null and !isExpired and !isFull}"
-                  th:href="@{/login}"
-                  class="btn btn-primary btn-rounded px-4"
-                >
-                  <i class="bi bi-box-arrow-in-right"></i> Đăng nhập để đăng ký
-                </a>
-              </div>
-            </div>
-          </div>
+    <!-- flash -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <span th:text="${success}">Thành công</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}">Có lỗi</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
-          <div class="col-12">
-            <div class="row g-3 text-sm">
-              <div class="col-md-4">
-                <div class="d-flex align-items-center gap-3">
-                  <div class="meta-icon"><i class="bi bi-geo-alt"></i></div>
-                  <div>
-                    <div class="text-secondary small">Địa điểm</div>
-                    <div
-                      class="fw-semibold"
-                      th:text="${opp != null && opp.location != null ? opp.location : 'Sapa, Lào Cai'}"
-                    >
-                      Sapa, Lào Cai
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="d-flex align-items-center gap-3">
-                  <div class="meta-icon"><i class="bi bi-calendar3"></i></div>
-                  <div>
-                    <div class="text-secondary small">Thời gian</div>
-                    <div class="fw-semibold">
-                      <span
-                        th:text="${opp != null ? #temporals.format(opp.startTime, 'HH:mm dd/MM/yyyy') : '15:00 15/03/2024'}"
-                        >15:00 15/03/2024</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="d-flex align-items-center gap-3">
-                  <div class="meta-icon"><i class="bi bi-people"></i></div>
-                  <div>
-                    <div class="text-secondary small">Tình nguyện viên</div>
-                    <div class="fw-semibold">
-                      <span th:text="${appliedCount != null ? appliedCount : 15}">15</span>/<span
-                        th:text="${opp != null ? opp.neededVolunteers : 20}"
-                        >20</span
-                      >
-                      người
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- HERO -->
+    <div class="card border-0 shadow-soft p-3 mb-3">
+      <div class="row g-3 align-items-center">
 
-      <!-- TABS -->
-      <ul class="nav nav-tabs bg-white rounded-3 p-2 shadow-soft mb-3" id="oppTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link"
-            id="overview-tab"
-            data-bs-toggle="tab"
-            data-bs-target="#overview"
-            type="button"
-            role="tab"
-          >
-            Tổng quan
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link active"
-            id="details-tab"
-            data-bs-toggle="tab"
-            data-bs-target="#details"
-            type="button"
-            role="tab"
-          >
-            Chi tiết
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link"
-            id="org-tab"
-            data-bs-toggle="tab"
-            data-bs-target="#organization"
-            type="button"
-            role="tab"
-          >
-            Tổ chức
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link"
-            id="reviews-tab"
-            data-bs-toggle="tab"
-            data-bs-target="#reviews"
-            type="button"
-            role="tab"
-          >
-            Đánh giá
-          </button>
-        </li>
-      </ul>
-
-      <div class="tab-content" id="oppTabsContent">
-        <div class="tab-pane fade" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-          <div class="card border-0 shadow-soft p-4">
-            <h5 class="mb-3">Mô tả ngắn</h5>
-            <p
-              class="mb-0"
-              th:text="${opp != null && opp.subtitle != null ? opp.subtitle : 'Chương trình mang lại cơ hội học tập cho trẻ em vùng cao.'}"
-            >
-              Chương trình mang lại cơ hội học tập cho trẻ em vùng cao.
-            </p>
-          </div>
+        <!-- Ảnh hero -->
+        <div class="col-12">
+          <!-- Có thumbnailUrl -->
+          <img class="w-100 hero-image" th:if="${opp != null and !#strings.isEmpty(opp.thumbnailUrl)}"
+            th:src="${opp.thumbnailUrl}" alt="banner" />
+          <!-- Không có thumbnailUrl -> ảnh mặc định -->
+          <img class="w-100 hero-image" th:unless="${opp != null and !#strings.isEmpty(opp.thumbnailUrl)}"
+            th:src="@{/images/placeholders/opportunity-hero.jpg}" alt="banner" />
         </div>
 
-        <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
-          <div class="card border-0 shadow-soft p-4">
-            <!-- Section 1 (section_order = 1) -->
-            <div th:if="${intro != null or detailImageUrl != null}">
-              <h5 class="mb-3" th:text="${introHeading != null ? introHeading : 'Giới thiệu chương trình'}">
-                Giới thiệu chương trình
-              </h5>
-              <p th:if="${intro != null}" th:text="${intro}">...</p>
-
-              <figure class="mt-3" th:if="${detailImageUrl != null and !#strings.isEmpty(detailImageUrl)}">
-                <img
-                  th:src="${detailImageUrl}"
-                  alt="Ảnh chi tiết"
-                  class="img-fluid d-block me-auto rounded"
-                  style="max-width: 500px; height: auto; object-fit: cover"
-                />
-
-                <figcaption class="text-secondary small mt-2" th:text="${imageCaption}">...</figcaption>
-              </figure>
-            </div>
-
-            <!-- Section 2 (section_order = 2) -->
-            <div class="mt-4" th:if="${requirement != null}">
-              <h5 class="mb-2" th:text="${reqHeading != null ? reqHeading : 'Yêu cầu tình nguyện viên'}">
-                Yêu cầu tình nguyện viên
-              </h5>
-              <p th:text="${requirement}">...</p>
-            </div>
-
-            <div th:if="${sections != null}">
-              <div class="mt-4" th:each="sec : ${sections}">
-                <h6 th:text="${sec.heading}">Nội dung</h6>
-                <p th:text="${sec.content}">Mô tả</p>
-                <div th:if="${sec.imageUrl != null && !#strings.isEmpty(sec.imageUrl)}" class="mb-3">
-                  <img class="img-fluid rounded" th:src="${sec.imageUrl}" th:alt="${sec.caption}" />
-                  <div class="text-secondary small mt-1" th:text="${sec.caption}">Chú thích</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tab-pane fade" id="organization" role="tabpanel" aria-labelledby="org-tab">
-          <div class="card border-0 shadow-soft p-4 d-flex gap-3 flex-md-row flex-column align-items-start">
+        <!-- Tiêu đề + nút -->
+        <div class="col-12">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div>
-              <h5 class="mb-1" th:text="${org != null ? org.name : 'Tên tổ chức'}">Tên tổ chức</h5>
-              <div
-                class="text-secondary small mb-2"
-                th:text="${org != null && org.description != null ? org.description : 'Mô tả về tổ chức...'}"
-              >
-                Mô tả
+              <h3 class="mb-1" th:text="${opp != null ? opp.title : 'Dạy học miễn phí cho trẻ em vùng cao'}">Tiêu đề
+              </h3>
+              <div class="text-secondary"
+                th:text="${opp != null && opp.subtitle != null ? opp.subtitle : 'Mang kiến thức đến với các em nhỏ tại vùng núi phía Bắc'}">
+                Phụ đề
               </div>
-              <div class="mt-3" th:if="${orgOwner != null}">
-                <h6 class="fw-semibold mb-1">Trưởng ban Tổ chức:</h6>
-                <ul class="list-unstyled mb-0 text-secondary small">
-                  <li>
-                    <i class="bi bi-person-circle me-1"></i>
-                    <span th:text="${orgOwner.fullName}">Nguyễn Văn A</span>
-                  </li>
-                  <li>
-                    <i class="bi bi-envelope me-1"></i>
-                    <a th:href="'mailto:' + ${orgOwner.email}" th:text="${orgOwner.email}">a@example.com</a>
-                  </li>
-                  <li th:if="${orgOwner.phone != null}">
-                    <i class="bi bi-telephone me-1"></i>
-                    <span th:text="${orgOwner.phone}">0123456789</span>
-                  </li>
-                </ul>
-              </div>
-              <a
-                class="btn btn-outline-primary btn-sm btn-rounded"
-                th:if="${org != null}"
-                th:href="@{/organizations/{id}(id=${org.orgId})}"
-              >
-                Xem trang tổ chức
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              <!-- 1. ĐÃ GỬI ĐƠN → chuyển sang nút xem kết quả -->
+              <a th:if="${alreadyApplied}" th:href="@{/profile/applications}"
+                class="btn btn-outline-secondary btn-rounded px-4">
+                <i class="bi bi-check2-circle"></i> Xem kết quả đơn ứng tuyển
+              </a>
+
+              <!-- 2. CHO PHÉP ĐĂNG KÝ (chỉ khi chưa nộp) -->
+              <button th:if="${!alreadyApplied and canApply}" type="button" class="btn btn-primary btn-rounded px-4"
+                data-bs-toggle="modal" data-bs-target="#applyModal">
+                <i class="bi bi-person-plus"></i> Đăng ký tham gia
+              </button>
+
+              <!-- 3. QUÁ HẠN (chỉ khi chưa nộp) -->
+              <button th:if="${!alreadyApplied and !canApply and isExpired}" type="button"
+                class="btn btn-secondary btn-rounded px-4" disabled>
+                <i class="bi bi-hourglass-split"></i> Quá hạn đăng ký
+              </button>
+
+              <!-- 4. ĐÃ ĐỦ SỐ LƯỢNG (chỉ khi chưa nộp, chưa hết hạn) -->
+              <button th:if="${!alreadyApplied and !isExpired and isFull}" type="button"
+                class="btn btn-secondary btn-rounded px-4" disabled>
+                <i class="bi bi-people-fill"></i> Đã đủ số lượng đơn đăng ký
+              </button>
+
+              <!-- 5. KHÁCH CHƯA LOGIN (chỉ khi chưa nộp, chưa hết hạn, chưa full) -->
+              <a th:if="${currentUserId == null and !isExpired and !isFull}" th:href="@{/login}"
+                class="btn btn-primary btn-rounded px-4">
+                <i class="bi bi-box-arrow-in-right"></i> Đăng nhập để đăng ký
               </a>
             </div>
+
           </div>
         </div>
 
-        <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
-          <div class="card border-0 shadow-soft p-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <h5 class="mb-0">Đánh giá</h5>
-              <a
-                class="btn btn-outline-primary btn-sm btn-rounded"
-                th:href="@{/reviews/new(oppId=${opp != null ? opp.oppId : 0})}"
-                ><i class="bi bi-star"></i> Viết đánh giá</a
-              >
-            </div>
-            <div th:if="${#lists.isEmpty(reviews)}" class="text-secondary">Chưa có đánh giá.</div>
-            <div th:each="rv : ${reviews}" class="border-bottom pb-3 mb-3">
-              <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="bi bi-star-fill text-warning" th:each="s : ${#numbers.sequence(1, rv.stars)}"></i>
+        <!-- Meta info -->
+        <div class="col-12">
+          <div class="row g-3 text-sm">
+            <div class="col-md-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="meta-icon"><i class="bi bi-geo-alt"></i></div>
+                <div>
+                  <div class="text-secondary small">Địa điểm</div>
+                  <div class="fw-semibold"
+                    th:text="${opp != null && opp.location != null ? opp.location : 'Sapa, Lào Cai'}">
+                    Sapa, Lào Cai
+                  </div>
+                </div>
               </div>
-              <div class="small text-secondary" th:text="${#temporals.format(rv.createdAt,'dd/MM/yyyy HH:mm')}">
-                12/03/2024 10:00
-              </div>
-              <p class="mb-0" th:text="${rv.comment}">Nội dung đánh giá...</p>
             </div>
+            <div class="col-md-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="meta-icon"><i class="bi bi-calendar3"></i></div>
+                <div>
+                  <div class="text-secondary small">Thời gian</div>
+                  <div class="fw-semibold">
+                    <span
+                      th:text="${opp != null ? #temporals.format(opp.startTime, 'HH:mm dd/MM/yyyy') : '15:00 15/03/2024'}">
+                      15:00 15/03/2024
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="meta-icon"><i class="bi bi-people"></i></div>
+                <div>
+                  <div class="text-secondary small">Tình nguyện viên</div>
+                  <div class="fw-semibold">
+                    <span th:text="${appliedCount != null ? appliedCount : 0}">0</span> /
+                    <span th:text="${opp != null && opp.neededVolunteers != null ? opp.neededVolunteers : 0}">0</span>
+                    người
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- /col-12 -->
+      </div> <!-- /row -->
+    </div> <!-- /card -->
+
+    <!-- TABS -->
+    <ul class="nav nav-tabs bg-white rounded-3 p-2 shadow-soft mb-3" id="oppTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button"
+          role="tab">
+          Tổng quan
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button"
+          role="tab">
+          Chi tiết
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="org-tab" data-bs-toggle="tab" data-bs-target="#organization" type="button"
+          role="tab">
+          Tổ chức
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button"
+          role="tab">
+          Đánh giá
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="oppTabsContent">
+      <!-- OVERVIEW -->
+      <div class="tab-pane fade" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+        <div class="card border-0 shadow-soft p-4">
+          <h5 class="mb-3">Mô tả ngắn</h5>
+          <p class="mb-0"
+            th:text="${opp != null && opp.subtitle != null ? opp.subtitle : 'Chương trình mang lại cơ hội học tập cho trẻ em vùng cao.'}">
+            Chương trình mang lại cơ hội học tập cho trẻ em vùng cao.
+          </p>
+        </div>
+      </div>
+
+      <!-- DETAILS: đơn giản, duyệt 1 list theo order đã sort từ repo -->
+      <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+        <div class="card border-0 shadow-soft p-4">
+
+          <!-- nếu không có section -->
+          <div th:if="${#lists.isEmpty(sections)}" class="text-secondary">Chưa có nội dung chi tiết.</div>
+
+          <!-- có section -->
+          <div th:each="sec : ${sections}">
+            <h5 class="mb-2" th:text="${sec.heading != null ? sec.heading : 'Nội dung'}">Nội dung</h5>
+            <p th:text="${sec.content}">Mô tả</p>
+
+            <!-- ảnh -->
+            <div th:if="${sec.imageUrl != null && !#strings.isEmpty(sec.imageUrl)}" class="mb-3">
+              <!-- ảnh external -->
+              <img th:if="${#strings.startsWith(sec.imageUrl, 'http')}" th:src="${sec.imageUrl}" th:alt="${sec.caption}"
+                class="section-image" />
+              <!-- ảnh nội bộ -->
+              <img th:if="${!#strings.startsWith(sec.imageUrl, 'http')}" th:src="@{/{p}(p=${sec.imageUrl})}"
+                th:alt="${sec.caption}" class="section-image" />
+              <div class="text-secondary small mt-1" th:text="${sec.caption}">Chú thích</div>
+            </div>
+
+            <hr class="my-4" />
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ORGANIZATION -->
+      <div class="tab-pane fade" id="organization" role="tabpanel" aria-labelledby="org-tab">
+        <div class="card border-0 shadow-soft p-4 d-flex gap-3 flex-md-row flex-column align-items-start">
+          <div>
+            <h5 class="mb-1" th:text="${org != null ? org.name : 'Tên tổ chức'}">Tên tổ chức</h5>
+            <div class="text-secondary small mb-2"
+              th:text="${org != null && org.description != null ? org.description : 'Mô tả về tổ chức...'}">
+              Mô tả
+            </div>
+
+            <div class="mt-3" th:if="${orgOwner != null}">
+              <h6 class="fw-semibold mb-1">Trưởng ban Tổ chức:</h6>
+              <ul class="list-unstyled mb-0 text-secondary small">
+                <li>
+                  <i class="bi bi-person-circle me-1"></i>
+                  <span th:text="${orgOwner.fullName}">Nguyễn Văn A</span>
+                </li>
+                <li>
+                  <i class="bi bi-envelope me-1"></i>
+                  <a th:href="'mailto:' + ${orgOwner.email}" th:text="${orgOwner.email}">a@example.com</a>
+                </li>
+                <li th:if="${orgOwner.phone != null}">
+                  <i class="bi bi-telephone me-1"></i>
+                  <span th:text="${orgOwner.phone}">0123456789</span>
+                </li>
+              </ul>
+            </div>
+
+            <a class="btn btn-outline-primary btn-sm btn-rounded" th:if="${org != null}"
+              th:href="@{/organizations/{id}(id=${org.orgId})}">
+              Xem trang tổ chức
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVIEWS: hiển thị feedback của volunteer nếu có -->
+      <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+        <div class="card border-0 shadow-soft p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0">Đánh giá sau hoạt động</h5>
+            <!-- nếu muốn cho tạo đánh giá thủ công thì mở lại -->
+            <!--
+          <a class="btn btn-outline-primary btn-sm btn-rounded"
+             th:href="@{/reviews/new(oppId=${opp != null ? opp.oppId : 0})}">
+            Viết đánh giá
+          </a>
+          -->
+          </div>
+
+          <!-- không có đánh giá -->
+          <div th:if="${#lists.isEmpty(reviews)}" class="text-secondary">
+            Hoạt động này chưa có đánh giá nào.
+          </div>
+
+          <!-- có đánh giá -->
+          <div th:each="fb : ${reviews}" class="border-bottom pb-3 mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="fw-semibold" th:text="${fb.user != null ? fb.user.fullName : 'Tình nguyện viên'}">
+                Tình nguyện viên
+              </div>
+              <div class="small text-secondary"
+                th:text="${fb.createdAt != null ? #temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm') : ''}">
+                01/10/2025 09:00
+              </div>
+            </div>
+
+            <!-- rating -->
+            <div class="mb-1">
+              <i class="bi" th:each="i : ${#numbers.sequence(1,5)}"
+                th:classappend="${fb.rating != null and i <= fb.rating} ? 'bi-star-fill text-warning' : 'bi-star text-muted'">
+              </i>
+            </div>
+
+            <!-- nội dung -->
+            <p class="mb-0" th:text="${fb.content}">Nội dung đánh giá...</p>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate>
-            <div class="modal-header">
-              <h5 class="modal-title">Đăng ký tham gia</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
 
-            <div class="modal-body">
-              <input type="hidden" name="oppId" th:value="${opp.oppId}" />
-              <input type="hidden" name="userId" th:value="${currentUserId}" />
+  </div>
 
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label">Họ tên</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    name="fullName"
-                    th:value="${currentUser != null ? currentUser.fullName : ''}"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Email</label>
-                  <input
-                    type="email"
-                    class="form-control"
-                    th:value="${currentUser != null ? currentUser.email : ''}"
-                    readonly
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Số điện thoại</label>
-                  <input
-                    type="tel"
-                    class="form-control"
-                    name="phone"
-                    th:value="${currentUser != null ? currentUser.phone : ''}"
-                    pattern="^[0-9+]{9,11}$"
-                    required
-                  />
-                  <div class="form-text">Chỉ điền chữ số ,gồm 10 ký tự.</div>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Địa chỉ</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    name="address"
-                    th:value="${currentUser != null ? currentUser.address : ''}"
-                  />
-                </div>
-                <div class="col-12">
-                  <label class="form-label">Lý do tham gia</label>
-                  <textarea
-                    class="form-control"
-                    name="reason"
-                    maxlength="500"
-                    placeholder="Vì sao bạn muốn tham gia?"
-                  ></textarea>
-                </div>
+  <!-- [NEW] Footer và Toast dùng chung như Home -->
+  <div th:replace="~{fragments/footer :: footer}"></div>
+  <div th:replace="~{fragments/toast-container :: toast-system}"></div>
+
+  <!-- APPLY MODAL -->
+  <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate id="applyForm">
+          <div class="modal-header">
+            <h5 class="modal-title">Đăng ký tham gia</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" name="oppId" th:value="${opp.oppId}" />
+            <input type="hidden" name="userId" th:value="${currentUserId}" />
+
+            <div class="row g-3">
+              <!-- Họ tên (bắt buộc) -->
+              <div class="col-md-6">
+                <label class="form-label">Họ tên</label>
+                <input type="text" class="form-control" name="fullName"
+                  th:value="${currentUser != null ? currentUser.fullName : ''}" required />
+                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+              </div>
+
+              <!-- Email (đọc thôi nhưng vẫn required để browser check đúng định dạng) -->
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" th:value="${currentUser != null ? currentUser.email : ''}"
+                  name="emailFake" readonly required />
+                <div class="invalid-feedback">Email không hợp lệ.</div>
+              </div>
+
+              <!-- Số điện thoại (bắt buộc) -->
+              <div class="col-md-6">
+                <label class="form-label">Số điện thoại</label>
+                <input type="tel" class="form-control" name="phone"
+                  th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^[0-9+]{10}$" required />
+                <div class="form-text">Chỉ điền chữ số, gồm 10 ký tự.</div>
+                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ.</div>
+              </div>
+
+              <!-- Địa chỉ (bắt buộc) -->
+              <div class="col-md-6">
+                <label class="form-label">Địa chỉ</label>
+                <input type="text" class="form-control" name="address"
+                  th:value="${currentUser != null ? currentUser.address : ''}" required />
+                <div class="invalid-feedback">Vui lòng nhập địa chỉ.</div>
+              </div>
+
+              <!-- Lý do tham gia (KHÔNG bắt buộc) -->
+              <div class="col-12">
+                <label class="form-label">Lý do tham gia</label>
+                <textarea class="form-control" name="reason" maxlength="500"
+                  placeholder="Vì sao bạn muốn tham gia?"></textarea>
               </div>
             </div>
+          </div>
 
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-              <button type="submit" class="btn btn-primary">Gửi đăng ký</button>
-            </div>
-          </form>
-        </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary">Gửi đăng ký</button>
+          </div>
+        </form>
+
       </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const forms = document.querySelectorAll('.needs-validation');
+
+      Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+          }, false);
+        });
+    })();
+  </script>
+
+</body>
+
 </html>

@@ -94,6 +94,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
+                        Integer oppId, // NEW
                         String q,
                         String status,
                         LocalDate from,
@@ -113,10 +114,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
                 List<Application> rows = repo.findOrgApplications(
-                                orgId, q, st, fromDT, toDT,
+                                orgId, oppId, q, st, fromDT, toDT, // NEW: có oppId
                                 pageable.getPageNumber() * pageable.getPageSize(),
                                 pageable.getPageSize());
-                long total = repo.countOrgApplications(orgId, q, st, fromDT, toDT);
+                long total = repo.countOrgApplications(orgId, oppId, q, st, fromDT, toDT); // NEW
 
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
                 for (Application a : rows) {
@@ -135,17 +136,36 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         @Override
-        public Map<String, Integer> computeOrgAppStats(Integer orgId) {
-                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId);
-                long total = 0, pending = 0, approved = 0, rejected = 0;
+        public Map<String, Integer> computeOrgAppStats(Integer orgId,
+                        Integer oppId, // NEW
+                        String q,
+                        String status,
+                        LocalDate from,
+                        LocalDate to) {
+
+                Application.ApplicationStatus st = null;
+                if (status != null && !status.isBlank()) {
+                        try {
+                                st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                        } catch (IllegalArgumentException ignored) {
+                                /* keep null */ }
+                }
+                LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
+
+                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId, oppId, q, st, fromDT, toDT); // NEW
+
+                long total = 0, pending = 0, approved = 0, rejected = 0, completed = 0, cancelled = 0;
                 for (var e : m.entrySet()) {
                         total += e.getValue();
                         switch (e.getKey()) {
                                 case PENDING -> pending = e.getValue();
                                 case APPROVED -> approved = e.getValue();
                                 case REJECTED -> rejected = e.getValue();
+                                case COMPLETED -> completed = e.getValue();
+                                case CANCELLED -> cancelled = e.getValue();
                                 default -> {
-                                }
+                                        /* ignore */ }
                         }
                 }
                 Map<String, Integer> out = new LinkedHashMap<>();
@@ -153,6 +173,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                 out.put("pending", (int) pending);
                 out.put("approved", (int) approved);
                 out.put("rejected", (int) rejected);
+                out.put("completed", (int) completed);
+                out.put("cancelled", (int) cancelled);
                 return out;
         }
 
@@ -204,7 +226,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return repo.findApprovedVolunteersByOppId(oppId);
         }
 
-        // Số đơn đã DUYỆT (APPROVED/COMPLETED) của 1 cơ hội PhiLong
         @Override
         public long countApprovedByOppId(Integer oppId) {
                 return repo.countApprovedByOppId(oppId);

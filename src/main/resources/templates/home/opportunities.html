@@ -278,11 +278,12 @@
   <script th:inline="javascript">
     window.CURRENT_USER_ID = /*[[${session.AUTH_USER_ID}]]*/ null;
   </script>
+
   <!-- Apply Modal -->
   <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
-        <form th:action="@{/applications/apply}" method="post" class="needs-validation">
+        <form th:action="@{/applications/apply}" method="post" class="needs-validation" novalidate>
           <div class="modal-header">
             <h5 class="modal-title">Đăng ký tham gia</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -293,31 +294,50 @@
             <input type="hidden" name="userId" th:value="${session.AUTH_USER_ID}" />
 
             <div class="row g-3">
+              <!-- Họ tên -->
               <div class="col-md-6">
-                <label class="form-label">Họ tên</label>
+                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="fullName"
-                  th:value="${currentUser != null ? currentUser.fullName : ''}" required>
+                  th:value="${currentUser != null ? currentUser.fullName : ''}" required minlength="2" maxlength="100"
+                  autocomplete="name" />
+                <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
               </div>
+
+              <!-- Email (readonly nhưng bắt buộc phải có) -->
               <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" th:value="${currentUser != null ? currentUser.email : ''}"
-                  readonly>
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" name="email"
+                  th:value="${currentUser != null ? currentUser.email : ''}" readonly required />
+                <div class="invalid-feedback">Tài khoản của bạn chưa có email. Vui lòng cập nhật email trước khi đăng
+                  ký.</div>
               </div>
+
+              <!-- Số điện thoại -->
               <div class="col-md-6">
-                <label class="form-label">Số điện thoại</label>
+                <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
                 <input type="tel" class="form-control" name="phone"
-                  th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^[0-9+]{9,11}$" required>
-                <div class="form-text">Chỉ điền chữ số, gồm 10 ký tự.</div>
+                  th:value="${currentUser != null ? currentUser.phone : ''}" pattern="^0[0-9]{9}$" minlength="10"
+                  maxlength="10" inputmode="numeric" required autocomplete="tel" />
+                <div class="form-text">Số Việt Nam 10 chữ số, bắt đầu bằng 0 (ví dụ 0987654321).</div>
+                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0).</div>
+
               </div>
+
+              <!-- Địa chỉ -->
               <div class="col-md-6">
-                <label class="form-label">Địa chỉ</label>
+                <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="address"
-                  th:value="${currentUser != null ? currentUser.address : ''}">
+                  th:value="${currentUser != null ? currentUser.address : ''}" maxlength="255" required
+                  autocomplete="street-address" />
+                <div class="invalid-feedback">Vui lòng nhập địa chỉ (tối đa 255 ký tự).</div>
               </div>
+
+              <!-- Lý do -->
               <div class="col-12">
-                <label class="form-label">Lý do tham gia</label>
-                <textarea class="form-control" name="reason" maxlength="500"
+                <label class="form-label">Lý do tham gia <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="reason" maxlength="500" minlength="5" required
                   placeholder="Vì sao bạn muốn tham gia?"></textarea>
+                <div class="invalid-feedback">Vui lòng nhập lý do tham gia (tối thiểu 5 ký tự, tối đa 500 ký tự).</div>
               </div>
             </div>
           </div>
@@ -331,6 +351,53 @@
     </div>
   </div>
 
+  <!-- Validation JS: chặn submit nếu form thiếu thông tin -->
+  <script>
+    (function () {
+      'use strict';
+      // Enable Bootstrap validation styles & block submit when invalid
+      const forms = document.querySelectorAll('.needs-validation');
+      Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          // Nếu có input readonly+required (email) rỗng -> setCustomValidity để hiển thị lỗi rõ ràng
+          const email = form.querySelector('input[name="email"]');
+          if (email && email.hasAttribute('required') && email.hasAttribute('readonly')) {
+            if (!email.value || email.value.trim() === '') {
+              email.setCustomValidity('missing');
+            } else {
+              email.setCustomValidity('');
+            }
+          }
+
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+
+      // Reset trạng thái khi modal mở lại
+      const applyModal = document.getElementById('applyModal');
+      if (applyModal) {
+        applyModal.addEventListener('shown.bs.modal', function () {
+          const form = applyModal.querySelector('form.needs-validation');
+          if (form) {
+            form.classList.remove('was-validated');
+            // Xóa custom validity (nếu có)
+            const email = form.querySelector('input[name="email"]');
+            if (email) email.setCustomValidity('');
+          }
+        });
+      }
+    })();
+
+    const phone = form.querySelector('input[name="phone"]');
+    if (phone) {
+      // loại mọi ký tự không phải số & trim
+      phone.value = (phone.value || '').replace(/\D/g, '').trim();
+    }
+  </script>
 
 </body>
 

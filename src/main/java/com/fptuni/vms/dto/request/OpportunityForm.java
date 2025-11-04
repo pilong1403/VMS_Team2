@@ -53,7 +53,11 @@ public class OpportunityForm {
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime endTime;
 
+    // Chỉ nhận file, không cho phép client gửi URL thủ công
     private MultipartFile thumbnailFile;
+
+    @Null(message = "Không cho phép gửi thumbnailUrl từ client")
+    @Size(max = 500, message = "URL hình ảnh tối đa 500 ký tự")
     private String thumbnailUrl;
 
     @Valid

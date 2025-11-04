@@ -91,6 +91,16 @@ public class FeedbackServiceImpl implements FeedbackService {
         return feedbackRepo.canVolunteerGiveFeedback(oppId, volunteerId);
     }
 
+    @Override
+    public List<Feedback> findByOpportunity(int oppId) {
+        return feedbackRepo.findByOpportunity(oppId);
+    }
+
+    @Override
+    public Feedback findByOpportunityAndVolunteer(int oppId, int volunteerId) {
+        return feedbackRepo.findVolunteerFeedback(oppId, volunteerId);
+    }
+
     // ===================== CRUD =====================
     @Override
     public Feedback findById(int id) {

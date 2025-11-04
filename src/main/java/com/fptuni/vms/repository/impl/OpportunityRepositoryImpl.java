@@ -374,5 +374,33 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
         return new PageImpl<>(content, pageable, total);
     }
-    // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
+
+    @Override
+    public List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
+                                                LocalDateTime start, LocalDateTime end, int limit) {
+        if (start == null || end == null) return List.of();
+
+        String jpql = """
+        SELECT o
+        FROM Opportunity o
+        JOIN o.organization org
+        WHERE org.orgId = :orgId
+          AND o.status IN (:st1, :st2)
+          AND (:excludeId IS NULL OR o.oppId <> :excludeId)
+          AND (:pStart < o.endTime AND :pEnd > o.startTime)
+        ORDER BY o.startTime ASC
+        """;
+
+        var q = em.createQuery(jpql, Opportunity.class)
+                .setParameter("orgId", orgId)
+                .setParameter("st1", Opportunity.OpportunityStatus.DRAFT)
+                .setParameter("st2", Opportunity.OpportunityStatus.OPEN)
+                .setParameter("excludeId", excludeOppId)
+                .setParameter("pStart", start)
+                .setParameter("pEnd", end);
+
+        if (limit > 0) q.setMaxResults(limit);
+        return q.getResultList();
+    }
+
 }

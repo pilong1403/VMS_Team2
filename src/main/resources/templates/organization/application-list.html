@@ -96,11 +96,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <h4 class="mb-3">Danh sách đơn ứng tuyển</h4>
+                <h4 class="mb-3">Danh sách đơn ứng tuyển </h4>
 
                 <!-- ===== Stats ===== -->
                 <div class="row g-3 mb-3" th:if="${stats != null}">
-                    <div class="col-6 col-md-3" th:each="s : ${stats.entrySet()}">
+                    <div class="col-2" th:each="s : ${stats.entrySet()}">
                         <div class="card card-stat shadow-sm">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -160,6 +160,10 @@
                                     placeholder="Đến: ngày/tháng/năm"
                                     th:value="${param.to != null ? param.to[0] : (toStr ?: '')}" />
                             </div>
+
+                            <!-- giữ oppId khi lọc -->
+                            <input type="hidden" name="oppId"
+                                th:value="${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')}" />
 
                             <input type="hidden" name="size" value="5" />
 
@@ -272,7 +276,8 @@
                         <nav th:if="${page.totalPages > 1}" class="mt-2">
                             <ul class="pagination pagination-sm mb-0 justify-content-end">
                                 <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(oppId=${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')},
+                                  q=${param.q},
                                   status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
                                   from=${param.from}, to=${param.to}, page=${page.number-1}, size=${page.size})}">
                                         Trước
@@ -281,7 +286,8 @@
 
                                 <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
                                     th:classappend="${i == page.number} ? 'active'">
-                                    <a class="page-link" th:text="${i + 1}" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                    <a class="page-link" th:text="${i + 1}" th:href="@{|/organization/${orgId}/applications|(oppId=${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')},
+                                  q=${param.q},
                                   status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
                                   from=${param.from}, to=${param.to}, page=${i}, size=${page.size})}">
                                         1
@@ -289,7 +295,8 @@
                                 </li>
 
                                 <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(q=${param.q},
+                                    <a class="page-link" th:href="@{|/organization/${orgId}/applications|(oppId=${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')},
+                                  q=${param.q},
                                   status=${param.status != null && !#lists.isEmpty(param.status) ? param.status[0] : ''},
                                   from=${param.from}, to=${param.to}, page=${page.number+1}, size=${page.size})}">
                                         Sau
@@ -405,6 +412,8 @@
                         </div>
 
                         <!-- keep filters -->
+                        <input type="hidden" name="oppId"
+                            th:value="${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')}" />
                         <input type="hidden" name="q"
                             th:value="${param.q != null      && !#lists.isEmpty(param.q)      ? param.q[0]      : ''}" />
                         <input type="hidden" name="status"
