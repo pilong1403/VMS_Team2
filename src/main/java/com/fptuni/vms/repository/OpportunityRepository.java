@@ -4,6 +4,7 @@ import com.fptuni.vms.model.Opportunity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,4 +53,8 @@ public interface OpportunityRepository {
 
     Page<Opportunity> searchByOrg(int orgId, String q,
             Opportunity.OpportunityStatus status, Pageable pageable);
+
+    List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
+                                         LocalDateTime start, LocalDateTime end, int limit);
+
 }
