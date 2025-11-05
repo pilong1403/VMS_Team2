@@ -44,7 +44,7 @@ public class OpportunityForOrgController {
     @GetMapping("/organizations/{orgId}")
     public String viewOrgOpportunities(@PathVariable("orgId") @Min(1) int orgId,
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "4") int size,
+            @RequestParam(name = "size", defaultValue = "3") int size,
             @RequestParam(name = "search", required = false) String searchTerm,
             @RequestParam(name = "categoryId", required = false) Integer categoryId,
             @RequestParam(name = "status", required = false) String status,
@@ -55,7 +55,7 @@ public class OpportunityForOrgController {
         if (page < 0)
             page = 0;
         if (size <= 0)
-            size = 4;
+            size = 3;
 
         String repoSort = "newest";
         if (sortBy != null && !sortBy.isBlank()) {
