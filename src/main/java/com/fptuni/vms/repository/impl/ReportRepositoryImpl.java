@@ -145,6 +145,38 @@ import java.util.*;
             }
         }
 
+        @Override
+        public List<Object[]> countOpportunitiesByDateRange(LocalDate from, LocalDate to) {
+            try (Session session = sessionFactory.openSession()) {
+                Query<Object[]> query = session.createQuery(
+                        "SELECT CAST(o.createdAt AS date), COUNT(o.oppId) " +
+                                "FROM Opportunity o " +
+                                "WHERE CAST(o.createdAt AS date) BETWEEN :from AND :to " +
+                                "GROUP BY CAST(o.createdAt AS date) " +
+                                "ORDER BY CAST(o.createdAt AS date)",
+                        Object[].class
+                );
+                query.setParameter("from", from);
+                query.setParameter("to", to);
+                return query.list();
+            }
+        }
+
+        @Override
+        public Map<String, Long> countOpportunitiesByStatus() {
+            Map<String, Long> result = new LinkedHashMap<>();
+            try (Session session = sessionFactory.openSession()) {
+                Query<Object[]> q = session.createQuery(
+                        "SELECT o.status, COUNT(o.oppId) FROM Opportunity o GROUP BY o.status",
+                        Object[].class
+                );
+                for (Object[] row : q.list()) {
+                    result.put(String.valueOf(row[0]), (Long) row[1]); // DRAFT / OPEN / CLOSED / CANCELLED :contentReference[oaicite:0]{index=0}
+                }
+            }
+            return result;
+        }
+
 
     }
 

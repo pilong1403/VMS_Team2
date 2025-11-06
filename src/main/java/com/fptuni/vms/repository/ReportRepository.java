@@ -15,6 +15,8 @@ public interface ReportRepository {
     Long countOpportunities();
     LocalDate findFirstUserCreatedDate();
     LocalDate findLastUserCreatedDate();
+    List<Object[]> countOpportunitiesByDateRange(LocalDate from, LocalDate to);
 
+    Map<String, Long> countOpportunitiesByStatus();
 
 }

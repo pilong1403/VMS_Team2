@@ -29,12 +29,21 @@ public class AdminReportController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,
             @RequestParam(defaultValue = "desc") String sort,
+
+            @RequestParam(name = "oppRangeType", required = false, defaultValue = "month") String oppRangeType,
+            @RequestParam(name = "oppFromDate",  required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate oppFromDate,
+            @RequestParam(name = "oppToDate",    required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate oppToDate,
             Model model
     ) {
         Map<String, Object> userStats = reportService.getUserRegistrationStats(rangeType, fromDate, toDate, sort);
         Map<String, Long> roleDistribution = reportService.getUserRoleDistribution();
         Map<String, Long> statusDistribution = reportService.getUserStatusDistribution(); // NEW
         Map<String, Long> summary = reportService.getSummaryCounts();
+
+        Map<String, Object> oppStats = reportService.getOpportunityStats(oppRangeType, oppFromDate, oppToDate);
+        Map<String, Long>   oppStatusDistribution = reportService.getOpportunityStatusDistribution();
 
         model.addAttribute("rangeType", rangeType);
         model.addAttribute("fromDate", fromDate);
@@ -43,6 +52,13 @@ public class AdminReportController {
         model.addAttribute("roleDistribution", roleDistribution);
         model.addAttribute("statusDistribution", statusDistribution); // NEW
         model.addAttribute("summary", summary);
+
+        model.addAttribute("oppRangeType",  oppRangeType);
+        model.addAttribute("oppFromDate",   oppFromDate);
+        model.addAttribute("oppToDate",     oppToDate);
+        model.addAttribute("oppStats",      oppStats);
+        model.addAttribute("oppStatusDistribution", oppStatusDistribution);
+
         return "admin/reportManagement";
     }
 

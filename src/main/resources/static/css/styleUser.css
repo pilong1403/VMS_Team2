@@ -729,3 +729,14 @@ input.error-border {
 .chart-row.chart-row--single {
     grid-template-columns: 1fr;
 }
+
+.toggle-report-row{
+    display:flex;
+    gap:.75rem;
+    margin-bottom:1rem;
+    flex-wrap:wrap;
+}
+
+.hidden-section{
+    display:none !important;
+}

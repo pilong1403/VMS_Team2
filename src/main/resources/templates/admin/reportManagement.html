@@ -37,9 +37,23 @@
                 </div>
             </div>
 
-            <p>Thống kê hệ thống theo thời gian</p>
+            <div class="toggle-report-row">
+                <button type="button" class="btn btn-outline"
+                        onclick="toggleSection('userReportSection')">
+                    Ẩn / Hiện báo cáo người dùng
+                </button>
+                <button type="button" class="btn btn-outline"
+                        onclick="toggleSection('oppReportSection')">
+                    Ẩn / Hiện báo cáo cơ hội
+                </button>
+            </div>
         </div>
 
+        <!-- ====== BÁO CÁO NGƯỜI DÙNG ====== -->
+        <section id="userReportSection">
+        <div class="page-header">
+            <h2>Thống kê người dùng theo thời gian </h2>
+        </div>
         <!-- ====== FORM LỌC BÁO CÁO ====== -->
         <form th:action="@{/admin/reports}" method="get" class="search-filter-bar">
             <div class="filter-group">
@@ -98,25 +112,55 @@
                 <canvas id="statusChart" height="200"></canvas>
             </div>
         </div>
+        </section>
 
-        <!-- ====== BẢNG DỮ LIỆU TỔNG HỢP (nếu cần thêm thống kê chi tiết) ====== -->
-<!--        <div class="table-wrapper">-->
-<!--            <table>-->
-<!--                <thead>-->
-<!--                <tr>-->
-<!--                    <th>Tên</th>-->
-<!--                    <th>Email</th>-->
-<!--                    <th>Ngày tạo</th>-->
-<!--                    <th>Trạng thái</th>-->
-<!--                </tr>-->
-<!--                </thead>-->
-<!--                <tbody id="reportTableBody">-->
-<!--                <tr th:if="${userStats.labels == null or userStats.labels.size() == 0}">-->
-<!--                    <td colspan="4" class="muted">Không có dữ liệu trong khoảng thời gian này.</td>-->
-<!--                </tr>-->
-<!--                </tbody>-->
-<!--            </table>-->
-<!--        </div>-->
+        <!-- ====== BẢNG DỮ LIỆU cơ hội (nếu cần thêm thống kê chi tiết) ====== -->
+        <section id="oppReportSection">
+
+        <hr style="margin:2rem 0">
+
+        <div class="page-header">
+            <h2>Thống kê cơ hội </h2>
+        </div>
+
+        <form th:action="@{/admin/reports}" method="get" class="search-filter-bar">
+            <div class="filter-group">
+                <select name="oppRangeType">
+                    <option value="week"  th:selected="${oppRangeType == 'week'}">Tuần</option>
+                    <option value="month" th:selected="${oppRangeType == 'month'}">Tháng</option>
+                    <option value="year"  th:selected="${oppRangeType == 'year'}">Năm</option>
+                </select>
+
+                <input type="date" name="oppFromDate" th:value="${oppFromDate}" />
+                <input type="date" name="oppToDate"   th:value="${oppToDate}" />
+
+                <button type="submit" class="btn btn-outline">Lọc cơ hội</button>
+            </div>
+        </form>
+
+        <!-- Hàng 1: biểu đồ đường Opportunity -->
+        <div class="chart-row chart-row--single">
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Biểu đồ cơ hội theo thời gian</h3>
+                    <button class="btn-export" onclick="exportOppChartToExcel('opp')">Tải Excel</button>
+                </div>
+                <canvas id="oppChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Hàng 2: pie status Opportunity -->
+        <div class="chart-row">
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Trạng thái cơ hội</h3>
+                    <button class="btn-export" onclick="exportOppChartToExcel('oppStatus')">Tải Excel</button>
+                </div>
+                <canvas id="oppStatusChart" height="200"></canvas>
+            </div>
+        </div>
+        </section>
+
     </main>
 </div>
 
@@ -238,6 +282,55 @@
         options: { responsive:true, plugins:{ legend:{ position:'right' } } }
     });
 
+    // ======= BIỂU ĐỒ CƠ HỘI =======
+    // ====== DỮ LIỆU OPS TỪ BACKEND ======
+    const oppLabels = /*[[${oppStats.labels}]]*/ [];
+    const oppCounts = /*[[${oppStats.counts}]]*/ [];
+    const oppStatusData = /*[[${oppStatusDistribution}]]*/ {}; // {OPEN: x, CLOSED: y ...}
+
+    // Line chart Opportunity
+    const ctxOpp = document.getElementById('oppChart');
+    let oppChart = new Chart(ctxOpp, {
+        type: 'line',
+        data: {
+            labels: oppLabels,
+            datasets: [{
+                label: 'Số lượng cơ hội',
+                data: oppCounts,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0,123,255,0.15)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+
+    // Pie chart Opportunity Status
+    const ctxOppStatus = document.getElementById('oppStatusChart');
+    new Chart(ctxOppStatus, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(oppStatusData),
+            datasets: [{
+                data: Object.values(oppStatusData),
+                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+
     // ======= NÚT QUAY LẠI =======
     function goBackChart() {
         const prev = drillStack.pop();
@@ -274,6 +367,29 @@
         // Gọi server backend để tải Excel
         window.location.href = `/admin/reports/export?${params.toString()}`;
     }
+
+    // ======= XUẤT EXCEL CƠ HỘI =======
+    function exportOppChartToExcel(type) {
+        const params = new URLSearchParams();
+        params.append("type", type);
+
+        // lấy rangeType của cơ hội
+        const oppRangeSelect = document.querySelector('select[name="oppRangeType"]');
+        if (oppRangeSelect) {
+            params.append("rangeType", oppRangeSelect.value);
+        }
+
+        // lấy from/to của cơ hội, map về fromDate/toDate cho controller
+        const oppFrom = document.querySelector('input[name="oppFromDate"]')?.value;
+        const oppTo   = document.querySelector('input[name="oppToDate"]')?.value;
+
+        if (oppFrom) params.append("fromDate", oppFrom);
+        if (oppTo)   params.append("toDate", oppTo);
+
+        // Gọi endpoint xuất Excel
+        window.location.href = `/admin/reports/export?${params.toString()}`;
+    }
+
 
     // header profile
     document.addEventListener('DOMContentLoaded', function () {
@@ -315,6 +431,34 @@
     });
 
     /*]]>*/
+
+    function toggleSection(sectionId) {
+        const el = document.getElementById(sectionId);
+        if (!el) return;
+
+        // toggle class
+        const isHidden = el.classList.toggle('hidden-section');
+
+        // lưu trạng thái vào localStorage
+        localStorage.setItem('reportSection_' + sectionId, isHidden ? 'hidden' : 'visible');
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        ['userReportSection', 'oppReportSection'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            const saved = localStorage.getItem('reportSection_' + id);
+            if (saved === 'hidden') {
+                el.classList.add('hidden-section');
+            } else {
+                el.classList.remove('hidden-section');
+            }
+        });
+
+        // phần DOMContentLoaded khác của bạn (profile, sidebar ...) vẫn giữ nguyên
+    });
+
+
 </script>
 
 

@@ -214,7 +214,41 @@ public class ReportServiceImpl implements ReportService {
                     row.createCell(1).setCellValue(e.getValue());
                 }
                 sheet.autoSizeColumn(0); sheet.autoSizeColumn(1);
+            } else if ("opp".equalsIgnoreCase(type)) {
+                // --- Thống kê opportunity theo thời gian ---
+                Map<String, Object> stats = getOpportunityStats(rangeType, from, to);
+                List<String> labels = (List<String>) stats.get("labels");
+                List<Long> counts  = (List<Long>) stats.get("counts");
+
+                Row header = sheet.createRow(0);
+                header.createCell(0).setCellValue("Thời gian");
+                header.createCell(1).setCellValue("Số lượng cơ hội");
+
+                for (int i = 0; i < labels.size(); i++) {
+                    Row row = sheet.createRow(i + 1);
+                    row.createCell(0).setCellValue(labels.get(i));
+                    row.createCell(1).setCellValue(counts.get(i));
+                }
+                sheet.autoSizeColumn(0);
+                sheet.autoSizeColumn(1);
+
+            } else if ("oppStatus".equalsIgnoreCase(type)) {
+                Map<String, Long> st = getOpportunityStatusDistribution();
+
+                Row header = sheet.createRow(0);
+                header.createCell(0).setCellValue("Trạng thái");
+                header.createCell(1).setCellValue("Số lượng");
+
+                int r = 1;
+                for (var e : st.entrySet()) {
+                    Row row = sheet.createRow(r++);
+                    row.createCell(0).setCellValue(e.getKey());
+                    row.createCell(1).setCellValue(e.getValue());
+                }
+                sheet.autoSizeColumn(0);
+                sheet.autoSizeColumn(1);
             }
+
 
             workbook.write(out);
         } catch (IOException e) {
@@ -234,6 +268,56 @@ public class ReportServiceImpl implements ReportService {
         s.put("opportunities",  reportRepository.countOpportunities());
         s.put("admins",         reportRepository.countUsersByRoleName("ADMIN"));
         return s;
+    }
+
+    @Override
+    public Map<String, Object> getOpportunityStats(String rangeType,
+                                                   LocalDate from,
+                                                   LocalDate to) {
+        if (from == null) from = LocalDate.now().minusMonths(1);
+        if (to == null)   to   = LocalDate.now();
+
+        List<Object[]> rawData = reportRepository.countOpportunitiesByDateRange(from, to);
+        Map<String, Long> grouped = new LinkedHashMap<>();
+
+        String rt = (rangeType == null ? "month" : rangeType).toLowerCase();
+        if ("week".equals(rt)) {
+            WeekFields wf = WeekFields.ISO;
+            rawData.forEach(obj -> {
+                LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
+                long count = (long) obj[1];
+                String label = "Tuần " + date.get(wf.weekOfMonth()) +
+                        " (" + date.getMonthValue() + "/" + date.getYear() + ")";
+                grouped.merge(label, count, Long::sum);
+            });
+        } else if ("month".equals(rt)) {
+            rawData.forEach(obj -> {
+                LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
+                long count = (long) obj[1];
+                String label = date.getMonthValue() + "/" + date.getYear();
+                grouped.merge(label, count, Long::sum);
+            });
+        } else if ("year".equals(rt)) {
+            rawData.forEach(obj -> {
+                LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
+                long count = (long) obj[1];
+                String label = String.valueOf(date.getYear());
+                grouped.merge(label, count, Long::sum);
+            });
+        }
+
+        List<String> labels = new ArrayList<>(grouped.keySet()); // luôn tăng dần
+        List<Long> counts = labels.stream().map(grouped::get).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("labels", labels);
+        result.put("counts", counts);
+        return result;
+    }
+
+    @Override
+    public Map<String, Long> getOpportunityStatusDistribution() {
+        return reportRepository.countOpportunitiesByStatus();
     }
 
 
