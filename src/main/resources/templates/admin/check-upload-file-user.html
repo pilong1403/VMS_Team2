@@ -30,10 +30,29 @@
 
         <!-- Thống kê -->
         <div class="info-box">
-            <p><strong>Tổng số dòng:</strong> <span th:text="${userList.size()}"></span></p>
-            <p><strong>Số dòng hợp lệ:</strong> <span th:text="${validCount}"></span></p>
-            <p><strong>Số dòng lỗi:</strong> <span th:text="${errorCount}"></span></p>
+            <p><strong>Tổng số dòng:</strong> <span th:text="${totalCount}">0</span></p>
+            <p><strong>Số dòng hợp lệ:</strong> <span th:text="${validCount}">0</span></p>
+            <p><strong>Số dòng lỗi:</strong> <span th:text="${errorCount}">0</span></p>
         </div>
+        <form class="search-filter-bar"
+              method="get"
+              th:action="@{/admin/users/check-upload}">
+            <input type="text"
+                   name="keyword"
+                   placeholder="Tìm theo tên / SĐT..."
+                   th:value="${keyword}"/>
+
+            <select name="status">
+                <option value="all"
+                        th:selected="${status} == null or ${status} == 'all'">Tất cả</option>
+                <option value="valid"
+                        th:selected="${status} == 'valid'">Hợp lệ</option>
+                <option value="error"
+                        th:selected="${status} == 'error'">Lỗi</option>
+            </select>
+
+            <button type="submit" class="btn btn-outline">Lọc</button>
+        </form>
 
         <!-- Bảng dữ liệu -->
         <div class="table-wrapper">
@@ -49,26 +68,69 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="user, loop : ${userList}"
-                    th:classappend="${errorMap.containsKey(loop.index + 1)} ? 'table-row-error' : 'table-row-ok'">
+                <tr th:each="row : ${userList}"
+                    th:classappend="${row.valid} ? 'table-row-ok' : 'table-row-error'">
 
-                    <td th:text="${loop.index + 1}"></td>
-                    <td th:text="${user.fullName}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.phone}"></td>
-                    <td th:text="${user.passwordHash}"></td>
+                    <td th:text="${row.rowIndex}">1</td>
+                    <td th:text="${row.user.fullName}">Tên</td>
+                    <td th:text="${row.user.email}">email@example.com</td>
+                    <td th:text="${row.user.phone}">0909...</td>
+                    <td th:text="${row.user.passwordHash}">Matkhau</td>
 
                     <td>
-                        <ul th:if="${errorMap.containsKey(loop.index + 1)}" class="error-list">
-                            <li th:each="err : ${errorMap.get(loop.index + 1)}" th:text="${err}"></li>
+                        <ul th:if="${!row.valid}" class="error-list">
+                            <li th:each="err : ${row.errors}"
+                                th:text="${err}">Lỗi</li>
                         </ul>
-                        <span th:if="${!errorMap.containsKey(loop.index + 1)}"> Hợp lệ</span>
+                        <span th:if="${row.valid}">Hợp lệ</span>
                     </td>
                 </tr>
 
+                <tr th:if="${#lists.isEmpty(userList)}">
+                    <td colspan="6" class="muted">
+                        Không có dữ liệu phù hợp bộ lọc.
+                    </td>
+                </tr>
                 </tbody>
 
             </table>
+            <div class="pagination" th:if="${totalPages > 1}">
+
+                <!-- Thông tin trang -->
+                <div class="pagination-info">
+                    Trang
+                    <span th:text="${page + 1}">1</span> /
+                    <span th:text="${totalPages}">1</span>
+                </div>
+
+                <!-- Các nút trang -->
+                <div class="pagination-buttons">
+
+                    <!-- Nút về trước -->
+                    <a class="btn"
+                       th:if="${page > 0}"
+                       th:href="@{|/admin/users/check-upload?page=${page -1}&size=${size}&keyword=${keyword}&status=${status}|}">
+                        &laquo;
+                    </a>
+
+                    <!-- Các số trang -->
+                    <a class="btn"
+                       th:each="i : ${#numbers.sequence(0, totalPages -1)}"
+                       th:text="${i + 1}"
+                       th:href="@{|/admin/users/check-upload?page=${i}&size=${size}&keyword=${keyword}&status=${status}|}"
+                       th:classappend="${i == page} ? ' btn-primary' : ''">
+                    </a>
+
+                    <!-- Nút tới sau -->
+                    <a class="btn"
+                       th:if="${page + 1 < totalPages}"
+                       th:href="@{|/admin/users/check-upload?page=${page+1}&size=${size}&keyword=${keyword}&status=${status}|}">
+                        &raquo;
+                    </a>
+
+                </div>
+            </div>
+
         </div>
 
         <!-- Hành động -->
