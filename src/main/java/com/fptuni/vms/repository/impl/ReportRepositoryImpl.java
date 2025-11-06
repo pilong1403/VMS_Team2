@@ -80,6 +80,72 @@ import java.util.*;
                 return query.list();
             }
         }
+
+        @Override
+        public Map<String, Long> countUsersByStatus() {
+            Map<String, Long> result = new LinkedHashMap<>();
+            try (Session session = sessionFactory.openSession()) {
+                Query<Object[]> q = session.createQuery(
+                        "SELECT u.status, COUNT(u.userId) FROM User u GROUP BY u.status",
+                        Object[].class
+                );
+                for (Object[] row : q.list()) {
+                    result.put(String.valueOf(row[0]), (Long) row[1]); // ACTIVE / LOCKED
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public Long countUsersByRoleName(String roleName) {
+            try (Session session = sessionFactory.openSession()) {
+                Query<Long> q = session.createQuery(
+                        "SELECT COUNT(u.userId) FROM User u WHERE u.role.roleName = :r", Long.class);
+                q.setParameter("r", roleName);
+                return q.uniqueResult();
+            }
+        }
+
+        @Override
+        public Long countOrganizations() {
+            try (Session session = sessionFactory.openSession()) {
+                return session.createQuery("SELECT COUNT(o.orgId) FROM Organization o", Long.class)
+                        .uniqueResult();
+            }
+        }
+
+        @Override
+        public Long countOpportunities() {
+            try (Session session = sessionFactory.openSession()) {
+                return session.createQuery("SELECT COUNT(op.oppId) FROM Opportunity op", Long.class)
+                        .uniqueResult();
+            }
+        }
+        @Override
+        public LocalDate findFirstUserCreatedDate() {
+            try (Session session = sessionFactory.openSession()) {
+                Query<java.sql.Date> q = session.createQuery(
+                        "SELECT MIN(CAST(u.createdAt AS date)) FROM User u",
+                        java.sql.Date.class
+                );
+                java.sql.Date d = q.uniqueResult();
+                return d != null ? d.toLocalDate() : null;
+            }
+        }
+
+        @Override
+        public LocalDate findLastUserCreatedDate() {
+            try (Session session = sessionFactory.openSession()) {
+                Query<java.sql.Date> q = session.createQuery(
+                        "SELECT MAX(CAST(u.createdAt AS date)) FROM User u",
+                        java.sql.Date.class
+                );
+                java.sql.Date d = q.uniqueResult();
+                return d != null ? d.toLocalDate() : null;
+            }
+        }
+
+
     }
 
 

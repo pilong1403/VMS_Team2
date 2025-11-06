@@ -17,6 +17,26 @@
     <main class="content">
         <div class="page-header">
             <h1>Báo cáo</h1>
+            <!-- KPI -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Tình nguyện viên</div>
+                    <div class="kpi-number" th:text="${summary.volunteers}">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Người tổ chức</div>
+                    <div class="kpi-number" th:text="${summary.organizations}">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Cơ hội và tổ chức</div>
+                    <div class="kpi-number" th:text="${summary.opportunities}">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Quản trị viên</div>
+                    <div class="kpi-number" th:text="${summary.admins}">0</div>
+                </div>
+            </div>
+
             <p>Thống kê hệ thống theo thời gian</p>
         </div>
 
@@ -32,10 +52,7 @@
                 <input type="date" name="fromDate" th:value="${fromDate}" />
                 <input type="date" name="toDate" th:value="${toDate}" />
 
-                <select name="sort">
-                    <option value="desc" th:selected="${sort == 'desc'}">Mới nhất</option>
-                    <option value="asc" th:selected="${sort == 'asc'}">Cũ nhất</option>
-                </select>
+
 
                 <button type="submit" class="btn btn-outline">Lọc</button>
             </div>
@@ -47,7 +64,9 @@
         </form>
 
         <!-- ====== BIỂU ĐỒ ====== -->
-        <div class="chart-row">
+        <!-- HÀNG 1: Bar -->
+        <!-- HÀNG 1: Bar, full width -->
+        <div class="chart-row chart-row--single">
             <div class="card">
                 <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
                     <h3>Biểu đồ người dùng đăng ký</h3>
@@ -58,12 +77,25 @@
                 </div>
                 <canvas id="userChartUser" height="200"></canvas>
             </div>
+        </div>
+
+
+        <!-- HÀNG 2: 2 Pie -->
+        <div class="chart-row">
             <div class="card">
                 <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
                     <h3>Phân bố theo vai trò</h3>
                     <button class="btn-export" onclick="exportChartToExcel('role')">Tải Excel</button>
                 </div>
                 <canvas id="roleChart" height="200"></canvas>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                    <h3>Trạng thái người dùng</h3>
+                    <button class="btn-export" onclick="exportChartToExcel('status')">Tải Excel</button>
+                </div>
+                <canvas id="statusChart" height="200"></canvas>
             </div>
         </div>
 
@@ -85,8 +117,8 @@
 <!--                </tbody>-->
 <!--            </table>-->
 <!--        </div>-->
-<!--    </main>-->
-<!--</div>-->
+    </main>
+</div>
 
 <div class="toast" id="toast">
     <div class="toast-content">
@@ -166,8 +198,8 @@
     renderUserChart(userLabels, userCounts);
 
     // ======= DRILLDOWN API CALL =======
+
     function drillDown(label) {
-        // lưu trạng thái hiện tại để quay lại
         drillStack.push({
             labels: userChart.data.labels.slice(),
             counts: userChart.data.datasets[0].data.slice(),
@@ -180,7 +212,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data && data.labels && data.counts) {
-                    currentRange = data.rangeType;
+                    currentRange = data.rangeType || currentRange;   // nhớ cập nhật level mới
                     renderUserChart(data.labels, data.counts);
                 } else {
                     showToast("Không có dữ liệu chi tiết.", "Thông báo");
@@ -188,6 +220,23 @@
             })
             .catch(err => console.error("Drilldown error:", err));
     }
+
+
+    const statusData = /*[[${statusDistribution}]]*/ {}; // {ACTIVE: x, LOCKED: y}
+
+    // Pie: Status
+    const ctxStatus = document.getElementById('statusChart');
+    new Chart(ctxStatus, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(statusData),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: ['#28a745','#dc3545'] // ACTIVE, LOCKED
+            }]
+        },
+        options: { responsive:true, plugins:{ legend:{ position:'right' } } }
+    });
 
     // ======= NÚT QUAY LẠI =======
     function goBackChart() {

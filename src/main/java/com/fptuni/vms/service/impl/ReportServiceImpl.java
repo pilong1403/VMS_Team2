@@ -23,14 +23,56 @@ public class ReportServiceImpl implements ReportService {
     private ReportRepository reportRepository;
 
     @Override
-    public Map<String, Object> getUserRegistrationStats(String rangeType, LocalDate from, LocalDate to, String sort) {
-        if (from == null) from = LocalDate.now().minusMonths(1);
-        if (to == null) to = LocalDate.now();
+    public Map<String, Object> getUserRegistrationStats(String rangeType,
+                                                        LocalDate from,
+                                                        LocalDate to,
+                                                        String sort) {
+        String rt = (rangeType == null ? "month" : rangeType).toLowerCase();
 
+        // Lấy min/max ngày có user
+        LocalDate minDate = reportRepository.findFirstUserCreatedDate();
+        LocalDate maxDate = reportRepository.findLastUserCreatedDate();
+
+        Map<String, Object> empty = new HashMap<>();
+        if (minDate == null || maxDate == null) {
+            empty.put("labels", List.of());
+            empty.put("counts", List.of());
+            return empty;
+        }
+
+        // Chỉ set default nếu người dùng KHÔNG chọn from/to
+        if (from == null || to == null) {
+            switch (rt) {
+                case "year":
+                    // hiển thị tất cả các năm có user
+                    if (from == null) from = minDate.withDayOfYear(1);
+                    if (to   == null) to   = maxDate.withMonth(12).withDayOfMonth(31);
+                    break;
+
+                case "month":
+                    // mặc định: tháng của NĂM MỚI NHẤT có user
+                    int lastYear = maxDate.getYear();
+                    if (from == null) from = LocalDate.of(lastYear, 1, 1);
+                    if (to   == null) to   = LocalDate.of(lastYear, 12, 31);
+                    break;
+
+                case "week":
+                    // mặc định lấy khoảng 4 tuần trước ngày đăng ký mới nhất
+                    if (from == null) from = maxDate.minusWeeks(4);
+                    if (to   == null) to   = maxDate;
+                    break;
+
+                default:
+                    if (from == null) from = maxDate.minusMonths(1);
+                    if (to   == null) to   = maxDate;
+            }
+        }
+
+        // Lấy dữ liệu thô trong khoảng from/to
         List<Object[]> rawData = reportRepository.countUsersByDateRange(from, to);
         Map<String, Long> grouped = new LinkedHashMap<>();
 
-        if ("week".equalsIgnoreCase(rangeType)) {
+        if ("week".equals(rt)) {
             WeekFields wf = WeekFields.ISO;
             rawData.forEach(obj -> {
                 LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
@@ -38,14 +80,14 @@ public class ReportServiceImpl implements ReportService {
                 String label = "Tuần " + date.get(wf.weekOfMonth()) + " (" + date.getMonthValue() + "/" + date.getYear() + ")";
                 grouped.merge(label, count, Long::sum);
             });
-        } else if ("month".equalsIgnoreCase(rangeType)) {
+        } else if ("month".equals(rt)) {
             rawData.forEach(obj -> {
                 LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
                 long count = (long) obj[1];
                 String label = date.getMonthValue() + "/" + date.getYear();
                 grouped.merge(label, count, Long::sum);
             });
-        } else if ("year".equalsIgnoreCase(rangeType)) {
+        } else if ("year".equals(rt)) {
             rawData.forEach(obj -> {
                 LocalDate date = ((java.sql.Date) obj[0]).toLocalDate();
                 long count = (long) obj[1];
@@ -55,7 +97,6 @@ public class ReportServiceImpl implements ReportService {
         }
 
         List<String> labels = new ArrayList<>(grouped.keySet());
-        if ("desc".equalsIgnoreCase(sort)) Collections.reverse(labels);
         List<Long> counts = labels.stream().map(grouped::get).collect(Collectors.toList());
 
         Map<String, Object> result = new HashMap<>();
@@ -64,6 +105,7 @@ public class ReportServiceImpl implements ReportService {
         return result;
     }
 
+
     @Override
     public Map<String, Long> getUserRoleDistribution() {
         return reportRepository.countUsersByRole();
@@ -71,39 +113,53 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public Map<String, Object> getDrillDownStats(String rangeType, String label) {
+        Map<String, Object> result;
         LocalDate from, to;
 
         try {
-            if ("year".equalsIgnoreCase(rangeType)) {
-                // label ví dụ: "5/2025"
+            String rt = rangeType.toLowerCase();
+
+            if ("year".equals(rt)) {
+                // label: "2024"  -> drill xuống theo tháng của năm đó
+                int year = Integer.parseInt(label.trim());
+                from = LocalDate.of(year, 1, 1);
+                to   = LocalDate.of(year, 12, 31);
+
+                result = getUserRegistrationStats("month", from, to, "asc");
+                result.put("rangeType", "month");
+                return result;
+
+            } else if ("month".equals(rt)) {
+                // label: "10/2025" -> drill xuống theo tuần của tháng đó
                 String[] parts = label.split("/");
                 int month = Integer.parseInt(parts[0]);
-                int year = Integer.parseInt(parts[1]);
+                int year  = Integer.parseInt(parts[1]);
+
                 from = LocalDate.of(year, month, 1);
-                to = from.plusMonths(1).minusDays(1);
-                return getUserRegistrationStats("month", from, to, "asc");
-            } else if ("month".equalsIgnoreCase(rangeType)) {
-                // label ví dụ: "Tuần 2 (10/2025)"
-                String[] parts = label.replace("Tuần ", "").replace("(", "").replace(")", "").split(" ");
-                int weekNum = Integer.parseInt(parts[0]);
-                String[] ym = parts[1].split("/");
-                int month = Integer.parseInt(ym[0]);
-                int year = Integer.parseInt(ym[1]);
-                from = LocalDate.of(year, month, 1).plusWeeks(weekNum - 1);
-                to = from.plusWeeks(1).minusDays(1);
-                return getUserRegistrationStats("week", from, to, "asc");
-            } else if ("week".equalsIgnoreCase(rangeType)) {
-                // Nếu là tuần → hiển thị theo ngày chi tiết
-                from = LocalDate.now().minusDays(6);
-                to = LocalDate.now();
-                return getUserRegistrationStats("week", from, to, "asc");
+                to   = from.plusMonths(1).minusDays(1);
+
+                result = getUserRegistrationStats("week", from, to, "asc");
+                result.put("rangeType", "week");
+                return result;
+            } else if ("week".equals(rt)) {
+                // Không drill sâu hơn
+                result = new HashMap<>();
+                result.put("labels", List.of());
+                result.put("counts", List.of());
+                result.put("rangeType", "week");
+                return result;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return Map.of("labels", List.of(), "counts", List.of(), "rangeType", rangeType);
+        result = new HashMap<>();
+        result.put("labels", List.of());
+        result.put("counts", List.of());
+        result.put("rangeType", rangeType);
+        return result;
     }
+
 
     @Override
     public void exportReportToExcel(String type, String rangeType, LocalDate from, LocalDate to, OutputStream out) {
@@ -146,6 +202,18 @@ public class ReportServiceImpl implements ReportService {
 
                 sheet.autoSizeColumn(0);
                 sheet.autoSizeColumn(1);
+            }else if ("status".equalsIgnoreCase(type)) {
+                Map<String, Long> st = getUserStatusDistribution();
+                Row header = sheet.createRow(0);
+                header.createCell(0).setCellValue("Trạng thái");
+                header.createCell(1).setCellValue("Số lượng");
+                int r = 1;
+                for (var e : st.entrySet()) {
+                    Row row = sheet.createRow(r++);
+                    row.createCell(0).setCellValue(e.getKey());
+                    row.createCell(1).setCellValue(e.getValue());
+                }
+                sheet.autoSizeColumn(0); sheet.autoSizeColumn(1);
             }
 
             workbook.write(out);
@@ -153,5 +221,20 @@ public class ReportServiceImpl implements ReportService {
             throw new RuntimeException("Lỗi khi xuất file Excel", e);
         }
     }
+    @Override
+    public Map<String, Long> getUserStatusDistribution() {
+        return reportRepository.countUsersByStatus();
+    }
+
+    @Override
+    public Map<String, Long> getSummaryCounts() {
+        Map<String, Long> s = new LinkedHashMap<>();
+        s.put("volunteers",     reportRepository.countUsersByRoleName("VOLUNTEER"));
+        s.put("organizations",  reportRepository.countOrganizations());
+        s.put("opportunities",  reportRepository.countOpportunities());
+        s.put("admins",         reportRepository.countUsersByRoleName("ADMIN"));
+        return s;
+    }
+
 
 }

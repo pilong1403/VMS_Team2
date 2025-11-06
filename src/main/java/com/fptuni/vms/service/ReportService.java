@@ -8,5 +8,7 @@ public interface ReportService {
     Map<String, Long> getUserRoleDistribution();
     Map<String, Object> getDrillDownStats(String rangeType, String label);
     void exportReportToExcel(String type, String rangeType, LocalDate from, LocalDate to, java.io.OutputStream out);
+    Map<String, Long> getUserStatusDistribution();
+    Map<String, Long> getSummaryCounts();
 
 }

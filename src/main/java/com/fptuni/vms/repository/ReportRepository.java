@@ -9,4 +9,12 @@ public interface ReportRepository {
     Map<String, Long> countUsersByRole();
     List<Object[]> countUsersByWeek(LocalDate from, LocalDate to);
     List<Object[]> countUsersByMonth(LocalDate from, LocalDate to);
+    Map<String, Long> countUsersByStatus();
+    Long countUsersByRoleName(String roleName);
+    Long countOrganizations();
+    Long countOpportunities();
+    LocalDate findFirstUserCreatedDate();
+    LocalDate findLastUserCreatedDate();
+
+
 }

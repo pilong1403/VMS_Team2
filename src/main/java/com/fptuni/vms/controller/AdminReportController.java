@@ -33,13 +33,16 @@ public class AdminReportController {
     ) {
         Map<String, Object> userStats = reportService.getUserRegistrationStats(rangeType, fromDate, toDate, sort);
         Map<String, Long> roleDistribution = reportService.getUserRoleDistribution();
+        Map<String, Long> statusDistribution = reportService.getUserStatusDistribution(); // NEW
+        Map<String, Long> summary = reportService.getSummaryCounts();
 
         model.addAttribute("rangeType", rangeType);
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);
-        model.addAttribute("sort", sort);
         model.addAttribute("userStats", userStats);
         model.addAttribute("roleDistribution", roleDistribution);
+        model.addAttribute("statusDistribution", statusDistribution); // NEW
+        model.addAttribute("summary", summary);
         return "admin/reportManagement";
     }
 
