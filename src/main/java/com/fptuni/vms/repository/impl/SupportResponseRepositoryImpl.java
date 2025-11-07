@@ -98,6 +98,8 @@ public class SupportResponseRepositoryImpl implements SupportResponseRepository 
             jpql.append(" AND (LOWER(t.subject) LIKE :kw OR CAST(t.ticketId AS string) LIKE :kw)");
         }
 
+        jpql.append(" ORDER BY r.createdAt DESC");
+
         TypedQuery<SupportResponse> query = em.createQuery(jpql.toString(), SupportResponse.class);
 
         if (StringUtils.hasText(keyword)) {

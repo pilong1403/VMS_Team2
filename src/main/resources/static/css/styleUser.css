@@ -608,23 +608,7 @@ input.error-border {
     background: var(--primary);
     color: var(--primary-foreground);
 }
-.chart-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.chart-row .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-}
+
 
 /* Header trong mỗi card */
 .card-header {
@@ -726,4 +710,33 @@ input.error-border {
     padding-left: 20px;
     color: red;
     font-weight: bold;
+}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:16px 0}
+.kpi-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px}
+.kpi-label{color:#6b7280;font-size:14px}
+.kpi-number{font-size:28px;font-weight:700}
+
+/* ===== Chart rows ===== */
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* hàng có 2 card */
+    gap: 16px;
+    margin: 16px 0 24px;
+}
+
+/* Hàng chỉ có 1 card (biểu đồ cột) => full width */
+.chart-row.chart-row--single {
+    grid-template-columns: 1fr;
+}
+
+.toggle-report-row{
+    display:flex;
+    gap:.75rem;
+    margin-bottom:1rem;
+    flex-wrap:wrap;
+}
+
+.hidden-section{
+    display:none !important;
 }

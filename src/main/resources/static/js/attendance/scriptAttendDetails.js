@@ -33,12 +33,63 @@ function openCheckinModal(button) {
     const typeButton = button.dataset.type;
     const checkinTimeString = button.dataset.checkinTime;
 
+    // Lấy các giá trị filter
+    const keyword = button.dataset.keyword;
+    const status = button.dataset.status;
+    const num = button.dataset.num;
+    const page = button.dataset.page;
+
     const modalAvatar = document.getElementById('modalAvatar');
     const modalVolunteerName = document.getElementById('modalVolunteerName');
     const modalTimeInput = document.getElementById('modalTimeInput');
     const applicationIdInput = document.getElementById('applicationIdInput');
     const oppIdInput = document.getElementById('oppId');
     const modalTitle = document.getElementById('modalTitleCheckIn');
+
+    // Lấy các input filter
+    const keywordInput = document.getElementById('keyword');
+    const statusInput = document.getElementById('status');
+    const numInput = document.getElementById('num');
+    const pageInput = document.getElementById('page');
+
+
+    // === PHẦN SỬA ĐỔI QUAN TRỌNG ===
+    // Kiểm tra và vô hiệu hóa các input filter nếu chúng không có giá trị
+    // (Giá trị "falsy" như undefined, null, "" đều sẽ vào 'else')
+
+    if (keyword) {
+        keywordInput.value = keyword;
+        keywordInput.disabled = false; // Bật để gửi đi
+    } else {
+        keywordInput.value = '';
+        keywordInput.disabled = true; // Tắt để không gửi đi
+    }
+
+    if (status) {
+        statusInput.value = status;
+        statusInput.disabled = false;
+    } else {
+        statusInput.value = '';
+        statusInput.disabled = true;
+    }
+
+    if (num) {
+        numInput.value = num;
+        numInput.disabled = false;
+    } else {
+        numInput.value = '';
+        numInput.disabled = true;
+    }
+
+    if (page) {
+        pageInput.value = page;
+        pageInput.disabled = false;
+    } else {
+        pageInput.value = '1';
+        pageInput.disabled = true;
+    }
+    // === KẾT THÚC PHẦN SỬA ĐỔI ===
+
 
     if(typeButton === 'CheckIn') {
         modalTitle.textContent = 'XÁC NHẬN CHECK-IN';
@@ -84,8 +135,6 @@ function openCheckinModal(button) {
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         modalTimeInput.value = now.toISOString().slice(0, 16);
     }
-
-
 
     document.getElementById("attendanceModal").classList.add("active");
 }
@@ -148,12 +197,63 @@ function openCheckOutModal(button) {
     const typeButton = button.dataset.type;
     const checkoutTimeString = button.dataset.checkoutTime;
 
+    // Lấy các giá trị filter
+    const keyword = button.dataset.keyword;
+    const status = button.dataset.status;
+    const num = button.dataset.num;
+    const page = button.dataset.page;
+
     const modalAvatar = document.getElementById('modalAvatar2');
     const modalVolunteerName = document.getElementById('modalVolunteerName2');
     const modalTimeInput = document.getElementById('modalTimeInput2');
     const applicationIdInput = document.getElementById('applicationIdInput2');
     const oppIdInput = document.getElementById('oppIdOut');
     const modalTitle = document.getElementById('modalTitleCheckOut');
+
+
+    // Lấy các input filter
+    const keywordInput = document.getElementById('keyword2');
+    const statusInput = document.getElementById('status2');
+    const numInput = document.getElementById('num2');
+    const pageInput = document.getElementById('page2');
+
+
+    // === PHẦN SỬA ĐỔI QUAN TRỌNG ===
+    // Kiểm tra và vô hiệu hóa các input filter nếu chúng không có giá trị
+    // (Giá trị "falsy" như undefined, null, "" đều sẽ vào 'else')
+
+    if (keyword) {
+        keywordInput.value = keyword;
+        keywordInput.disabled = false; // Bật để gửi đi
+    } else {
+        keywordInput.value = '';
+        keywordInput.disabled = true; // Tắt để không gửi đi
+    }
+
+    if (status) {
+        statusInput.value = status;
+        statusInput.disabled = false;
+    } else {
+        statusInput.value = '';
+        statusInput.disabled = true;
+    }
+
+    if (num) {
+        numInput.value = num;
+        numInput.disabled = false;
+    } else {
+        numInput.value = '';
+        numInput.disabled = true;
+    }
+
+    if (page) {
+        pageInput.value = page;
+        pageInput.disabled = false;
+    } else {
+        pageInput.value = '1';
+        pageInput.disabled = true;
+    }
+    // === KẾT THÚC PHẦN SỬA ĐỔI ===
 
     if(typeButton === 'CheckOut') {
         modalTitle.textContent = 'XÁC NHẬN CHECK-OUT';
@@ -238,6 +338,51 @@ function openViewDetailModal(button) {
     document.getElementById('detailAddress').textContent = data.address || 'N/A';
     document.getElementById('oppId2').value = data.oppId;
 
+    // Lấy các input filter
+    const keywordInput = document.getElementById('keyword3');
+    const statusInput = document.getElementById('status3');
+    const numInput = document.getElementById('num3');
+    const pageInput = document.getElementById('page3');
+
+
+    // === PHẦN SỬA ĐỔI QUAN TRỌNG ===
+    // Kiểm tra và vô hiệu hóa các input filter nếu chúng không có giá trị
+    // (Giá trị "falsy" như undefined, null, "" đều sẽ vào 'else')
+
+    if (data.keyword) {
+        keywordInput.value = data.keyword;
+        keywordInput.disabled = false; // Bật để gửi đi
+    } else {
+        keywordInput.value = '';
+        keywordInput.disabled = true; // Tắt để không gửi đi
+    }
+
+    if (data.statusFilter) {
+        statusInput.value = data.statusFilter;
+        statusInput.disabled = false;
+    } else {
+        statusInput.value = '';
+        statusInput.disabled = true;
+    }
+
+    if (data.num) {
+        numInput.value = data.num;
+        numInput.disabled = false;
+    } else {
+        numInput.value = '';
+        numInput.disabled = true;
+    }
+
+    if (data.page) {
+        pageInput.value = data.page;
+        pageInput.disabled = false;
+    } else {
+        pageInput.value = '1';
+        pageInput.disabled = true;
+    }
+    // === KẾT THÚC PHẦN SỬA ĐỔI ===
+
+    document.getElementById('questionErrorEdit').style.display = 'none';
 
     const statusContainer = document.getElementById('detailStatusBadge');
 

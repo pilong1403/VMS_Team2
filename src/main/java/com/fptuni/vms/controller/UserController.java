@@ -1,6 +1,7 @@
 package com.fptuni.vms.controller;
 
 import com.fptuni.vms.integrations.cloud.CloudStorageService;
+import com.fptuni.vms.model.UploadVolunteerRow;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.service.RoleService;
 import com.fptuni.vms.service.UserService;
@@ -18,10 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin/users")
@@ -93,6 +91,7 @@ public class UserController {
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("sortField", sortField);
 
+        model.addAttribute("activePage", "users");
         model.addAttribute("roles", roleService.getAllRoles());
         return "admin/userManagement";
     }
@@ -219,11 +218,14 @@ public class UserController {
 
     @PostMapping("/upload-volunteer-excel")
     public String uploadVolunteerExcel(@RequestParam("excelFile") MultipartFile file,
-                                       Model model, HttpSession session,
+                                       HttpSession session,
                                        RedirectAttributes redirectAttributes) {
 
+        // clear session cũ
         session.removeAttribute("volunteerListSession");
-        session.removeAttribute("errorMap");
+        session.removeAttribute("uploadRows");
+        session.removeAttribute("totalCount");
+        session.removeAttribute("errorCount");
         session.removeAttribute("validCount");
 
         if (file.isEmpty()) {
@@ -231,26 +233,110 @@ public class UserController {
             return "redirect:/admin/users";
         }
 
-
-
         Map<Integer, List<String>> errorMap = new HashMap<>();
         List<User> volunteerList = userService.parseVolunteerExcel(file, errorMap);
 
-        session.setAttribute("volunteerListSession", volunteerList);
         int totalCount = volunteerList.size();
         int errorCount = errorMap.size();
         int validCount = totalCount - errorCount;
 
-        model.addAttribute("userList", volunteerList);
-        model.addAttribute("errorMap", errorMap);
+        // build danh sách row hiển thị
+        List<UploadVolunteerRow> rows = new ArrayList<>();
+        for (int i = 0; i < volunteerList.size(); i++) {
+            int rowIndex = i + 1;
+            User u = volunteerList.get(i);
+            List<String> errs = errorMap.getOrDefault(rowIndex, List.of());
+
+            UploadVolunteerRow row = new UploadVolunteerRow(rowIndex, u, errs);
+            rows.add(row);
+        }
+
+        // lưu vào session cho trang check-upload dùng
+        session.setAttribute("volunteerListSession", volunteerList); // confirm-volunteer cần
+        session.setAttribute("uploadRows", rows);
+        session.setAttribute("totalCount", totalCount);
+        session.setAttribute("errorCount", errorCount);
+        session.setAttribute("validCount", validCount);
+
+        // chuyển sang GET để hỗ trợ phân trang / lọc
+        return "redirect:/admin/users/check-upload";
+    }
+
+
+
+    @GetMapping("/check-upload")
+    public String checkUploadPage(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "all") String status, // all | valid | error
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpSession session,
+            Model model) {
+
+        @SuppressWarnings("unchecked")
+        List<UploadVolunteerRow> all =
+                (List<UploadVolunteerRow>) session.getAttribute("uploadRows");
+
+        if (all == null) {
+            // F5 thẳng trang này mà chưa upload file
+            return "redirect:/admin/users";
+        }
+
+        Integer totalCount = (Integer) session.getAttribute("totalCount");
+        Integer errorCount = (Integer) session.getAttribute("errorCount");
+        Integer validCount = (Integer) session.getAttribute("validCount");
+
+        if (keyword == null || "null".equalsIgnoreCase(keyword)) {
+            keyword = "";
+        }
+        String kw = keyword.trim().toLowerCase();
+
+        // lọc theo trạng thái + search tên/sđt
+        List<UploadVolunteerRow> filtered = all.stream()
+                .filter(r -> {
+                    boolean okStatus =
+                            "all".equals(status) ||
+                                    ("valid".equals(status) && r.isValid()) ||
+                                    ("error".equals(status) && !r.isValid());
+
+                    String name  = Optional.ofNullable(r.getUser().getFullName()).orElse("").toLowerCase();
+                    String phone = Optional.ofNullable(r.getUser().getPhone()).orElse("").toLowerCase();
+
+                    boolean okSearch = kw.isEmpty()
+                            || name.contains(kw)
+                            || phone.contains(kw);
+
+                    return okStatus && okSearch;
+                })
+                .toList();
+
+        int total = filtered.size();
+        int totalPages = (int) Math.ceil(total / (double) size);
+        if (totalPages == 0) totalPages = 1;
+
+        if (page < 0) page = 0;
+        if (page >= totalPages) page = totalPages - 1;
+
+        int from = page * size;
+        int to = Math.min(from + size, total);
+        List<UploadVolunteerRow> pageRows = filtered.subList(from, to);
+
+        model.addAttribute("userList", pageRows);
+        model.addAttribute("totalCount", totalCount);
         model.addAttribute("errorCount", errorCount);
         model.addAttribute("validCount", validCount);
-        model.addAttribute("totalCount", totalCount);
 
-
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status);
 
         return "admin/check-upload-file-user";
     }
+
+
+
 
     @PostMapping("/confirm-volunteer-excel")
     public String confirmVolunteerExcel(HttpSession session, RedirectAttributes redirectAttributes) {

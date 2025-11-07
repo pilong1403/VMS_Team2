@@ -77,6 +77,8 @@ public class SupportResponseController {
             model.addAttribute("activeTab", "responses");
         }
 
+        model.addAttribute("activePage", "support");
+
         // data mặc định cho tab support tickets
         model.addAttribute("listSupportTickets", Collections.emptyList());
         model.addAttribute("totalPages", 1);

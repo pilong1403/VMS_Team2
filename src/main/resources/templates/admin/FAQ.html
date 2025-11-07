@@ -19,6 +19,13 @@
         min-height: 100vh;
     }
 
+    .error-text {
+        display: none; /* Ẩn thông báo lỗi theo mặc định */
+        color: #d9534f; /* Màu đỏ cho dễ thấy (bạn có thể đổi màu) */
+        font-size: 0.875em; /* Kích thước chữ nhỏ hơn một chút */
+        margin-top: 5px; /* Thêm chút khoảng cách bên trên */
+    }
+
 </style>
 
 
@@ -275,16 +282,24 @@
                         </select>
 
                     </div>
+
                     <div class="form-group">
                         <label for="faqQuestion">Câu hỏi <span class="required">*</span></label>
                         <input name="question" type="text" id="faqQuestion" class="form-control"
                                required placeholder="Nhập câu hỏi..."
-                                title="Chỉ được dùng chữ, số và dấu .,?!">
+                               title="Chỉ được dùng chữ, số và dấu .,?!">
+                        <small id="questionError" class="error-text">
+                            Câu hỏi không được để trống hoặc chỉ chứa khoảng trắng.
+                        </small>
                     </div>
+
                     <div class="form-group">
                         <label for="faqAnswer">Câu trả lời<span class="required">*</span></label>
                         <textarea name="answer" id="faqAnswer" class="form-control" rows="4"
-                            placeholder="Nhập câu trả lời..."></textarea>
+                                  placeholder="Nhập câu trả lời..." required></textarea>
+                        <small id="answerError" class="error-text">
+                            Câu trả lời không được để trống hoặc chỉ chứa khoảng trắng.
+                        </small>
                     </div>
 
                     <div class="modal-footer">
@@ -333,13 +348,19 @@
                         <input name="question" type="text" id="questionEdit" class="form-control"
                                required placeholder="Nhập câu hỏi..."
                                title="Chỉ được dùng chữ, số và dấu .,?!">
+                        <small id="questionErrorEdit" class="error-text">
+                            Câu hỏi không được để trống hoặc chỉ chứa khoảng trắng.
+                        </small>
                     </div>
 
 
                     <div class="form-group">
                         <label for="faqAnswer">Câu trả lời<span class="required">*</span></label>
                         <textarea name="answer" id="answerEdit" class="form-control" rows="4"
-                                  placeholder="Nhập câu trả lời..."></textarea>
+                                  placeholder="Nhập câu trả lời..." required></textarea>
+                        <small id="answerErrorEdit" class="error-text">
+                            Câu trả lời không được để trống hoặc chỉ chứa khoảng trắng.
+                        </small>
                     </div>
 
                     <div class="modal-footer">
@@ -353,11 +374,109 @@
         </div>
     </div>
 
-
-
     <script>
 
-        //edit form
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const faqForm = document.getElementById('faqForm');
+            const faqQuestion = document.getElementById('faqQuestion');
+            const faqAnswer = document.getElementById('faqAnswer');
+
+            const questionError = document.getElementById('questionError');
+            const answerError = document.getElementById('answerError');
+
+            faqForm.addEventListener('submit', function(event) {
+
+                let isFormValid = true;
+
+                // Ẩn tất cả thông báo lỗi trước khi kiểm tra
+                questionError.style.display = 'none';
+                answerError.style.display = 'none';
+
+                // Kiểm tra ô "Câu hỏi"
+                if (faqQuestion.value.trim().length === 0) {
+                    questionError.style.display = 'block';
+                    isFormValid = false;
+                }
+
+                // Kiểm tra ô "Câu trả lời"
+                if (faqAnswer.value.trim().length === 0) {
+                    answerError.style.display = 'block';
+                    isFormValid = false;
+                }
+
+                if (!isFormValid) {
+                    event.preventDefault();
+                }
+            });
+
+            faqQuestion.addEventListener('input', function() {
+                if (questionError.style.display === 'block') {
+                    questionError.style.display = 'none';
+                }
+            });
+
+            faqAnswer.addEventListener('input', function() {
+                if (answerError.style.display === 'block') {
+                    answerError.style.display = 'none';
+                }
+            });
+
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const faqFormEdit = document.getElementById('faqFormEdit');
+            const questionEdit = document.getElementById('questionEdit');
+            const answerEdit = document.getElementById('answerEdit');
+
+            const questionErrorEdit = document.getElementById('questionErrorEdit');
+            const answerErrorEdit = document.getElementById('answerErrorEdit');
+
+            if (faqFormEdit) {
+
+                faqFormEdit.addEventListener('submit', function(event) {
+
+                    let isFormValid = true;
+
+                    // Ẩn tất cả thông báo lỗi
+                    questionErrorEdit.style.display = 'none';
+                    answerErrorEdit.style.display = 'none';
+
+                    // Kiểm tra ô "Câu hỏi" (Sửa)
+                    if (questionEdit.value.trim().length === 0) {
+                        questionErrorEdit.style.display = 'block';
+                        isFormValid = false;
+                    }
+
+                    if (answerEdit.value.trim().length === 0) {
+                        answerErrorEdit.style.display = 'block';
+                        isFormValid = false;
+                    }
+
+                    if (!isFormValid) {
+                        event.preventDefault();
+                    }
+                });
+
+                questionEdit.addEventListener('input', function() {
+                    if (questionErrorEdit.style.display === 'block') {
+                        questionErrorEdit.style.display = 'none';
+                    }
+                });
+
+                answerEdit.addEventListener('input', function() {
+                    if (answerErrorEdit.style.display === 'block') {
+                        answerErrorEdit.style.display = 'none';
+                    }
+                });
+            }
+
+        });
+
+
+
         function openEditFAQModal(btn) {
             const id = btn.dataset.id;
             const category = btn.dataset.category;
@@ -368,6 +487,9 @@
             document.getElementById("categoryEdit").value = category;
             document.getElementById("questionEdit").value = question;
             document.getElementById("answerEdit").value = answer;
+
+            document.getElementById('questionErrorEdit').style.display = 'none';
+            document.getElementById('answerErrorEdit').style.display = 'none';
 
             document.getElementById("faqModalEdit").classList.add("show");
         }
