@@ -34,6 +34,7 @@ public class SupportTicketController {
         int startPage = Math.max(1, page - visiblePages / 2);
         int endPage = Math.min(totalPages, startPage + visiblePages - 1);
 
+        model.addAttribute("activePage", "support");
         model.addAttribute("listSupportTickets", supportTicketService.findAllWithPagination(page, size));
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentPage", page);

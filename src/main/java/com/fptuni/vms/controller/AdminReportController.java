@@ -45,6 +45,7 @@ public class AdminReportController {
         Map<String, Object> oppStats = reportService.getOpportunityStats(oppRangeType, oppFromDate, oppToDate);
         Map<String, Long>   oppStatusDistribution = reportService.getOpportunityStatusDistribution();
 
+        model.addAttribute("activePage", "reports");
         model.addAttribute("rangeType", rangeType);
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);

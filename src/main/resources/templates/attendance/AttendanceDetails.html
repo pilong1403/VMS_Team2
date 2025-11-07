@@ -8,6 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" th:href="@{/css/attendance/styleAttendDetails.css}"/>
     <title>Điểm Danh - Hệ Thống Quản Lý Tình Nguyện</title>
+
+    <style>
+        .error-text {
+            display: none; /* Ẩn thông báo lỗi theo mặc định */
+            color: #d9534f; /* Màu đỏ cho dễ thấy (bạn có thể đổi màu) */
+            font-size: 0.875em; /* Kích thước chữ nhỏ hơn một chút */
+            margin-top: 5px; /* Thêm chút khoảng cách bên trên */
+        }
+    </style>
 </head>
 
 <body>
@@ -192,6 +201,12 @@
                                             th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
                                             th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
 
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
+
+
                                             onclick="openCheckinModal(this)"
                                             th:text="${record.checkinTime != null ? 'Update checkin' : 'Check In'}"
                                             th:data-type="${record.checkinTime != null ? 'Update' : 'CheckIn'}">
@@ -206,6 +221,11 @@
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-opp-id="${opportunity.oppId}"
                                             th:disabled="${record.checkinTime == null}"
+
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
 
                                             onclick="openCheckOutModal(this)"
                                             th:text="${record.checkoutTime != null ? 'Update checkout' : 'Check Out'}"
@@ -225,6 +245,12 @@
                                             th:data-total-hours = "${record.totalHours}"
                                             th:data-note = "${record.notes}"
                                             th:data-proof-url = "${record.proofFileUrl}"
+
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status-filter="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
+
                                             onclick="openViewDetailModal(this)">
                                         Xem chi tiết
                                     </button>
@@ -261,6 +287,12 @@
                                             th:data-checkout-time="${record.checkoutTime != null ? #temporals.formatISO(record.checkoutTime) : ''}"
                                             th:data-checkin-time="${record.checkinTime != null ? #temporals.formatISO(record.checkinTime) : ''}"
 
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
+
+
                                             onclick="openCheckinModal(this)"
                                             th:text="${record.checkinTime != null ? 'Update checkin' : 'Check In'}"
                                             th:data-type="${record.checkinTime != null ? 'Update' : 'CheckIn'}">
@@ -275,6 +307,11 @@
                                             th:data-event-end-time="${opportunity.endTime != null ? #temporals.formatISO(opportunity.endTime) : ''}"
                                             th:data-opp-id="${opportunity.oppId}"
                                             th:disabled="${record.checkinTime == null}"
+
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
 
                                             onclick="openCheckOutModal(this)"
                                             th:text="${record.checkoutTime != null ? 'Update checkout' : 'Check Out'}"
@@ -294,6 +331,12 @@
                                             th:data-total-hours = "${record.totalHours}"
                                             th:data-note = "${record.notes}"
                                             th:data-proof-url = "${record.proofFileUrl}"
+
+                                            th:data-keyword="${keyword != null ? keyword : ''}"
+                                            th:data-num="${num != null ? num : ''}"
+                                            th:data-status-filter="${status != null ? status : ''}"
+                                            th:data-page = "${currentPage != null ? currentPage : 1}"
+
                                             onclick="openViewDetailModal(this)">
                                         Xem chi tiết
                                     </button>
@@ -373,6 +416,10 @@
             <div class="modal-footer">
                 <input type="hidden" id="applicationIdInput" name="applicationId">
                 <input type="hidden" id="oppId" name="oppId">
+                <input type="hidden" id="keyword" name="keyword">
+                <input type="hidden" id="num" name="num">
+                <input type="hidden" id="status" name="status">
+                <input type="hidden" id="page" name="page">
 
                 <button type="button" class="btn-cancel" id="cancelBtn" onclick="closeCheckModal()">Hủy</button>
                 <button type="submit" class="btn-confirm" id="confirmBtn">Xác nhận</button>
@@ -406,6 +453,10 @@
             <div class="modal-footer">
                 <input type="hidden" id="applicationIdInput2" name="applicationId">
                 <input type="hidden" id="oppIdOut" name="oppId">
+                <input type="hidden" id="keyword2" name="keyword">
+                <input type="hidden" id="num2" name="num">
+                <input type="hidden" id="status2" name="status">
+                <input type="hidden" id="page2" name="page">
 
                 <button type="button" class="btn-cancel" id="cancelBtn2" onclick="closeCheckModal2()">Hủy</button>
                 <button type="submit" class="btn-confirm" id="confirmBtn2">Xác nhận</button>
@@ -469,6 +520,9 @@
                         <textarea id="detailNotes"  th:disabled="${statusOpp == 'CLOSED'}"
                                   name="notes" class="form-control" rows="6" placeholder="Nhập ghi chú...">
                         </textarea>
+                        <small id="questionErrorEdit" class="error-text">
+                            Ghi chú không được để trống hoặc chỉ chứa khoảng trắng !!
+                        </small>
                     </div>
 
                     <div class="form-group full-width">
@@ -483,6 +537,10 @@
 
             <input type="hidden" id="applicationId" name="applicationId">
             <input type="hidden" id="oppId2" name="oppId">
+            <input type="hidden" id="keyword3" name="keyword">
+            <input type="hidden" id="num3" name="num">
+            <input type="hidden" id="status3" name="status">
+            <input type="hidden" id="page3" name="page">
 
             <div class="modal-footer" th:if="${statusOpp != 'CLOSED'}">
                 <button type="button" class="btn-cancel" onclick="closeDetailModal()">Hủy</button>
@@ -499,6 +557,37 @@
 <script th:src="@{/js/attendance/scriptAttendDetails.js}"></script>
 
 <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const attendanceDetailForm = document.getElementById('detailsForm');
+        const detailNotes = document.getElementById('detailNotes');
+
+        const questionError = document.getElementById('questionErrorEdit');
+
+        attendanceDetailForm.addEventListener('submit', function(event) {
+
+            let isFormValid = true;
+
+            // Ẩn tất cả thông báo lỗi trước khi kiểm tra
+            questionError.style.display = 'none';
+
+            if (detailNotes.value.trim().length === 0) {
+                questionError.style.display = 'block';
+                isFormValid = false;
+            }
+
+            if (!isFormValid) {
+                event.preventDefault();
+            }
+        });
+
+        detailNotes.addEventListener('input', function() {
+            if (questionError.style.display === 'block') {
+                questionError.style.display = 'none';
+            }
+        });
+    });
 
 
     const autoHideAlert = (elementId, timeout) => {

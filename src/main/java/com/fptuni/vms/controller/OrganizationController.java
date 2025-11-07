@@ -59,6 +59,7 @@ public class OrganizationController {
         pageSizes.add((int) total);
         pageSizes = pageSizes.stream().distinct().sorted().toList();
 
+        model.addAttribute("activePage", "organizations");
         model.addAttribute("orgs", orgs);
         model.addAttribute("keyword", keyword);
         model.addAttribute("status", status);
@@ -96,6 +97,7 @@ public class OrganizationController {
 
         List<Organization> orgs = organizationService.searchOrganizations(null, null, null, null, 0, 10, "DESC", "createdAt");
 
+        model.addAttribute("activePage", "organizations");
         model.addAttribute("orgs", orgs);
         model.addAttribute("selectedOrg", org);
         model.addAttribute("viewType", view);
