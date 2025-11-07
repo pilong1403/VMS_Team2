@@ -93,6 +93,7 @@ public class UserController {
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("sortField", sortField);
 
+        model.addAttribute("activePage", "users");
         model.addAttribute("roles", roleService.getAllRoles());
         return "admin/userManagement";
     }

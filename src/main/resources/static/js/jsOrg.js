@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
 
     /* ========== 1. Hiển thị popup thông báo ========== */
@@ -73,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /* ========== 5. (Mục 8 cũ) Các hàm gọi modal quyết định ========== */
+    /* ========== 5. Các hàm gọi modal quyết định (Wrapper) ========== */
     // Đặt vào đây để chúng có thể "thấy" các hàm ở mục 2 và 3
     window.openRejectModal = function (btn) {
         window.openDecisionModal(btn, "reject");
@@ -94,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
         detailModal.style.display = "flex";
     }
 
-    // (Gom từ DOMContentLoaded thứ 2)
     const userDetailModal = document.getElementById("userDetailModal");
     if (userDetailModal && userDetailModal.classList.contains("show")) {
         userDetailModal.style.display = "flex";
@@ -135,7 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ========== 10. Đóng dropdown khi click bên ngoài ========== */
-    // Gộp 2 hàm click bên ngoài làm một cho gọn
     window.addEventListener('click', function (event) {
         if (dropdownMenu && dropdownMenu.classList.contains('show')) {
             dropdownMenu.classList.remove('show');

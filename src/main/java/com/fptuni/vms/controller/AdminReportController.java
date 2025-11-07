@@ -34,6 +34,7 @@ public class AdminReportController {
         Map<String, Object> userStats = reportService.getUserRegistrationStats(rangeType, fromDate, toDate, sort);
         Map<String, Long> roleDistribution = reportService.getUserRoleDistribution();
 
+        model.addAttribute("activePage", "reports");
         model.addAttribute("rangeType", rangeType);
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);
