@@ -56,8 +56,8 @@ public class FAQController {
 
         FAQ faq = new FAQ();
         faq.setCategory(category);
-        faq.setQuestion(question);
-        faq.setAnswer(answer);
+        faq.setQuestion(question.trim());
+        faq.setAnswer(answer.trim());
         faq.setStatus(true);
         faq.setCreatedAt(java.time.LocalDateTime.now());
         faq.setUpdatedAt(null);
@@ -89,8 +89,8 @@ public class FAQController {
         } else{
             FAQ existingFAQ = faqService.getFAQById(faqId);
             existingFAQ.setCategory(editedCategory);
-            existingFAQ.setQuestion(question);
-            existingFAQ.setAnswer(answer);
+            existingFAQ.setQuestion(question.trim());
+            existingFAQ.setAnswer(answer.trim());
             existingFAQ.setUpdatedAt(java.time.LocalDateTime.now());
 
             if (loggedInUser != null) {
