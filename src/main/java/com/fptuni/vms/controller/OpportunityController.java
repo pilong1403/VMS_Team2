@@ -77,6 +77,8 @@ public class OpportunityController {
                                @RequestParam(value = "page", defaultValue = "0") int page,
                                @RequestParam(value = "size", defaultValue = "10") int size,
                                Model model) {
+        model.addAttribute("activePage","OppManagement"); // hiển thị highlight trên sidebar
+
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {

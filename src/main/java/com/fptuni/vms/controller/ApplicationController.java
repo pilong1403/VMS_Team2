@@ -194,6 +194,9 @@ public class ApplicationController {
             Model model, HttpSession session,
             @RequestParam Map<String, String> allParams) {
 
+        model.addAttribute("activePage","approval"); // hiển thị highlight trên sidebar
+
+
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         if (currentUserId == null) {
             return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
