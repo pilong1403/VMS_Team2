@@ -206,13 +206,6 @@ public class UserRepositoryImpl implements UserRepository {
                 .getSingleResult();
     }
 
-//    @Override
-//    public boolean existsByEmail(String email) {
-//        Long count = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
-//                .setParameter("email", email)
-//                .getSingleResult();
-//        return count > 0;
-//    }
 
     @Override
     public boolean existsByPhone(String phone) {
@@ -253,13 +246,4 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
 
-//    @Override
-//    public User findByEmail(String email) {
-//        List<User> users = em.createQuery(
-//                        "SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)", User.class)
-//                .setParameter("email", email)
-//                .setMaxResults(1)
-//                .getResultList();
-//        return users.isEmpty() ? null : users.get(0);
-//    }
 }

@@ -22,39 +22,32 @@
 </div>
 
 <div class="app">
-    <!-- Sidebar -->
     <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
-    <!-- 2. Wrapper mới cho nội dung bên phải -->
     <div class="content-wrapper">
-
-        <!-- 2a. Header Container (Phần cố định) -->
         <div class="header-container">
-
-            <!-- Header Fragment -->
             <div th:replace="~{fragments/organization/header :: header}"></div>
-
-            <!-- Tiêu đề trang (ĐÃ ĐƯỢC DI CHUYỂN XUỐNG .main) -->
-
         </div>
 
-        <!-- 2b. Main (Phần cuộn được) -->
         <main class="main">
-
-            <!-- Tiêu đề trang (ĐÃ DI CHUYỂN TỚI ĐÂY) -->
-            <!-- Sửa padding-bottom thành margin-bottom để tạo khoảng cách với toolbar -->
-            <div style="margin-bottom: 16px;">
-                <h2 style="margin:0" th:text="${opportunity.title}">Tên hoạt động</h2>
-                <!-- Thêm margin-top để tách khỏi h2 -->
-                <div class="muted" style="margin-top: 4px;">
-                    <i class="fa-solid fa-location-dot" style="margin-right:6px"></i>
-                    <span th:text="${opportunity.location}">Địa điểm</span>
-                    <span class="dot"></span>
-                    <i class="fa-regular fa-calendar" style="margin-right:6px"></i>
-                    <span th:text="|${#temporals.format(opportunity.startTime, 'dd/MM/yyyy')} &ndash; ${#temporals.format(opportunity.endTime, 'dd/MM/yyyy')}|">
-                        10/10/2025 – 12/10/2025
-                    </span>
+            <div style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                <div>
+                    <h2 style="margin:0" th:text="${opportunity.title}">Tên hoạt động</h2>
+                    <div class="muted" style="margin-top:4px;">
+                        <i class="fa-solid fa-location-dot" style="margin-right:6px"></i>
+                        <span th:text="${opportunity.location}">Địa điểm</span>
+                        <span class="dot"></span>
+                        <i class="fa-regular fa-calendar" style="margin-right:6px"></i>
+                        <span th:text="|${#temporals.format(opportunity.startTime, 'dd/MM/yyyy')} &ndash; ${#temporals.format(opportunity.endTime, 'dd/MM/yyyy')}|">
+                            10/10/2025 – 12/10/2025
+                        </span>
+                    </div>
                 </div>
+
+                <a th:href="@{/organization/ratings/opportunities}" class="btn ghost">
+                    <i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>
+                    Quay lại danh sách
+                </a>
             </div>
 
             <!-- Toolbar -->
@@ -99,8 +92,8 @@
                             <th>
                                 Tình nguyện viên
                                 <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
-            (page=${currentPage}, size=${pageSize}, keyword=${keyword},
-             statusFilter=${statusFilter}, sort='name')}">
+                                    (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+                                     statusFilter=${statusFilter}, sort='name')}">
                                     <i class="fa-solid fa-arrow-down-a-z"></i>
                                 </a>
                             </th>
@@ -108,8 +101,8 @@
                             <th>
                                 Giờ tham gia
                                 <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
-            (page=${currentPage}, size=${pageSize}, keyword=${keyword},
-             statusFilter=${statusFilter}, sort='hours')}">
+                                        (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+                                         statusFilter=${statusFilter}, sort='hours')}">
                                     <i class="fa-solid fa-hourglass-half"></i>
                                 </a>
                             </th>
@@ -117,8 +110,8 @@
                             <th>
                                 Check-in
                                 <a th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
-            (page=${currentPage}, size=${pageSize}, keyword=${keyword},
-             statusFilter=${statusFilter}, sort='checkin')}">
+                                        (page=${currentPage}, size=${pageSize}, keyword=${keyword},
+                                         statusFilter=${statusFilter}, sort='checkin')}">
                                     <i class="fa-solid fa-clock"></i>
                                 </a>
                             </th>
@@ -152,14 +145,14 @@
                                 <i class="fa-regular fa-calendar"></i>
                                 <span th:text="|${#temporals.format(v.opportunityStart, 'dd/MM/yyyy')} &ndash; ${#temporals.format(v.opportunityEnd, 'dd/MM/yyyy')}|"></span>
                                 <div class="muted" style="margin-top:4px">
-                    <span th:if="${v.checkinTime != null}">
-                      <i class="fa-regular fa-clock"></i>
-                      <span th:text="|In: ${#temporals.format(v.checkinTime, 'HH:mm dd/MM')}|"></span>
-                    </span>
+                                    <span th:if="${v.checkinTime != null}">
+                                        <i class="fa-regular fa-clock"></i>
+                                        <span th:text="|In: ${#temporals.format(v.checkinTime, 'HH:mm dd/MM')}|"></span>
+                                    </span>
                                     <span th:if="${v.checkoutTime != null}" style="margin-left:10px">
-                      <i class="fa-regular fa-clock"></i>
-                      <span th:text="|Out: ${#temporals.format(v.checkoutTime, 'HH:mm dd/MM')}|"></span>
-                    </span>
+                                        <i class="fa-regular fa-clock"></i>
+                                         <span th:text="|Out: ${#temporals.format(v.checkoutTime, 'HH:mm dd/MM')}|"></span>
+                                    </span>
                                 </div>
                             </td>
 
@@ -177,8 +170,8 @@
                                    th:href="@{'/organization/ratings/edit/' + ${v.ratingId}}">Xem / Sửa</a>
 
                                 <span th:if="${v.status == 'NOT_ATTENDED' or v.status == 'IN_PROGRESS'}" class="btn ghost" style="opacity:.6;cursor:not-allowed">
-        <i class="fa-regular fa-circle-xmark" style="margin-right:6px"></i>Chưa thể đánh giá
-    </span>
+                                    <i class="fa-regular fa-circle-xmark" style="margin-right:6px"></i>Chưa thể đánh giá
+                                </span>
 
                             </td>
                         </tr>
@@ -191,14 +184,14 @@
             <div style="margin-top:20px;display:flex;justify-content:center;gap:6px;" th:if="${totalPages > 1}">
                 <a th:each="i : ${#numbers.sequence(0,totalPages - 1)}"
                    th:href="@{'/organization/ratings/opportunity/' + ${opportunity.oppId}
-               (page=${i}, size=${pageSize}, keyword=${keyword}, status=${status}, sort=${sort})}"
+                         (page=${i}, size=${pageSize}, keyword=${keyword}, status=${status}, sort=${sort})}"
                    th:text="${i + 1}"
                    th:classappend="${i == currentPage} ? ' btn primary' : ' btn ghost'"></a>
             </div>
 
-        </main> <!-- Đóng .main (phần cuộn) -->
+        </main>
 
-    </div> <!-- Đóng .content-wrapper -->
+    </div>
 
 </div>
 

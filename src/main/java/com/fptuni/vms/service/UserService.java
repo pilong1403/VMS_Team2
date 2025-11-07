@@ -55,12 +55,10 @@ public interface UserService {
     // ===== STATISTICS =====
     long countAllUsers();
     long countUsersByStatus(String status);
-//    boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
     void exportUserToExcel(User user, OutputStream outputStream) throws IOException;
     List<User> getUsersByRole(Integer roleId);
-//    User findByEmail(String email);
-ResponseEntity<InputStreamResource> downloadFileFromUrl(String fileUrl);
+    ResponseEntity<InputStreamResource> downloadFileFromUrl(String fileUrl);
 
     List<User> parseVolunteerExcel(MultipartFile file, Map<Integer, List<String>> errorMap);
     boolean saveVolunteerList(List<User> volunteerList);

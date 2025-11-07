@@ -95,13 +95,13 @@ public class VolunteerRatingServiceImpl implements VolunteerRatingService {
             throw new IllegalStateException("Tình nguyện viên này đã được đánh giá rồi!");
         }
 
-        // 5. Thiết lập dữ liệu để lưu
+
         rating.setOpportunity(opportunity);
         rating.setRateeUser(ratee);
         rating.setCreatedAt(LocalDateTime.now());
         rating.setRaterOrg(opportunity.getOrganization()); // hoặc lấy từ session
 
-        // 6. Lưu
+
         ratingRepo.save(rating);
     }
 

@@ -9,9 +9,8 @@ import java.util.List;
 
 public interface VolunteerRatingRepository {
 
-        // ================================
-        // 1. DANH SÁCH HOẠT ĐỘNG (LIST PAGE)
-        // ================================
+        // danh sách hoạt động
+
         List<OpportunitySummaryDto> findOpportunitiesByOrg(
                         int orgId,
                         String keyword,
@@ -25,9 +24,8 @@ public interface VolunteerRatingRepository {
                         String keyword,
                         String eventStatus);
 
-        // ================================
-        // 2. DANH SÁCH TÌNH NGUYỆN VIÊN TRONG HOẠT ĐỘNG
-        // ================================
+        // danh sách tình nguyện viên trong haotj động
+
         List<OpportunityVolunteerRatingDto> findVolunteersForOpportunity(
                         int orgId,
                         int opportunityId,
@@ -43,32 +41,21 @@ public interface VolunteerRatingRepository {
                         String keyword,
                         String statusFilter);
 
-        // ================================
-        // 3. VOLUNTEER EVENT HISTORY
-        // ================================
+       // lịch sử hoạt động tình nguyện viên
         List<EventHistoryDto> findVolunteerEventHistory(int volunteerId, int offset, int limit);
 
         long countVolunteerEventHistory(int volunteerId);
 
-        // ================================
-        // 4. VOLUNTEER RATING CHECKS
-        // ================================
         boolean canVolunteerRate(int oppId, int volunteerId);
 
         VolunteerRating findVolunteerRating(int oppId, int volunteerId);
 
-        // ================================
-        // 5. CRUD VOLUNTEER RATING
-        // ================================
         VolunteerRating findById(int id);
 
         void save(VolunteerRating rating);
 
         void update(VolunteerRating rating);
 
-        // ================================
-        // 6. BADGE (THỐNG KÊ)
-        // ================================
         Double getAverageStarsByUser(int userId);
 
         boolean hasCheckedIn(int oppId, int userId);

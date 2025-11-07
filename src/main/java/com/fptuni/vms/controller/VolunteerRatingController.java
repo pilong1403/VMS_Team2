@@ -33,7 +33,7 @@ public class VolunteerRatingController {
     @Autowired
     private UserService userService;
 
-    // ====== Helper ======
+    // lấy user hiện tại
     private User getCurrentUser(HttpSession session) {
         Integer userId = (Integer) session.getAttribute("AUTH_USER_ID");
         return userId == null ? null : userService.getUserById(userId);
@@ -48,7 +48,7 @@ public class VolunteerRatingController {
         return organizationService.findByOwnerId(me.getUserId());
     }
 
-    // ===================== 1. DANH SÁCH HOẠT ĐỘNG (CÓ FILTER) =====================
+    // danh sách hoạt động
     @GetMapping("/opportunities")
     public String listOpportunities(@RequestParam(defaultValue = "0") int page,
                                     @RequestParam(defaultValue = "5") int size,
@@ -69,7 +69,6 @@ public class VolunteerRatingController {
         long total = ratingService.countOpportunitiesByOrg(org.getOrgId(), keyword, eventStatus);
         int totalPages = (int) Math.ceil((double) total / size);
 
-        // Gửi data ra view
         model.addAttribute("opportunities", opportunities);
         model.addAttribute("keyword", keyword);
         model.addAttribute("eventStatus", eventStatus);
@@ -85,7 +84,7 @@ public class VolunteerRatingController {
         return "rating/listOpportunities";
     }
 
-    // ===================== 2. DANH SÁCH TNV TRONG HOẠT ĐỘNG =====================
+    // danh sách tnv trong hoạt động
     @GetMapping("/opportunity/{oppId}")
     public String listVolunteersByOpportunity(@PathVariable int oppId,
                                               @RequestParam(defaultValue = "0") int page,
@@ -122,7 +121,7 @@ public class VolunteerRatingController {
 
         return "rating/listRatingVolunteer";
     }
-    // ===================== 4. FORM CHỈNH SỬA RATING =====================
+    // edit rating
     @GetMapping("/edit/{id}")
     public String editRating(@PathVariable int id, HttpSession session, Model model) {
         User me = getCurrentUser(session);
@@ -138,7 +137,7 @@ public class VolunteerRatingController {
         User volunteer = rating.getRateeUser();
         Opportunity opp = rating.getOpportunity();
 
-        // Tính điểm trung bình của TNV
+        // Tính sao trung bình của TNV
         double avgStars = ratingService.getAverageStarsByUser(volunteer.getUserId());
 
         model.addAttribute("rating", rating);
@@ -151,7 +150,7 @@ public class VolunteerRatingController {
         return "rating/updateRate";
     }
 
-    // ===================== 3. HIỂN THỊ FORM THÊM RATING MỚI =====================
+    // thêm rating
     @GetMapping("/save/{oppId}/{userId}")
     public String showCreateRatingForm(@PathVariable int oppId,
                                        @PathVariable int userId,
@@ -176,7 +175,7 @@ public class VolunteerRatingController {
         return "rating/rateVolunteer";
     }
 
-    // ===================== 4. CẬP NHẬT RATING =====================
+    // update rating
     @PostMapping("/update")
     public String updateRating(@RequestParam int oppId,
                                @ModelAttribute VolunteerRating rating,

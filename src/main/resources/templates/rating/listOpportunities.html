@@ -8,38 +8,34 @@
 <body>
 <div class="app">
 
-    <!-- 1. Sidebar (Không thay đổi) -->
     <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
-    <!-- 2. Wrapper mới cho nội dung bên phải -->
     <div class="content-wrapper">
 
-        <!-- 2a. Header (Đã được đưa ra ngoài main) -->
-        <!-- Chúng ta bọc header trong một container mới để tạo nền trắng và viền -->
+
         <div class="header-container">
             <div th:replace="~{fragments/organization/header :: header}"></div>
         </div>
 
-        <!-- 2b. Main (Bây giờ chỉ chứa nội dung có thể cuộn) -->
         <main class="main">
 
             <!-- Toolbar -->
             <form method="get" class="toolbar">
                 <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm theo tên hoạt động..." class="search-input"/>
 
-                <select name="eventStatus" class="select">
-                    <option value="all" th:selected="${eventStatus == 'all'}">Tất cả trạng thái</option>
-                    <option value="upcoming" th:selected="${eventStatus == 'upcoming'}">Sắp diễn ra</option>
-                    <option value="ongoing" th:selected="${eventStatus == 'ongoing'}">Đang diễn ra</option>
-                    <option value="finished" th:selected="${eventStatus == 'finished'}">Đã kết thúc</option>
-                </select>
+                    <select name="eventStatus" class="select">
+                        <option value="all" th:selected="${eventStatus == 'all'}">Tất cả trạng thái</option>
+                        <option value="upcoming" th:selected="${eventStatus == 'upcoming'}">Sắp diễn ra</option>
+                        <option value="ongoing" th:selected="${eventStatus == 'ongoing'}">Đang diễn ra</option>
+                        <option value="finished" th:selected="${eventStatus == 'finished'}">Đã kết thúc</option>
+                    </select>
 
-                <select name="sort" class="select">
-                    <option value="recent" th:selected="${sort == 'recent'}">Gần nhất</option>
-                    <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
-                    <option value="name" th:selected="${sort == 'name'}">Tên (A → Z)</option>
-                    <option value="participants" th:selected="${sort == 'participants'}">Số TNV nhiều nhất</option>
-                </select>
+                    <select name="sort" class="select">
+                        <option value="recent" th:selected="${sort == 'recent'}">Gần nhất</option>
+                        <option value="oldest" th:selected="${sort == 'oldest'}">Cũ nhất</option>
+                        <option value="name" th:selected="${sort == 'name'}">Tên (A → Z)</option>
+                        <option value="participants" th:selected="${sort == 'participants'}">Số TNV nhiều nhất</option>
+                    </select>
 
                 <button type="submit" class="btn primary">Lọc</button>
             </form>
@@ -47,7 +43,7 @@
             <!-- List -->
             <section class="list">
                 <div th:if="${#lists.isEmpty(opportunities)}" class="empty">
-                    Không có hoạt động nào phù hợp.
+                    Không tìm thấy hoạt động nào phù hợp.
                 </div>
 
                 <div class="card" th:each="o : ${opportunities}">
@@ -104,7 +100,7 @@
             </div>
         </main>
 
-    </div> <!-- Đóng .content-wrapper -->
+    </div>
 
 </div>
 

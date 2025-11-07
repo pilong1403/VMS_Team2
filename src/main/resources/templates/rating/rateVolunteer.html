@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đánh giá Tình nguyện viên</title>
     <link rel="stylesheet" th:href="@{/css/rate.css}">
-    <!-- Thêm link Font Awesome (từ file trước, có thể bạn cần) -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
           xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13Z8Y7P8QJdQfPRpA=="
@@ -24,32 +23,25 @@
 </div>
 
 <div class="app">
-    <!-- 1. Sidebar -->
     <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
-    <!-- 2. Wrapper nội dung -->
     <div class="content-wrapper">
 
-        <!-- 2a. Header cố định -->
         <div class="header-container">
             <div th:replace="~{fragments/organization/header :: header}"></div>
         </div>
 
-        <!-- 2b. Main (phần cuộn) -->
         <main class="main">
 
-            <!-- Layout chi tiết form -->
             <div class="detail-layout">
 
-                <!-- Panel bên trái -->
                 <div class="panel">
                     <h3>Hướng dẫn</h3>
                     <div class="helper">
-                        Sau đó chọn số sao và viết nhận xét, nhấn <b>Lưu</b> để hoàn tất.
+                        Chọn số sao và viết nhận xét,sau đó nhấn <b>Lưu</b> để hoàn tất.
                     </div>
                     <div class="divider"></div>
 
-                    <!-- Sửa lỗi: Thẻ .panel bị lồng 2 lần, đã gộp lại -->
                     <h3>Chi tiết đánh giá</h3>
                     <div style="display:flex;align-items:center;gap:12px;">
                         <img th:src="${volunteer.avatarUrl != null ? volunteer.avatarUrl : 'https://i.pravatar.cc/100'}"

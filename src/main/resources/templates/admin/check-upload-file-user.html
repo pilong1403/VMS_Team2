@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <title>Xác nhận Upload Volunteer</title>
 
-    <!-- CSS hiện tại -->
     <link rel="stylesheet" th:href="@{/css/styleUser.css}"/>
 </head>
 
@@ -136,8 +135,7 @@
         <!-- Hành động -->
         <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
 
-            <!-- Nút lưu -->
-            <!-- Hiện nút Lưu chỉ khi KHÔNG có lỗi -->
+
             <form method="post" th:if="${errorCount == 0}" th:action="@{/admin/users/confirm-volunteer-excel}">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <button type="submit" class="btn btn-primary">

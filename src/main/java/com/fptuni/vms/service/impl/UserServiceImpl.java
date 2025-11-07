@@ -193,9 +193,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.countByStatus(status);
     }
 
-//    @Override
-//    public boolean existsByEmail(String email) {
-//        return userRepository.existsByEmail(email);    }
+
 
     @Override
     public boolean existsByPhone(String phone) {
