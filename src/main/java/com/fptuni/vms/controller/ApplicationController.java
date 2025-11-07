@@ -10,7 +10,7 @@ import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.OpportunitySectionService;
 import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.OrganizationService;
-import com.fptuni.vms.service.FeedbackService;  // ← THÊM
+import com.fptuni.vms.service.FeedbackService;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,33 +23,35 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class ApplicationController {
+
+    private static final Set<Opportunity.OpportunityStatus> PUBLIC_STATUSES =
+            Set.of(Opportunity.OpportunityStatus.OPEN,
+                    Opportunity.OpportunityStatus.CLOSED,
+                    Opportunity.OpportunityStatus.CANCELLED);
 
     private final ApplicationService service;
     private final ApplicationRepository applicationRepository;
     private final OpportunitySectionService sectionService;
     private final OrganizationService organizationService;
     private final OpportunityService opportunityService;
-    private final FeedbackService feedbackService; // ← THÊM
+    private final FeedbackService feedbackService;
 
     public ApplicationController(ApplicationService service,
                                  ApplicationRepository applicationRepository,
                                  OpportunitySectionService sectionService,
                                  OrganizationService organizationService,
                                  OpportunityService opportunityService,
-                                 FeedbackService feedbackService   // ← THÊM
-    ) {
+                                 FeedbackService feedbackService) {
         this.service = service;
         this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
         this.organizationService = organizationService;
         this.opportunityService = opportunityService;
-        this.feedbackService = feedbackService;     // ← THÊM
+        this.feedbackService = feedbackService;
     }
 
     @GetMapping("/opportunities/{id}")
@@ -57,31 +59,45 @@ public class ApplicationController {
         Opportunity opp = applicationRepository.findOpportunityById(id);
         if (opp == null) {
             model.addAttribute("error", "Không tìm thấy cơ hội.");
-            model.addAttribute("reviews", Collections.emptyList());
-            model.addAttribute("sections", Collections.emptyList());
+            // đảm bảo view không lỗi
+            model.addAttribute("reviews", List.of());
+            model.addAttribute("sections", List.of());
             return "opportunity/opportunity-detail";
         }
 
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        model.addAttribute("currentUserId", currentUserId);
+
+        // Quyền xem: công khai nếu status thuộc PUBLIC_STATUSES.
+        // Nếu KHÔNG công khai, CHỈ chủ sở hữu tổ chức mới xem được.
+        boolean isOwner = isOwner(currentUserId, opp);
+        boolean isPublic = opp.getStatus() != null && PUBLIC_STATUSES.contains(opp.getStatus());
+        if (!isPublic && !isOwner) {
+            model.addAttribute("error", "Không tìm thấy cơ hội hoặc bạn không đủ quyền xem.");
+            model.addAttribute("reviews", List.of());
+            model.addAttribute("sections", List.of());
+            return "opportunity/opportunity-detail";
+        }
+
+        // Common model
         model.addAttribute("opp", opp);
         model.addAttribute("org", opp.getOrganization());
         if (opp.getOrganization() != null && opp.getOrganization().getOwner() != null) {
             model.addAttribute("orgOwner", opp.getOrganization().getOwner());
         }
 
-        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        model.addAttribute("currentUserId", currentUserId);
-
         if (currentUserId != null) {
             model.addAttribute("items", service.listMyApplications(currentUserId));
             User currentUser = applicationRepository.findUserById(currentUserId);
             model.addAttribute("currentUser", currentUser);
         } else {
-            model.addAttribute("items", Collections.emptyList());
+            model.addAttribute("items", List.of());
             model.addAttribute("currentUser", null);
         }
 
-        boolean isExpired = opp.getStartTime() != null
-                && !opp.getStartTime().isAfter(LocalDateTime.now());
+        // Trạng thái & nút hành động
+        boolean isCancelled = opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED;
+        boolean isExpired = opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now());
 
         long approvedCount = service.findApprovedUsersByOppId(opp.getOppId()).size();
         Integer needVols = opp.getNeededVolunteers();
@@ -93,26 +109,31 @@ public class ApplicationController {
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
+                && !isCancelled
                 && currentUserId != null
                 && !alreadyApplied;
 
+        model.addAttribute("isCancelled", isCancelled);
         model.addAttribute("isExpired", isExpired);
         model.addAttribute("isFull", isFull);
         model.addAttribute("canApply", canApply);
         model.addAttribute("alreadyApplied", alreadyApplied);
         model.addAttribute("appliedCount", approvedCount);
 
-        // sections
+        // Badge hiển thị trạng thái
+        model.addAttribute("statusDisplayName", toStatusDisplay(opp.getStatus()));
+        model.addAttribute("statusBadgeClass", toStatusBadgeClass(opp.getStatus()));
+
+        // Sections
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
         model.addAttribute("sections", sections);
 
-        // ===== chỉ load feedback khi sự kiện kết thúc =====
+        // Feedback: chỉ load khi sự kiện kết thúc
         boolean isEventEnded = opp.getEndTime() != null && opp.getEndTime().isBefore(LocalDateTime.now());
         if (isEventEnded) {
             List<Feedback> feedbacks = feedbackService.findByOpportunity(opp.getOppId());
             model.addAttribute("reviews", feedbacks);
 
-            // [THÊM] trạng thái feedback của chính user
             if (currentUserId != null) {
                 var myFb = feedbackService.findByOpportunityAndVolunteer(opp.getOppId(), currentUserId);
                 model.addAttribute("myFeedback", myFb);
@@ -122,8 +143,7 @@ public class ApplicationController {
 
                 boolean canEditMyFeedback = false;
                 if (myFb != null && myFb.getCreatedAt() != null) {
-                    canEditMyFeedback = myFb.getCreatedAt()
-                            .isAfter(LocalDateTime.now().minusDays(3));
+                    canEditMyFeedback = myFb.getCreatedAt().isAfter(LocalDateTime.now().minusDays(3));
                 }
                 model.addAttribute("canEditMyFeedback", canEditMyFeedback);
             } else {
@@ -131,9 +151,8 @@ public class ApplicationController {
                 model.addAttribute("canCreateMyFeedback", false);
                 model.addAttribute("canEditMyFeedback", false);
             }
-
         } else {
-            model.addAttribute("reviews", Collections.emptyList());
+            model.addAttribute("reviews", List.of());
             model.addAttribute("myFeedback", null);
             model.addAttribute("canCreateMyFeedback", false);
             model.addAttribute("canEditMyFeedback", false);
@@ -154,18 +173,15 @@ public class ApplicationController {
         try {
             service.apply(oppId, userId, reason, fullName, phone, address);
             ra.addFlashAttribute("success", "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
-            // quay lại đúng trang cơ hội
             return "redirect:/opportunities/" + oppId;
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi không mong muốn. Vui lòng thử lại.");
         }
-        // nếu lỗi cũng quay lại trang cơ hội
         return "redirect:/opportunities/" + oppId;
     }
 
-    /** Route tiện lợi: không cần orgId trong URL, tự tìm theo user và redirect */
     @GetMapping("/organization/applications")
     public String redirectMyOrgApplications(@RequestParam Map<String, String> allParams, HttpSession session) {
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
@@ -180,11 +196,10 @@ public class ApplicationController {
         return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    /** Danh sách đơn theo tổ chức (filter, paging) — LỌC THEO oppId nếu có */
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
-            @RequestParam(value = "oppId", required = false) Integer oppId, // <— NEW
+            @RequestParam(value = "oppId", required = false) Integer oppId,
             @RequestParam(value = "q", required = false) String q,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
@@ -194,8 +209,7 @@ public class ApplicationController {
             Model model, HttpSession session,
             @RequestParam Map<String, String> allParams) {
 
-        model.addAttribute("activePage","approval"); // hiển thị highlight trên sidebar
-
+        model.addAttribute("activePage","approval");
 
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         if (currentUserId == null) {
@@ -219,16 +233,16 @@ public class ApplicationController {
         }
 
         var result = service.searchOrgApplicationsByOrgId(
-                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1)); // <— NEW
+                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1));
 
-        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to); // <— NEW
+        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to);
 
         List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
         var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("orgId", orgId);
-        model.addAttribute("oppId", oppId); // <— giữ oppId cho view/filter
+        model.addAttribute("oppId", oppId);
         model.addAttribute("myOpps", myOpps);
         model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
         model.addAttribute("toStr", to != null ? to.format(fmt) : "");
@@ -241,8 +255,34 @@ public class ApplicationController {
     }
 
     // ===== helpers =====
+    private boolean isOwner(Integer currentUserId, Opportunity opp) {
+        if (currentUserId == null || opp == null || opp.getOrganization() == null || opp.getOrganization().getOwner() == null) {
+            return false;
+        }
+        return Objects.equals(opp.getOrganization().getOwner().getUserId(), currentUserId);
+    }
+
+    private String toStatusDisplay(Opportunity.OpportunityStatus st) {
+        if (st == null) return "Không rõ";
+        return switch (st) {
+            case OPEN -> "Đang mở";
+            case CLOSED -> "Đã đóng";
+            case CANCELLED -> "Đã hủy";
+            default -> "Không công khai";
+        };
+    }
+
+    private String toStatusBadgeClass(Opportunity.OpportunityStatus st) {
+        if (st == null) return "badge bg-secondary";
+        return switch (st) {
+            case OPEN -> "badge bg-success";
+            case CLOSED -> "badge bg-secondary";
+            case CANCELLED -> "badge bg-danger";
+            default -> "badge bg-dark";
+        };
+    }
+
     private String keepListParams(Map<String, String> params) {
-        // <— giữ thêm oppId
         String[] keys = { "oppId", "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
         try {
@@ -274,7 +314,6 @@ public class ApplicationController {
         return sb.toString();
     }
 
-    /** Duyệt đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/approve")
     public String approveApplication(@PathVariable Integer orgId,
                                      @PathVariable Integer appId,
@@ -296,7 +335,6 @@ public class ApplicationController {
         return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    /** Từ chối đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/reject")
     public String rejectApplication(@PathVariable Integer orgId,
                                     @PathVariable Integer appId,

@@ -57,4 +57,6 @@ public interface ApplicationService {
 
         // Số đơn đã DUYỆT (APPROVED/COMPLETED) của 1 cơ hội
         long countApprovedByOppId(Integer oppId);
+
+        boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
 }
