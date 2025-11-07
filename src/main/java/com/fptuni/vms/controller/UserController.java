@@ -233,8 +233,21 @@ public class UserController {
             return "redirect:/admin/users";
         }
 
+        String filename = file.getOriginalFilename();
+        if (filename == null ||
+                !(filename.toLowerCase().endsWith(".xlsx") || filename.toLowerCase().endsWith(".xls"))) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ cho phép file Excel (.xlsx hoặc .xls).");
+            return "redirect:/admin/users";
+        }
+
         Map<Integer, List<String>> errorMap = new HashMap<>();
         List<User> volunteerList = userService.parseVolunteerExcel(file, errorMap);
+
+        if (volunteerList.size() > 100) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Mỗi lần chỉ được upload tối đa 100 volunteer. File hiện có " + volunteerList.size() + " dòng.");
+            return "redirect:/admin/users";
+        }
 
         int totalCount = volunteerList.size();
         int errorCount = errorMap.size();

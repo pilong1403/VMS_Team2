@@ -370,16 +370,149 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-$('#btnChooseBulk')?.addEventListener('click', () => {
-    $('#bulkFile').click();
-});
 
-$('#bulkFile')?.addEventListener('change', function () {
-    const file = this.files[0];
-    if (file) {
-        $('#bulkFilename').textContent = file.name;
-        $('#btnUploadBulk').disabled = false; // bật nút Upload
+
+/*************************************************
+ * 9. Validate upload Excel (tối đa 100 người, đúng định dạng)
+ *************************************************/
+document.addEventListener("DOMContentLoaded", () => {
+    const bulkForm      = document.getElementById("bulkUploadForm");
+    const bulkFileInput = document.getElementById("bulkFile");
+    const btnChooseBulk = document.getElementById("btnChooseBulk");
+    const bulkDropzone  = document.getElementById("bulkDropzone");
+    const bulkFilename  = document.getElementById("bulkFilename");
+    const btnUploadBulk = document.getElementById("btnUploadBulk");
+
+    if (!bulkForm) return; // nếu trang không có form thì thôi
+
+    // Hàm popup lỗi riêng cho upload Excel
+    function showBulkError(message) {
+        // xóa popup cũ (nếu có)
+        const old = document.querySelector(".error-popup.dynamic");
+        if (old) old.remove();
+
+        const wrap = document.createElement("div");
+        wrap.className = "error-popup dynamic";
+        wrap.innerHTML = `
+            <div class="error-content">
+                <strong>Lỗi upload Excel</strong>
+                <p>${message}</p>
+            </div>
+        `;
+        document.body.appendChild(wrap);
+        setTimeout(() => wrap.remove(), 4000);
     }
+
+    // Nút "Chọn file"
+    btnChooseBulk?.addEventListener("click", () => {
+        bulkFileInput.click();
+    });
+
+    // Chọn file qua dialog
+    bulkFileInput?.addEventListener("change", () => {
+        const file = bulkFileInput.files[0];
+        if (file) {
+            bulkFilename.textContent = file.name;
+            btnUploadBulk.disabled = false;
+        } else {
+            bulkFilename.textContent = "";
+            btnUploadBulk.disabled = true;
+        }
+    });
+
+    // Hỗ trợ kéo–thả vào dropzone
+    bulkDropzone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        bulkDropzone.classList.add("dragover");
+    });
+    bulkDropzone?.addEventListener("dragleave", () => {
+        bulkDropzone.classList.remove("dragover");
+    });
+    bulkDropzone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        bulkDropzone.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            // gán file dropp vào input
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            bulkFileInput.files = dt.files;
+
+            bulkFilename.textContent = file.name;
+            btnUploadBulk.disabled = false;
+        }
+    });
+
+    // Validate khi submit form
+    bulkForm.addEventListener("submit", function (e) {
+        // tránh validate lại khi đã cho submit thật
+        if (bulkForm.dataset.validated === "true") return;
+
+        e.preventDefault();
+
+        const file = bulkFileInput.files[0];
+        if (!file) {
+            showBulkError("Vui lòng chọn file Excel.");
+            return;
+        }
+
+        // Kiểm tra đuôi file
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (!["xlsx", "xls"].includes(ext)) {
+            showBulkError("Chỉ cho phép file Excel (.xlsx hoặc .xls).");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            try {
+                const data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[firstSheetName];
+
+                if (!sheet || !sheet["!ref"]) {
+                    showBulkError("File Excel không có dữ liệu.");
+                    return;
+                }
+
+                const range = XLSX.utils.decode_range(sheet["!ref"]);
+
+                // Đếm số dòng có dữ liệu (bỏ qua hàng header)
+                let rowCount = 0;
+                for (let r = range.s.r + 1; r <= range.e.r; r++) {
+                    let empty = true;
+                    for (let c = range.s.c; c <= range.e.c; c++) {
+                        const cellRef = XLSX.utils.encode_cell({ r, c });
+                        const cell = sheet[cellRef];
+                        if (cell && String(cell.v).trim() !== "") {
+                            empty = false;
+                            break;
+                        }
+                    }
+                    if (!empty) rowCount++;
+                }
+
+                if (rowCount > 100) {
+                    showBulkError(
+                        "Mỗi lần chỉ được upload tối đa 100 volunteer. File hiện có " +
+                        rowCount + " dòng dữ liệu."
+                    );
+                    return;
+                }
+
+                // OK -> cho submit thật (bỏ qua validate lần sau)
+                bulkForm.dataset.validated = "true";
+                bulkForm.submit();
+
+            } catch (err) {
+                console.error(err);
+                showBulkError("Không đọc được nội dung file Excel. Vui lòng kiểm tra lại.");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
 });
 
 
