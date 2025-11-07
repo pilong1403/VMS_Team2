@@ -133,20 +133,43 @@ public class AttendanceDetailsController {
     @PostMapping("/organization/attendance-details/check-in")
     public String processCheckIn(@RequestParam("applicationId") Integer applicationId,
                                  @RequestParam("oppId") Integer oppId,
+                                 @RequestParam(required = false) String keyword,
+                                 @RequestParam(name = "num", required = false) Integer size,
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(defaultValue = "1") int page,
                                  @RequestParam("checkinTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkinTime,
                                  RedirectAttributes redirectAttributes) {
+
+
+        redirectAttributes.addAttribute("opportunityId", oppId);
+
+        if (keyword != null) {
+            redirectAttributes.addAttribute("keyword", keyword);
+        }
+        if (size != null) {
+            redirectAttributes.addAttribute("num", size);
+        }
+        if (status != null) {
+            redirectAttributes.addAttribute("status", status);
+        }
+        if(page > 1){
+            redirectAttributes.addAttribute("page", page);
+        }
+
+        String redirectUrl = "redirect:/organization/attendance-details";
+
+
 
         Application application = attendanceService.findApplicationById(applicationId);
 
         if (application == null) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Không tìm thấy đơn ứng tuyển hợp lệ.");
-            return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+            return redirectUrl;
         }
 
         Opportunity opportunity = application.getOpportunity();
 
         LocalDateTime eventStartTime = opportunity.getStartTime();
-//        LocalDateTime endOfDay = eventStartTime.toLocalDate().atTime(LocalTime.MAX);
         LocalDateTime eventEndTime = opportunity.getEndTime();
 
         // Lấy bản ghi điểm danh và thời gian check-out hiện tại (nếu có)
@@ -156,7 +179,7 @@ public class AttendanceDetailsController {
         //check xem time check in có < time bắt đầu sk ko
         if (checkinTime.isBefore(eventStartTime)) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Thời gian check-in không được sớm hơn thời gian bắt đầu sự kiện.");
-            return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+            return redirectUrl;
         }
 
         //Xác định giới hạn cho thời gian check-in
@@ -171,7 +194,7 @@ public class AttendanceDetailsController {
                     ? "Lỗi: Thời gian check-in không được muộn hơn thời gian đã check-out."
                     : "Lỗi: Thời gian check-in phải ở trong ngày diễn ra sự kiện.";
             redirectAttributes.addFlashAttribute("error", errorMessage);
-            return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+            return redirectUrl;
         }
 
         // TH chưa có bản ghi attendance thì tạo mới để lưu điểm danh cho volunteer
@@ -195,23 +218,44 @@ public class AttendanceDetailsController {
             redirectAttributes.addFlashAttribute("success", "Cập nhật thời gian check-in thành công!");
         }
 
-        return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+        return redirectUrl;
     }
-
 
     @PostMapping("/organization/attendance-details/check-out")
     public String handleCheckOut(@RequestParam("applicationId") Integer applicationId,
                                  @RequestParam("oppId") Integer oppId,
+                                 @RequestParam(required = false) String keyword,
+                                 @RequestParam(name = "num", required = false) Integer size,
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(defaultValue = "1") int page,
                                  @RequestParam("checkOutTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime checkOutTime,
                                  @AuthenticationPrincipal CustomUserDetails loggedInUser,
                                  RedirectAttributes redirectAttributes) {
+
+        redirectAttributes.addAttribute("opportunityId", oppId);
+
+        if (keyword != null) {
+            redirectAttributes.addAttribute("keyword", keyword);
+        }
+        if (size != null) {
+            redirectAttributes.addAttribute("num", size);
+        }
+        if (status != null) {
+            redirectAttributes.addAttribute("status", status);
+        }
+        if(page > 1){
+            redirectAttributes.addAttribute("page", page);
+        }
+
+        String redirectUrl = "redirect:/organization/attendance-details";
+
 
 
         Attendance attendance = attendanceService.findAttendanceByApplicationId(applicationId);
 
         if (attendance == null || attendance.getCheckinTime() == null) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Không thể check-out khi chưa check-in.");
-            return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+            return redirectUrl;
         }
 
         Application application = attendance.getApplication();
@@ -223,20 +267,20 @@ public class AttendanceDetailsController {
         //check xem time check-out có < thời gian check-in
         if (checkOutTime.isBefore(checkinTime)) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Thời gian check-out không được sớm hơn thời gian check-in.");
-            return "redirect:/organization/attendance-details?opportunityId=" + opportunity.getOppId();
+            return redirectUrl;
         }
 
         //check xem time check-out có = thời gian check-in
         if (checkOutTime.equals(checkinTime)) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Thời gian check-out không được trùng với thời gian check-in.");
-            return "redirect:/organization/attendance-details?opportunityId=" + opportunity.getOppId();
+            return redirectUrl;
         }
 
 
         //Thời gian check-out > thời gian kết thúc sk
         if (checkOutTime.isAfter(endTime)) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: Thời gian check-out phải ở trong ngày diễn ra sự kiện.");
-            return "redirect:/organization/attendance-details?opportunityId=" + opportunity.getOppId();
+            return redirectUrl;
         }
 
         // set time check-out và status của attendance = COMPLETED
@@ -250,36 +294,60 @@ public class AttendanceDetailsController {
         attendanceService.updateAttendance(attendance);
         redirectAttributes.addFlashAttribute("success", "Check-out thành công!");
 
-        return "redirect:/organization/attendance-details?opportunityId=" + opportunity.getOppId();
+        return redirectUrl;
     }
 
 
     @PostMapping("organization/attendance-details/view-attendance-details")
     public String viewAttendanceDetails(@RequestParam("applicationId") Integer applicationId,
                                         @RequestParam("oppId") Integer oppId,
+                                        @RequestParam(required = false) String keyword,
+                                        @RequestParam(name = "num", required = false) Integer size,
+                                        @RequestParam(required = false) String status,
+                                        @RequestParam(defaultValue = "1") int page,
                                         @RequestParam("notes") String notes,
                                         @RequestParam("proofFile") MultipartFile proofFileUrl,
                                         RedirectAttributes redirectAttributes) {
+
+
+        redirectAttributes.addAttribute("opportunityId", oppId);
+
+        if (keyword != null) {
+            redirectAttributes.addAttribute("keyword", keyword);
+        }
+        if (size != null) {
+            redirectAttributes.addAttribute("num", size);
+        }
+        if (status != null) {
+            redirectAttributes.addAttribute("status", status);
+        }
+        if(page > 1){
+            redirectAttributes.addAttribute("page", page);
+        }
+
+        String redirectUrl = "redirect:/organization/attendance-details";
+
+
 
         Attendance attendance = attendanceService.findAttendanceByApplicationId(applicationId);
         if(notes == null || notes.isEmpty()){
             attendance.setNotes(null);
         } else{
-            attendance.setNotes(notes);
+            attendance.setNotes(notes.trim());
         }
 
         if(proofFileUrl != null && !proofFileUrl.isEmpty()) {
             String proofFileUrlStr = cloudStorageService.uploadFile(proofFileUrl);
             if(proofFileUrlStr == null) {
                 redirectAttributes.addFlashAttribute("error", "Lỗi: Đã xảy ra lỗi khi upload file!!");
-                return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+                return redirectUrl;
             }
             attendance.setProofFileUrl(proofFileUrlStr);
         }
 
         attendanceService.updateAttendance(attendance);
         redirectAttributes.addFlashAttribute("success", "Cập nhật chi tiết điểm danh thành công !!");
-        return "redirect:/organization/attendance-details?opportunityId=" + oppId;
+        return redirectUrl;
     }
 
 }
