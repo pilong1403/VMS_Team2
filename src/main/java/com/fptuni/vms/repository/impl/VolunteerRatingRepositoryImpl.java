@@ -36,11 +36,10 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
                         o.startTime,
                         o.endTime,
 
-                        (SELECT COUNT(a)
-                         FROM Application a
-                         WHERE a.opportunity.oppId = o.oppId
-                           AND a.status IN ('APPROVED','COMPLETED')
-                        ),
+                       (SELECT COUNT(DISTINCT a.volunteer.userId)
+                        FROM Application a
+                        WHERE a.opportunity.oppId = o.oppId
+                       ),
 
                         (SELECT COUNT(vr)
                          FROM VolunteerRating vr

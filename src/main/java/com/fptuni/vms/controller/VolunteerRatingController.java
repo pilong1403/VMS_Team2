@@ -51,7 +51,7 @@ public class VolunteerRatingController {
     // ===================== 1. DANH SÁCH HOẠT ĐỘNG (CÓ FILTER) =====================
     @GetMapping("/opportunities")
     public String listOpportunities(@RequestParam(defaultValue = "0") int page,
-                                    @RequestParam(defaultValue = "10") int size,
+                                    @RequestParam(defaultValue = "5") int size,
                                     @RequestParam(required = false) String keyword,
                                     @RequestParam(defaultValue = "all") String eventStatus, // all, upcoming, ongoing, finished
                                     @RequestParam(defaultValue = "recent") String sort,     // recent, oldest, name, participants
