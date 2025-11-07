@@ -23,7 +23,7 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
     @Transactional(readOnly = true)
     public List<SupportTicket> findAll() {
         return em.createQuery(
-                "SELECT t FROM SupportTicket t ORDER BY t.ticketId DESC",
+                "SELECT t FROM SupportTicket t ORDER BY t.createdAt DESC",
                 SupportTicket.class
         ).getResultList();
     }
@@ -42,7 +42,7 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
     @Transactional(readOnly = true)
     public List<SupportTicket> findAllWithPagination(int page, int size) {
         int offset = (page - 1) * size;
-        TypedQuery<SupportTicket> query = em.createQuery("SELECT t FROM SupportTicket t", SupportTicket.class);
+        TypedQuery<SupportTicket> query = em.createQuery("SELECT t FROM SupportTicket t ORDER BY t.createdAt DESC", SupportTicket.class);
         query.setFirstResult(offset);
         query.setMaxResults(size);
         return query.getResultList();
@@ -103,6 +103,8 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
             }
             jpql.append(")");
         }
+
+        jpql.append(" ORDER BY t.createdAt DESC");
 
         // Build query
         TypedQuery<SupportTicket> query = em.createQuery(jpql.toString(), SupportTicket.class);
@@ -192,7 +194,7 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId ,String keyword, int page, int size) {
+    public List<SupportTicket> filterTicketsWithUserId(String status, String priority, Integer num, Integer userId, String keyword, int page, int size) {
 
         StringBuilder jpql = new StringBuilder("SELECT t FROM SupportTicket t WHERE 1=1");
 
@@ -245,13 +247,14 @@ public class SupportTicketRepositoryImpl implements SupportTicketRepository {
             jpql.append(")");
         }
 
+        jpql.append(" ORDER BY t.createdAt DESC");
+
         TypedQuery<SupportTicket> query = em.createQuery(jpql.toString(), SupportTicket.class);
 
-        // 3. Set tham số userId (nếu tồn tại)
+        // Set tham số
         if (userId != null) {
             query.setParameter("userId", userId);
         }
-
         if (statusEnum != null) {
             query.setParameter("statusVal", statusEnum);
         }

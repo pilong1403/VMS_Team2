@@ -83,7 +83,7 @@ public class SupportResponseServiceImpl implements SupportResponseService {
 
             SupportResponse newResponse = new SupportResponse();
             newResponse.setTicket(existingTicket);
-            newResponse.setMessage(message);
+            newResponse.setMessage(message.trim());
             newResponse.setResponder(admin);
             newResponse.setCreatedAt(LocalDateTime.now());
             newResponse.setAttachmentUrl(attachmentUrl); // Lưu URL từ Cloudinary (có thể là null nếu không có file)
