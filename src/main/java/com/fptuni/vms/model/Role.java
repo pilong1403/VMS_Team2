@@ -23,6 +23,8 @@ public class Role {
     @Column(name = "description", length = 255)
     private String description;
 
+
+
     @PrePersist @PreUpdate
     private void normalize() {
         if (roleName != null) roleName = roleName.trim().toUpperCase(); // hoặc giữ nguyên tuỳ convention

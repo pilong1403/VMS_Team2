@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận Upload Volunteer</title>
+
+    <!-- CSS hiện tại -->
+    <link rel="stylesheet" th:href="@{/css/styleUser.css}"/>
+</head>
+
+<body data-page="users">
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/admin/sidebar :: sidebar}"></div>
+
+<div class="main-wrapper">
+
+    <!-- Header -->
+    <header>
+        <div th:replace="~{fragments/admin/header :: header}"></div>
+    </header>
+
+    <main class="content">
+
+        <div class="page-header">
+            <h1>Xác nhận danh sách Volunteer từ Excel</h1>
+            <p>Vui lòng kiểm tra dữ liệu trước khi lưu</p>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="info-box">
+            <p><strong>Tổng số dòng:</strong> <span th:text="${userList.size()}"></span></p>
+            <p><strong>Số dòng hợp lệ:</strong> <span th:text="${validCount}"></span></p>
+            <p><strong>Số dòng lỗi:</strong> <span th:text="${errorCount}"></span></p>
+        </div>
+
+        <!-- Bảng dữ liệu -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Mật khẩu</th>
+                    <th>Kết quả kiểm tra</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user, loop : ${userList}"
+                    th:classappend="${errorMap.containsKey(loop.index + 1)} ? 'table-row-error' : 'table-row-ok'">
+
+                    <td th:text="${loop.index + 1}"></td>
+                    <td th:text="${user.fullName}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.phone}"></td>
+                    <td th:text="${user.passwordHash}"></td>
+
+                    <td>
+                        <ul th:if="${errorMap.containsKey(loop.index + 1)}" class="error-list">
+                            <li th:each="err : ${errorMap.get(loop.index + 1)}" th:text="${err}"></li>
+                        </ul>
+                        <span th:if="${!errorMap.containsKey(loop.index + 1)}"> Hợp lệ</span>
+                    </td>
+                </tr>
+
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- Hành động -->
+        <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+
+            <!-- Nút lưu -->
+            <!-- Hiện nút Lưu chỉ khi KHÔNG có lỗi -->
+            <form method="post" th:if="${errorCount == 0}" th:action="@{/admin/users/confirm-volunteer-excel}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn btn-primary">
+                     Lưu vào hệ thống
+                </button>
+            </form>
+
+            <!-- Hiện cảnh báo khi có lỗi -->
+            <div th:if="${errorCount > 0}" style="color: red; font-weight: 500; margin-top: 10px;">
+                 Có <span th:text="${errorCount}"></span> dòng lỗi.
+                Vui lòng sửa file Excel và tải lại trước khi lưu.
+            </div>
+
+            <!-- Nút hủy -->
+            <a class="btn btn-outline" th:href="@{/admin/users}"> Hủy / Quay lại</a>
+        </div>
+
+
+    </main>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const errorCount = parseInt(document.querySelector("[th\\:text='${errorCount}']")?.innerText || "0");
+        const btnSave = document.querySelector("button.btn.btn-primary");
+
+        // Nếu có lỗi thì khóa nút và báo hiệu
+        if (errorCount > 0) {
+            btnSave.disabled = true;
+            btnSave.style.opacity = "0.5";
+            btnSave.style.cursor = "not-allowed";
+        }
+
+        // Tooltip khi hover lỗi
+        document.querySelectorAll(".table-row-error").forEach(row => {
+            row.addEventListener("mouseenter", () => {
+                row.style.backgroundColor = "#ffdddd";
+            });
+            row.addEventListener("mouseleave", () => {
+                row.style.backgroundColor = "";
+            });
+        });
+
+        // Nếu user click lưu khi có lỗi (validator phía front)
+        btnSave?.addEventListener("click", (e) => {
+            if (errorCount > 0) {
+                e.preventDefault();
+                alert("Không thể lưu vì còn dòng lỗi trong file. Vui lòng sửa file Excel và tải lại.");
+            }
+        });
+
+        // Thêm hiệu ứng scroll đến dòng lỗi đầu tiên
+        const firstError = document.querySelector(".table-row-error");
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+            firstError.style.outline = "2px solid red";
+            setTimeout(() => {
+                firstError.style.outline = "";
+            }, 3000);
+        }
+    });
+</script>
+
+</body>
+</html>

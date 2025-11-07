@@ -96,28 +96,24 @@
                                     <option th:if="${form.status != null and form.status.name() == 'DRAFT'}"
                                             th:selected="${form.status.name() == 'DRAFT'}"
                                             th:value="${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).DRAFT}">
-                                        Bản nháp
+                                        Lưu dưới dạng bản nháp
                                     </option>
                                     <option th:if="${form.status != null and form.status.name() == 'DRAFT'}"
                                             th:value="${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).OPEN}">
-                                        Đang mở
+                                        Công khai cơ hội
                                     </option>
 
+                                    <!-- OPEN/CANCELLED -->
                                     <!-- OPEN/CANCELLED -->
                                     <option th:if="${form.status != null and (form.status.name() == 'OPEN' or form.status.name() == 'CANCELLED')}"
                                             th:selected="${form.status.name() == 'OPEN'}"
                                             th:value="${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).OPEN}">
-                                        Đang mở
+                                        Công khai cơ hội
                                     </option>
                                     <option th:if="${form.status != null and (form.status.name() == 'OPEN' or form.status.name() == 'CANCELLED')}"
                                             th:selected="${form.status.name() == 'CANCELLED'}"
                                             th:value="${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).CANCELLED}">
-                                        Đã hủy
-                                    </option>
-                                    <option th:if="${form.status != null and (form.status.name() == 'OPEN' or form.status.name() == 'CANCELLED')}"
-                                            th:selected="${form.status.name() == 'CLOSED'}"
-                                            th:value="${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).CLOSED}">
-                                        Đã kết thúc
+                                        Hủy cơ hội
                                     </option>
 
                                     <!-- CLOSED -->

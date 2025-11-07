@@ -10,7 +10,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -64,7 +63,10 @@ public class OpportunityController {
         if (current == null) return List.of(Opportunity.OpportunityStatus.DRAFT); // tạo mới → DRAFT
         return switch (current) {
             case DRAFT -> List.of(Opportunity.OpportunityStatus.DRAFT, Opportunity.OpportunityStatus.OPEN);
-            case OPEN, CANCELLED -> List.of(Opportunity.OpportunityStatus.OPEN, Opportunity.OpportunityStatus.CANCELLED, Opportunity.OpportunityStatus.CLOSED);
+            case OPEN, CANCELLED -> List.of(
+                    Opportunity.OpportunityStatus.OPEN,
+                    Opportunity.OpportunityStatus.CANCELLED
+            );
             case CLOSED -> List.of(Opportunity.OpportunityStatus.CLOSED);
         };
     }
@@ -232,9 +234,37 @@ public class OpportunityController {
 
         OppSnapshot oldSnap = (old == null) ? null : OppSnapshot.from(old);
 
+        // ===== Ghép thời gian để dùng cho overlap-check + lưu =====
         var start = LocalDateTime.of(form.getStartDate(), form.getStartTime());
         var end = LocalDateTime.of(form.getEndDate(), form.getEndTime());
 
+        // ===== NEW: Lấy danh sách các cơ hội đang chồng lấn để hiển thị chi tiết =====
+        List<Opportunity> overlaps = opportunityService.findOverlapsForOrg(
+                org.getOrgId(),
+                form.getOppId(), // null nếu tạo mới, khác null nếu edit (loại trừ chính nó)
+                start, end,
+                5 // giới hạn số mục hiển thị
+        );
+        if (!overlaps.isEmpty()) {
+            StringBuilder detail = new StringBuilder("Thời gian bị chồng lấn với các cơ hội sau:\n");
+            for (Opportunity o : overlaps) {
+                detail.append("• ")
+                        .append(o.getTitle())
+                        .append(" (")
+                        .append(FMT.format(o.getStartTime()))
+                        .append(" → ")
+                        .append(FMT.format(o.getEndTime()))
+                        .append(")\n");
+            }
+            // Đẩy message chi tiết ra global error + gắn error cho field ngày để UX tốt hơn
+            binding.rejectValue("startDate", "time.overlap", "Khoảng thời gian trùng với cơ hội khác.");
+            binding.rejectValue("endDate", "time.overlap", "Khoảng thời gian trùng với cơ hội khác.");
+            model.addAttribute("err", detail.toString().trim());
+            populateCommon(model, form, form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội");
+            return "organization/opportunity-form";
+        }
+
+        // ===== Map qua entity =====
         Opportunity opp = (old == null) ? new Opportunity() : old;
         opp.setOrganization(org);
         Category cat = new Category();
@@ -255,7 +285,6 @@ public class OpportunityController {
         List<OpportunitySection> toSave = new ArrayList<>();
         int idx = 1;
 
-        // Lấy danh sách section hiện có (nếu đang edit) để fallback imageUrl theo sectionOrder
         Map<Integer, OpportunitySection> oldByOrder = Collections.emptyMap();
         if (old != null) {
             List<OpportunitySection> existing = sectionService.findByOpportunity(old.getOppId());
@@ -269,10 +298,8 @@ public class OpportunityController {
         for (int i = 0; i < form.getSections().size(); i++) {
             var sf = form.getSections().get(i);
 
-            // 1) Thứ tự phần
             int order = (sf.getSectionOrder() != null ? sf.getSectionOrder() : idx);
 
-            // 2) Upload mới (nếu có)
             String finalImageUrl = null;
             if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
                 String uploaded = cloudStorage.uploadFile(sf.getImageFile());
@@ -283,7 +310,6 @@ public class OpportunityController {
                 }
             }
 
-            // 3) Không có ảnh mới → giữ ảnh cũ theo sectionOrder; nếu không có, dùng imageUrl post từ hidden
             if (finalImageUrl == null) {
                 OpportunitySection oldSec = oldByOrder.get(order);
                 if (oldSec != null && oldSec.getImageUrl() != null && !oldSec.getImageUrl().isBlank()) {
@@ -293,7 +319,6 @@ public class OpportunityController {
                 }
             }
 
-            // 4) Tạo entity section
             OpportunitySection s = new OpportunitySection();
             s.setOpportunity(opp);
             s.setSectionOrder(order);
@@ -317,7 +342,6 @@ public class OpportunityController {
             opp = opportunityService.save(opp);
             sectionService.replaceSections(opp, toSave);
         } catch (DataIntegrityViolationException | PersistenceException ex) {
-            // Có thể là vi phạm unique (opp_id, section_order)
             binding.reject("db.constraint", "Lưu thất bại do dữ liệu trùng lặp hoặc vi phạm ràng buộc.");
             model.addAttribute("err", "Lưu thất bại do dữ liệu không hợp lệ (ví dụ trùng Thứ tự).");
             populateCommon(model, form, form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội");
@@ -330,12 +354,12 @@ public class OpportunityController {
 
         if (oldSnap == null) {
             String title = "Cơ hội mới: " + opp.getTitle();
-            String msg = buildCreateMessage(opp, org);
+            String msg = buildCreateMessage(opp, organizationService.findByOwnerId(me.getUserId()));
             notificationService.notifyUsers(recipients, title, msg, "INFO", publicLink, me.getUserId(), org.getOrgId());
             ra.addFlashAttribute("ok", "Tạo cơ hội thành công.");
         } else {
             String title = "Cập nhật cơ hội: " + opp.getTitle();
-            String msg = buildUpdateMessage(oldSnap, opp, org);
+            String msg = buildUpdateMessage(oldSnap, opp, organizationService.findByOwnerId(me.getUserId()));
             if (!msg.isBlank())
                 notificationService.notifyUsers(recipients, title, msg, "INFO", publicLink, me.getUserId(),
                         org.getOrgId());
@@ -414,7 +438,6 @@ public class OpportunityController {
             sf.setSectionOrder(s.getSectionOrder() != null ? s.getSectionOrder() : i);
             sf.setHeading(s.getHeading());
             sf.setContent(s.getContent());
-            // Gán URL ảnh cũ vào field imageUrl để hiển thị/giữ lại nếu không upload mới
             sf.setImageUrl(s.getImageUrl());
             sf.setCaption(s.getCaption());
             sfs.add(sf);

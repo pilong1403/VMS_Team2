@@ -51,5 +51,8 @@ public interface UserRepository {
     boolean existsByPhone(String phone);
 
     List<User> getUsersByRole(Integer roleId);
+    int findRoleIdByName(String roleName);
+    boolean insertVolunteer(User user);
+
 
 }

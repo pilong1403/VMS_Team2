@@ -713,3 +713,17 @@ input.error-border {
     border-color: var(--success);
     box-shadow: 0 0 0 3px hsl(142, 76%, 90%);
 }
+.table-row-error {
+    background-color: #ffecec !important;
+    transition: background-color 0.3s ease;
+}
+.table-row-ok {
+    background-color: #eaffea !important;
+}
+
+.error-list {
+    margin: 0;
+    padding-left: 20px;
+    color: red;
+    font-weight: bold;
+}

@@ -229,6 +229,30 @@ public class UserRepositoryImpl implements UserRepository {
                 .getResultList();
     }
 
+    @Override
+    public int findRoleIdByName(String roleName) {
+        try {
+            return em.createQuery(
+                            "SELECT r.roleId FROM Role r WHERE r.roleName = :name", Integer.class)
+                    .setParameter("name", roleName)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    @Override
+    public boolean insertVolunteer(User user) {
+        try {
+            em.persist(user);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 //    @Override
 //    public User findByEmail(String email) {
 //        List<User> users = em.createQuery(
