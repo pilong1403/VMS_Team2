@@ -250,7 +250,7 @@
             <div class="nav-label">MENU CHÍNH</div>
             <ul class="nav-menu">
                 <li>
-                    <a th:href="@{/org/opps}" class="nav-item" th:classappend="${activePage == '#'} ? 'active' : ''">
+                    <a th:href="@{/org/opps}" class="nav-item" th:classappend="${activePage == 'OppManagement'} ? 'active' : ''">
                         Quản lý Sự Kiện
                     </a>
                 </li>
@@ -268,7 +268,7 @@
                 </li>
                 <li>
                     <a th:href="@{/organization/approvals}" class="nav-item"
-                        th:classappend="${activePage == 'support'} ? 'active' : ''">
+                        th:classappend="${activePage == 'approval'} ? 'active' : ''">
                         <span>Duyệt Đơn</span>
                     </a>
                 </li>
