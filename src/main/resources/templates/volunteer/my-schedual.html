@@ -33,7 +33,22 @@
             >
               <h2 class="section-title" th:text="'Sắp diễn ra (' + ${scheduleData.upcomingCount} + ')'">Sắp diễn ra</h2>
               <div class="events-list">
-                <div th:each="app : ${scheduleData.upcomingApplications}" class="event-card upcoming">
+                <div
+                  th:each="app : ${scheduleData.upcomingApplications}"
+                  class="event-card upcoming clickable-event"
+                  th:data-app-id="${app.appId}"
+                  th:data-title="${app.opportunityTitle}"
+                  th:data-start="${app.startTime}"
+                  th:data-end="${app.endTime}"
+                  th:data-location="${app.location ?: 'Chưa cập nhật'}"
+                  th:data-organization="${app.organizationName}"
+                  th:data-description="${app.description ?: 'Hoạt động tình nguyện ý nghĩa'}"
+                  th:data-applied-at="${app.appliedAt}"
+                  th:data-status="${app.status}"
+                  th:data-needed-volunteers="${app.neededVolunteers}"
+                  th:data-thumbnail="${app.thumbnailUrl ?: ''}"
+                  onclick="showEventDetail(this)"
+                >
                   <div class="event-date">
                     <span class="day" th:text="${#temporals.day(app.startTime)}">15</span>
                     <span class="month" th:text="'Th' + ${#temporals.month(app.startTime)}">Th11</span>
@@ -55,7 +70,22 @@
                       >
                     </div>
                   </div>
-                  <div class="event-status upcoming">Sắp diễn ra</div>
+                  <div class="event-actions">
+                    <button
+                      class="btn btn-outline-primary btn-sm add-to-calendar"
+                      th:data-title="${app.opportunityTitle}"
+                      th:data-start="${app.startTime}"
+                      th:data-end="${app.endTime}"
+                      th:data-location="${app.location ?: ''}"
+                      th:data-organization="${app.organizationName}"
+                      onclick="addToGoogleCalendar(this)"
+                      title="Thêm vào Google Calendar"
+                    >
+                      <i class="bi bi-calendar-plus"></i>
+                      <span class="d-none d-md-inline">Thêm vào lịch</span>
+                    </button>
+                    <div class="event-status upcoming">Sắp diễn ra</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -75,6 +105,93 @@
       </div>
     </div>
 
+    <!-- Event Detail Modal -->
+    <div
+      class="modal fade"
+      id="eventDetailModal"
+      tabindex="-1"
+      aria-labelledby="eventDetailModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="eventDetailModalLabel">Chi tiết hoạt động</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="event-detail-content">
+              <!-- Event Thumbnail -->
+              <div class="event-thumbnail mb-4" id="modal-thumbnail-container" style="display: none">
+                <img id="modal-thumbnail" src="" alt="Event thumbnail" class="img-fluid rounded" />
+              </div>
+
+              <div class="row">
+                <div class="col-md-8">
+                  <h4 id="modal-event-title" class="mb-3">Tên hoạt động</h4>
+                  <div class="event-meta mb-4">
+                    <div class="meta-item">
+                      <i class="bi bi-building"></i>
+                      <span id="modal-organization">Tổ chức</span>
+                    </div>
+                    <div class="meta-item">
+                      <i class="bi bi-calendar-event"></i>
+                      <span id="modal-date">Ngày</span>
+                    </div>
+                    <div class="meta-item">
+                      <i class="bi bi-clock"></i>
+                      <span id="modal-time">Thời gian</span>
+                    </div>
+                    <div class="meta-item">
+                      <i class="bi bi-geo-alt"></i>
+                      <span id="modal-location">Địa điểm</span>
+                    </div>
+                    <div class="meta-item">
+                      <i class="bi bi-people"></i>
+                      <span id="modal-volunteers"
+                        >Cần <span id="modal-needed-volunteers">0</span> tình nguyện viên</span
+                      >
+                    </div>
+                    <div class="meta-item">
+                      <i class="bi bi-calendar-check"></i>
+                      <span>Đăng ký lúc: <span id="modal-applied-at">--</span></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="event-status-card">
+                    <div class="status-badge" id="modal-status">Sắp diễn ra</div>
+                    <div class="countdown" id="modal-countdown"></div>
+                    <div class="application-info mt-3">
+                      <small class="text-muted">ID Đăng ký: #<span id="modal-app-id">--</span></small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="event-description">
+                <h6>Mô tả hoạt động</h6>
+                <p id="modal-description">Thông tin chi tiết về hoạt động tình nguyện...</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="modal-add-calendar"
+              onclick="addToGoogleCalendarFromModal()"
+            >
+              <i class="bi bi-calendar-plus"></i>
+              Thêm vào lịch
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/my-schedule.js}"></script>
   </body>
 </html>

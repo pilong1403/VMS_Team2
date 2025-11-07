@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/profile")
 public class ProfileController {
 
-    private UserService userService;
-    private ApplicationService applicationService;
-    private FeedbackService feedbackService;
+    private final UserService userService;
+    private final ApplicationService applicationService;
+    private final FeedbackService feedbackService;
 
     public ProfileController(UserService userService, ApplicationService applicationService,
             FeedbackService feedbackService) {
@@ -243,7 +243,7 @@ public class ProfileController {
             return "redirect:/login";
         }
 
-        // Check if user is volunteer
+        // Check if user is volunteer role
         if (!"VOLUNTEER".equals(currentUser.getRole().getRoleName())) {
             return "redirect:/";
         }
