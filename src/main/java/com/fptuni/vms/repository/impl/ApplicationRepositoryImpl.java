@@ -176,8 +176,7 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         return total == null ? 0L : total;
     }
 
-    // ================== các phần theo tổ chức giữ nguyên (không đổi)
-    // ==================
+    // ================== Query theo tổ chức (CÓ LỌC oppId) ==================
     @Override
     public List<Application> findOrgApplications(Integer orgId, Integer oppId, String q,
             Application.ApplicationStatus status,

@@ -17,11 +17,11 @@ public interface ApplicationService {
 
         List<Application> listMyApplications(Integer volunteerId);
 
-        // NOTE: NEW — tìm kiếm/loc/sort + phân trang cho volunteer
+        // tìm kiếm/loc/sort + phân trang cho volunteer PhiLong
         Page<Application> searchMyApplications(Integer volunteerId,
                         String status,
                         String q,
-                        String sort, // "newest" | "oldest"
+                        String sort,
                         int page,
                         int size);
 
@@ -35,6 +35,7 @@ public interface ApplicationService {
                         String status) {
         }
 
+        // search + stats theo organization (CÓ LỌC OPPID)
         Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
                         Integer oppId,
                         String q,

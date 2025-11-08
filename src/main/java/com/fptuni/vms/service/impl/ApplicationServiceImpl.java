@@ -89,7 +89,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return repo.findAllByVolunteerId(volunteerId);
         }
 
-        // NOTE: NEW — tìm kiếm/loc/sort + phân trang cho volunteer
+        // tìm kiếm/loc/sort + phân trang cho volunteer PhiLong
         @Override
         public Page<Application> searchMyApplications(Integer volunteerId,
                         String status,
@@ -104,10 +104,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                         try {
                                 st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
                         } catch (IllegalArgumentException ignored) {
-                                /* keep null */ }
+                        }
                 }
 
-                // sort: "newest" | "oldest"
                 boolean newestFirst = !"oldest".equalsIgnoreCase(sort);
 
                 List<Application> rows = repo.findMyApplications(
@@ -119,7 +118,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return new PageImpl<>(rows, pageable, total);
         }
 
-        // ====== phần cho Organization giữ nguyên ======
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
                         Integer oppId,
@@ -136,7 +134,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         try {
                                 st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
                         } catch (IllegalArgumentException ignored) {
-                                /* keep null */ }
+                        }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay();

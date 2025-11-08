@@ -24,12 +24,10 @@ public interface ApplicationRepository {
 
         List<Application> findAllByVolunteerId(Integer volunteerId);
 
-        // ====== NOTE: NEW — query cho volunteer có tìm kiếm/loc/sort + phân trang
-        // ======
         List<Application> findMyApplications(Integer volunteerId,
                         Application.ApplicationStatus status,
                         String q,
-                        String sortDir, // "ASC"/"DESC" theo appliedAt
+                        String sortDir,
                         int offset,
                         int limit);
 
@@ -37,7 +35,7 @@ public interface ApplicationRepository {
                         Application.ApplicationStatus status,
                         String q);
 
-        // ====== theo tổ chức (giữ nguyên) ======
+        // theo tổ chức (giữ nguyên)
         List<Application> findOrgApplications(Integer orgId,
                         Integer oppId,
                         String q,
