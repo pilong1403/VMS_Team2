@@ -33,4 +33,15 @@ public class UserAuthProviderRepositoryImpl implements UserAuthProviderRepositor
         List<UserAuthProvider> list = q.getResultList();
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
+
+    @Override
+    public UserAuthProvider save(UserAuthProvider link) {
+        if (link == null) return null;
+        if (link.getProviderId() == null || link.getProviderId() == 0) {
+            em.persist(link);    // INSERT
+            return link;
+        } else {
+            return em.merge(link); // UPDATE
+        }
+    }
 }

@@ -108,6 +108,9 @@ public class AuthController {
                 return "Tài khoản của bạn chưa thể đăng nhập vì hồ sơ tổ chức đang chờ duyệt.";
             case "ORG_REJECTED":
                 return "Hồ sơ tổ chức của bạn đã bị từ chối. Vui lòng đăng ký lại.";
+            case "OAUTH_ROLE_BLOCKED":
+                return "Chỉ VOLUNTEER mới được đăng nhập bằng Google. " +
+                        "Tổ chức và Admin vui lòng đăng nhập bằng tài khoản & mật khẩu.";
 
             default:
                 return null;
@@ -122,4 +125,5 @@ public class AuthController {
             return "";
         }
     }
+
 }

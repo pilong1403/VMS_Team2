@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface UserAuthProviderRepository {
 
     Optional<UserAuthProvider> findByProviderAndExternalUid(String provider, String externalUid);
+    UserAuthProvider save(UserAuthProvider link);
+
 }

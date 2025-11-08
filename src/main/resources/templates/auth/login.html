@@ -121,6 +121,35 @@
       </div>
     </form>
   </div>
+
+    <!-- Modal xác nhận dùng Google -->
+    <div class="modal fade" id="googleConfirmModal" tabindex="-1" aria-labelledby="googleConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="googleConfirmLabel">
+                        <i class="bi bi-google me-2"></i>Xác nhận đăng nhập bằng Google
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Chỉ <strong>Tình nguyện viên</strong> được dùng đăng nhập Google.
+                    </p>
+                    <ul class="mb-0 ps-3">
+                        <li>Nếu bạn là <strong>Tổ chức</strong> hoặc <strong>Admin</strong>, vui lòng dùng email &amp; mật khẩu.</li>
+                        <li>Nếu dùng Google cho tài khoản Tổ chức/Admin, hệ thống sẽ từ chối và quay lại trang đăng nhập.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnGoogleConfirm">Tôi là Tình nguyện viên</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </main>
 
 <!-- Footer & Toast -->

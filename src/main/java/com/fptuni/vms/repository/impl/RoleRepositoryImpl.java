@@ -39,4 +39,15 @@ public class RoleRepositoryImpl implements RoleRepository {
     public Role findById(int id) {
         return null;
     }
+
+    @Override
+    public Role save(Role role) {
+        if (role == null) return null;
+        if (role.getRoleId() == null) {
+            em.persist(role);       // INSERT
+            return role;
+        } else {
+            return em.merge(role);  // UPDATE
+        }
+    }
 }

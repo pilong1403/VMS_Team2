@@ -1,5 +1,7 @@
 package com.fptuni.vms.config;
 
+import com.fptuni.vms.security.CustomOidcUserService;
+import com.fptuni.vms.security.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,7 +18,11 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 public class SecurityConfig {
 
         @Bean
-        SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        SecurityFilterChain filterChain(HttpSecurity http,
+                                        CustomOidcUserService customOidcUserService,   // <-- inject bean
+                                        OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
+
+
                 // Trang 403 tuỳ biến
                 AccessDeniedHandlerImpl denied = new AccessDeniedHandlerImpl();
                 denied.setErrorPage("/403");
@@ -57,6 +63,7 @@ public class SecurityConfig {
                                                                 "/", "/home", "/opportunities", "/opportunities/**",
                                                                 "/about",
                                                                 "/login", "/403",
+                                                                "/oauth2/**", "/login/oauth2/**",
                                                                 "/register", "/register/**",
                                                                 "/auth/org-register", "/auth/org-register/**",
                                                                 "/assets/**", "/css/**", "/js/**", "/images/**",
@@ -87,7 +94,27 @@ public class SecurityConfig {
 
                                                 // Các URL còn lại yêu cầu đăng nhập
                                                 .anyRequest().authenticated());
+                                                    http.oauth2Login(oauth -> oauth
+                                                                    .loginPage("/login")
+                                                                    .userInfoEndpoint(ui -> ui.oidcUserService(customOidcUserService))
+                                                                    .successHandler(oAuth2LoginSuccessHandler)  // <-- dùng đúng biến đã inject
+                                                            .failureUrl("/login?e=SYSTEM_ERROR")
+                                                    );
 
-                return http.build();
+                                            http.oauth2Login(oauth -> oauth
+                                                    .loginPage("/login")
+                                                    .userInfoEndpoint(ui -> ui.oidcUserService(customOidcUserService)) // <-- OIDC
+                                                    .successHandler(oAuth2LoginSuccessHandler)
+                                                    .failureHandler((req, resp, ex) -> {
+                                                        String code = "SYSTEM_ERROR";
+                                                        if (ex instanceof org.springframework.security.oauth2.core.OAuth2AuthenticationException oae
+                                                                && "oauth_role_blocked".equalsIgnoreCase(oae.getError().getErrorCode())) {
+                                                            code = "OAUTH_ROLE_BLOCKED";
+                                                        }
+                                                        resp.sendRedirect("/login?e=" + code);
+                                                    })
+                                            );
+
+            return http.build();
         }
 }
