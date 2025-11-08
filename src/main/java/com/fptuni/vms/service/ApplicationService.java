@@ -12,12 +12,18 @@ import com.fptuni.vms.model.User;
 public interface ApplicationService {
         Application apply(Integer oppId, Integer volunteerId, String reason);
 
-        // apply kèm cập nhật nhanh thông tin liên hệ
         Application apply(Integer oppId, Integer volunteerId, String reason,
                         String fullName, String phone, String address);
 
-        // danh sách đơn của volunteer
         List<Application> listMyApplications(Integer volunteerId);
+
+        // NOTE: NEW — tìm kiếm/loc/sort + phân trang cho volunteer
+        Page<Application> searchMyApplications(Integer volunteerId,
+                        String status,
+                        String q,
+                        String sort, // "newest" | "oldest"
+                        int page,
+                        int size);
 
         // ====== ViewModel cho trang list của Organization ======
         record ApplicationRowVM(
@@ -29,9 +35,8 @@ public interface ApplicationService {
                         String status) {
         }
 
-        // ====== search + stats theo organization (CÓ LỌC OPPID) ======
         Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         String status,
                         LocalDate from,
@@ -40,21 +45,17 @@ public interface ApplicationService {
                         int size);
 
         Map<String, Integer> computeOrgAppStats(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         String status,
                         LocalDate from,
                         LocalDate to);
 
-        // ====== duyệt / từ chối ======
         void approveApplication(Integer orgId, Integer appId, Integer processedById, String note);
 
         void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note);
 
-        // ====== tiện ích ======
-        /** Danh sách user đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
         List<User> findApprovedUsersByOppId(Integer oppId);
 
-        // Số đơn đã DUYỆT (APPROVED/COMPLETED) của 1 cơ hội
         long countApprovedByOppId(Integer oppId);
 }

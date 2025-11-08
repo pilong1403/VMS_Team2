@@ -15,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Transactional
@@ -92,9 +89,40 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return repo.findAllByVolunteerId(volunteerId);
         }
 
+        // NOTE: NEW — tìm kiếm/loc/sort + phân trang cho volunteer
+        @Override
+        public Page<Application> searchMyApplications(Integer volunteerId,
+                        String status,
+                        String q,
+                        String sort,
+                        int page,
+                        int size) {
+                var pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
+
+                Application.ApplicationStatus st = null;
+                if (status != null && !status.isBlank()) {
+                        try {
+                                st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
+                        } catch (IllegalArgumentException ignored) {
+                                /* keep null */ }
+                }
+
+                // sort: "newest" | "oldest"
+                boolean newestFirst = !"oldest".equalsIgnoreCase(sort);
+
+                List<Application> rows = repo.findMyApplications(
+                                volunteerId, st, q, newestFirst ? "DESC" : "ASC",
+                                pageable.getPageNumber() * pageable.getPageSize(),
+                                pageable.getPageSize());
+                long total = repo.countMyApplications(volunteerId, st, q);
+
+                return new PageImpl<>(rows, pageable, total);
+        }
+
+        // ====== phần cho Organization giữ nguyên ======
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         String status,
                         LocalDate from,
@@ -111,13 +139,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
-                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay();
 
                 List<Application> rows = repo.findOrgApplications(
-                                orgId, oppId, q, st, fromDT, toDT, // NEW: có oppId
+                                orgId, oppId, q, st, fromDT, toDT,
                                 pageable.getPageNumber() * pageable.getPageSize(),
                                 pageable.getPageSize());
-                long total = repo.countOrgApplications(orgId, oppId, q, st, fromDT, toDT); // NEW
+                long total = repo.countOrgApplications(orgId, oppId, q, st, fromDT, toDT);
 
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
                 for (Application a : rows) {
@@ -131,18 +159,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                                         a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
                                         a.getStatus() != null ? a.getStatus().name() : "PENDING"));
                 }
-
                 return new PageImpl<>(vms, pageable, total);
         }
 
         @Override
         public Map<String, Integer> computeOrgAppStats(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         String status,
                         LocalDate from,
                         LocalDate to) {
-
                 Application.ApplicationStatus st = null;
                 if (status != null && !status.isBlank()) {
                         try {
@@ -151,9 +177,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
-                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay();
 
-                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId, oppId, q, st, fromDT, toDT); // NEW
+                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId, oppId, q, st, fromDT, toDT);
 
                 long total = 0, pending = 0, approved = 0, rejected = 0, completed = 0, cancelled = 0;
                 for (var e : m.entrySet()) {
@@ -165,7 +191,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 case COMPLETED -> completed = e.getValue();
                                 case CANCELLED -> cancelled = e.getValue();
                                 default -> {
-                                        /* ignore */ }
+                                }
                         }
                 }
                 Map<String, Integer> out = new LinkedHashMap<>();
@@ -220,7 +246,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 repo.save(app);
         }
 
-        // ====== Thêm để controller không phải gọi repository ======
         @Override
         public List<User> findApprovedUsersByOppId(Integer oppId) {
                 return repo.findApprovedVolunteersByOppId(oppId);
