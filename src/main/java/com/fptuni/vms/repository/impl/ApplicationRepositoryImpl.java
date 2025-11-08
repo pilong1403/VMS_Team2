@@ -52,7 +52,7 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 return em.merge(application);
             }
         } catch (PersistenceException e) {
-            throw e; // cho service handle lỗi unique constraint
+            throw e;
         }
     }
 
@@ -68,7 +68,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public long countByOppId(Integer oppId) {
-        // Đếm các đơn PENDING/APPROVED/COMPLETED (không tính REJECTED/CANCELLED)
         Long cnt = em.createQuery("""
                 SELECT COUNT(a.appId)
                 FROM Application a
@@ -92,7 +91,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public List<Application> findAllByVolunteerId(Integer volunteerId) {
-        // fetch join o & org để hiển thị tên tổ chức, tiêu đề... không bị N+1
         return em.createQuery("""
                 SELECT a
                 FROM Application a
@@ -105,12 +103,11 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
-    // ================== Query theo tổ chức (CÓ LỌC oppId) ==================
     @Override
     public List<Application> findOrgApplications(Integer orgId, Integer oppId, String q,
-            Application.ApplicationStatus status,
-            LocalDateTime from, LocalDateTime to,
-            int offset, int limit) {
+                                                 Application.ApplicationStatus status,
+                                                 LocalDateTime from, LocalDateTime to,
+                                                 int offset, int limit) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT a
                   FROM Application a
@@ -119,20 +116,16 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                   JOIN FETCH o.organization org
                  WHERE org.orgId = :orgId
                 """);
-        if (oppId != null)
-            jpql.append(" AND o.oppId = :oppId");
-        if (status != null)
-            jpql.append(" AND a.status = :status");
+        if (oppId != null) jpql.append(" AND o.oppId = :oppId");
+        if (status != null) jpql.append(" AND a.status = :status");
         if (q != null && !q.isBlank()) {
             jpql.append("""
                        AND (LOWER(v.fullName) LIKE :kw
                          OR LOWER(o.title)     LIKE :kw)
                     """);
         }
-        if (from != null)
-            jpql.append(" AND a.appliedAt >= :from");
-        if (to != null)
-            jpql.append(" AND a.appliedAt <  :to");
+        if (from != null) jpql.append(" AND a.appliedAt >= :from");
+        if (to != null)   jpql.append(" AND a.appliedAt <  :to");
         jpql.append(" ORDER BY a.appliedAt DESC");
 
         var query = em.createQuery(jpql.toString(), Application.class)
@@ -140,24 +133,19 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .setFirstResult(offset)
                 .setMaxResults(limit);
 
-        if (oppId != null)
-            query.setParameter("oppId", oppId);
-        if (status != null)
-            query.setParameter("status", status);
-        if (q != null && !q.isBlank())
-            query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
-        if (from != null)
-            query.setParameter("from", from);
-        if (to != null)
-            query.setParameter("to", to);
+        if (oppId != null) query.setParameter("oppId", oppId);
+        if (status != null) query.setParameter("status", status);
+        if (q != null && !q.isBlank()) query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
+        if (from != null) query.setParameter("from", from);
+        if (to != null)   query.setParameter("to", to);
 
         return query.getResultList();
     }
 
     @Override
     public long countOrgApplications(Integer orgId, Integer oppId, String q,
-            Application.ApplicationStatus status,
-            LocalDateTime from, LocalDateTime to) {
+                                     Application.ApplicationStatus status,
+                                     LocalDateTime from, LocalDateTime to) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT COUNT(a.appId)
                   FROM Application a
@@ -166,34 +154,25 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                   JOIN o.organization org
                  WHERE org.orgId = :orgId
                 """);
-        if (oppId != null)
-            jpql.append(" AND o.oppId = :oppId");
-        if (status != null)
-            jpql.append(" AND a.status = :status");
+        if (oppId != null) jpql.append(" AND o.oppId = :oppId");
+        if (status != null) jpql.append(" AND a.status = :status");
         if (q != null && !q.isBlank()) {
             jpql.append("""
                        AND (LOWER(v.fullName) LIKE :kw
                          OR LOWER(o.title)     LIKE :kw)
                     """);
         }
-        if (from != null)
-            jpql.append(" AND a.appliedAt >= :from");
-        if (to != null)
-            jpql.append(" AND a.appliedAt <  :to");
+        if (from != null) jpql.append(" AND a.appliedAt >= :from");
+        if (to != null)   jpql.append(" AND a.appliedAt <  :to");
 
         var query = em.createQuery(jpql.toString(), Long.class)
                 .setParameter("orgId", orgId);
 
-        if (oppId != null)
-            query.setParameter("oppId", oppId);
-        if (status != null)
-            query.setParameter("status", status);
-        if (q != null && !q.isBlank())
-            query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
-        if (from != null)
-            query.setParameter("from", from);
-        if (to != null)
-            query.setParameter("to", to);
+        if (oppId != null) query.setParameter("oppId", oppId);
+        if (status != null) query.setParameter("status", status);
+        if (q != null && !q.isBlank()) query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
+        if (from != null) query.setParameter("from", from);
+        if (to != null)   query.setParameter("to", to);
 
         Long total = query.getSingleResult();
         return total == null ? 0L : total;
@@ -201,8 +180,8 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId,
-            Integer oppId, String q, Application.ApplicationStatus status,
-            LocalDateTime from, LocalDateTime to) {
+                                                                       Integer oppId, String q, Application.ApplicationStatus status,
+                                                                       LocalDateTime from, LocalDateTime to) {
         StringBuilder jpql = new StringBuilder("""
                 SELECT a.status, COUNT(a.appId)
                   FROM Application a
@@ -210,35 +189,26 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                   JOIN o.organization org
                  WHERE org.orgId = :orgId
                 """);
-        if (oppId != null)
-            jpql.append(" AND o.oppId = :oppId");
-        if (status != null)
-            jpql.append(" AND a.status = :status");
+        if (oppId != null) jpql.append(" AND o.oppId = :oppId");
+        if (status != null) jpql.append(" AND a.status = :status");
         if (q != null && !q.isBlank()) {
             jpql.append("""
                        AND (LOWER(a.volunteer.fullName) LIKE :kw
                          OR LOWER(o.title)              LIKE :kw)
                     """);
         }
-        if (from != null)
-            jpql.append(" AND a.appliedAt >= :from");
-        if (to != null)
-            jpql.append(" AND a.appliedAt <  :to");
+        if (from != null) jpql.append(" AND a.appliedAt >= :from");
+        if (to != null)   jpql.append(" AND a.appliedAt <  :to");
         jpql.append(" GROUP BY a.status");
 
         var query = em.createQuery(jpql.toString(), Object[].class)
                 .setParameter("orgId", orgId);
 
-        if (oppId != null)
-            query.setParameter("oppId", oppId);
-        if (status != null)
-            query.setParameter("status", status);
-        if (q != null && !q.isBlank())
-            query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
-        if (from != null)
-            query.setParameter("from", from);
-        if (to != null)
-            query.setParameter("to", to);
+        if (oppId != null) query.setParameter("oppId", oppId);
+        if (status != null) query.setParameter("status", status);
+        if (q != null && !q.isBlank()) query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
+        if (from != null) query.setParameter("from", from);
+        if (to != null)   query.setParameter("to", to);
 
         List<Object[]> rows = query.getResultList();
         Map<Application.ApplicationStatus, Long> m = new HashMap<>();
@@ -248,7 +218,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         return m;
     }
 
-    // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
     @Override
     public Application findByIdAndOrgId(Integer appId, Integer orgId) {
         try {
@@ -269,9 +238,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         }
     }
 
-    // ====== THÊM MỚI: phục vụ gửi mail/thông báo khi opp hủy/sửa ======
-
-    /** Danh sách User đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
     @Override
     public List<User> findApprovedVolunteersByOppId(Integer oppId) {
         return em.createQuery("""
@@ -288,10 +254,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
-    /**
-     * Danh sách Application đã duyệt (kèm fetch opp & org) để build nội dung mail
-     * chi tiết.
-     */
     @Override
     public List<Application> findApprovedApplicationsByOppId(Integer oppId) {
         return em.createQuery("""
@@ -310,7 +272,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
-    // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED)
     @Override
     public long countApprovedByOppId(Integer oppId) {
         Long cnt = em.createQuery("""
@@ -324,5 +285,38 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .setParameter("s2", Application.ApplicationStatus.COMPLETED)
                 .getSingleResult();
         return cnt == null ? 0L : cnt;
+    }
+
+    // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+    @Override
+    public boolean hasOverlappingActiveApplications(Integer volunteerId,
+                                                    LocalDateTime newStart,
+                                                    LocalDateTime newEnd,
+                                                    Integer excludeOppId) {
+        if (volunteerId == null || newStart == null || newEnd == null) return false;
+
+        String jpql = """
+            SELECT COUNT(a.appId)
+              FROM Application a
+              JOIN a.opportunity o
+             WHERE a.volunteer.userId = :uid
+               AND a.status IN (:s1, :s2)        /* PENDING, APPROVED */
+               AND (:excludeId IS NULL OR o.oppId <> :excludeId)
+               AND o.startTime IS NOT NULL
+               AND o.endTime   IS NOT NULL
+               AND o.startTime < :newEnd         /* overlap core */
+               AND o.endTime   > :newStart
+            """;
+
+        Long cnt = em.createQuery(jpql, Long.class)
+                .setParameter("uid", volunteerId)
+                .setParameter("s1", Application.ApplicationStatus.PENDING)
+                .setParameter("s2", Application.ApplicationStatus.APPROVED)
+                .setParameter("excludeId", excludeOppId)
+                .setParameter("newStart", newStart)
+                .setParameter("newEnd", newEnd)
+                .getSingleResult();
+
+        return cnt != null && cnt > 0;
     }
 }

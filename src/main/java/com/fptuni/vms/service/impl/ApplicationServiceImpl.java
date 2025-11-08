@@ -35,18 +35,15 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (opp == null)
                         throw new IllegalArgumentException("Cơ hội không tồn tại: " + oppId);
 
-                // Ưu tiên báo rõ khi đã hủy
                 if (opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED)
                         throw new IllegalStateException("Cơ hội đã bị hủy.");
 
                 if (opp.getStatus() != Opportunity.OpportunityStatus.OPEN)
                         throw new IllegalStateException("Cơ hội không còn mở.");
 
-                // Quá hạn đăng ký theo startTime
                 if (opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now()))
                         throw new IllegalStateException("Đã quá hạn đăng ký.");
 
-                // Đã kết thúc theo endTime
                 if (opp.getEndTime() != null && !opp.getEndTime().isAfter(LocalDateTime.now()))
                         throw new IllegalStateException("Cơ hội đã kết thúc.");
 
@@ -54,16 +51,27 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (volunteer == null)
                         throw new IllegalArgumentException("Tình nguyện viên không tồn tại: " + volunteerId);
 
-                // Đã nộp trước đó?
                 if (repo.existsByOppIdAndVolunteerId(oppId, volunteerId))
                         throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
 
-                // Đủ số lượng đang hoạt động (PENDING/APPROVED/COMPLETED)
                 Integer need = opp.getNeededVolunteers();
                 if (need != null) {
                         long active = repo.countByOppId(oppId);
                         if (active >= need)
                                 throw new IllegalStateException("Cơ hội đã đủ số lượng đăng ký.");
+                }
+
+                // ===== NEW: kiểm tra trùng thời gian với PENDING/APPROVED của volunteer =====
+                if (opp.getStartTime() != null && opp.getEndTime() != null) {
+                        boolean overlapped = repo.hasOverlappingActiveApplications(
+                                volunteerId,
+                                opp.getStartTime(),
+                                opp.getEndTime(),
+                                opp.getOppId()
+                        );
+                        if (overlapped) {
+                                throw new IllegalStateException("Bạn đang có lịch trùng với một cơ hội khác đã đăng ký (đang chờ duyệt/đã duyệt).");
+                        }
                 }
 
                 Application app = new Application();
@@ -77,7 +85,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 try {
                         return repo.save(app);
                 } catch (PersistenceException ex) {
-                        // Nếu có unique constraint (oppId, volunteerId)
                         throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
                 }
         }
@@ -101,8 +108,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         user.setAddress(address);
                         dirty = true;
                 }
-                if (dirty)
-                        repo.saveUser(user);
+                if (dirty) repo.saveUser(user);
 
                 return apply(oppId, volunteerId, reason);
         }
@@ -182,7 +188,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 case REJECTED -> rejected = e.getValue();
                                 case COMPLETED -> completed = e.getValue();
                                 case CANCELLED -> cancelled = e.getValue();
-                                default -> { /* ignore */ }
+                                default -> { }
                         }
                 }
                 Map<String, Integer> out = new LinkedHashMap<>();
@@ -205,11 +211,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 if (processedById != null) {
                         var user = repo.findUserById(processedById);
-                        if (user != null)
-                                app.setProcessedBy(user);
+                        if (user != null) app.setProcessedBy(user);
                 }
-                if (note != null && !note.isBlank())
-                        app.setCancelReason(note.trim());
+                if (note != null && !note.isBlank()) app.setCancelReason(note.trim());
 
                 app.setStatus(Application.ApplicationStatus.APPROVED);
                 app.setUpdatedAt(LocalDateTime.now());
@@ -226,11 +230,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 if (processedById != null) {
                         var user = repo.findUserById(processedById);
-                        if (user != null)
-                                app.setProcessedBy(user);
+                        if (user != null) app.setProcessedBy(user);
                 }
-                if (note != null && !note.isBlank())
-                        app.setCancelReason(note.trim());
+                if (note != null && !note.isBlank()) app.setCancelReason(note.trim());
 
                 app.setStatus(Application.ApplicationStatus.REJECTED);
                 app.setUpdatedAt(LocalDateTime.now());
