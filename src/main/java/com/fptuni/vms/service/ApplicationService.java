@@ -1,6 +1,7 @@
 package com.fptuni.vms.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +27,19 @@ public interface ApplicationService {
                         int size);
 
         // ====== ViewModel cho trang list của Organization ======
+        // ĐÃ BỔ SUNG: reason, cancelReason, processedByName, processedAt, appliedAt ->
+        // LocalDateTime
         record ApplicationRowVM(
                         Integer appId,
                         String volunteerName,
                         String volunteerAvatar,
                         String opportunityTitle,
-                        java.time.LocalDate appliedAt,
-                        String status) {
+                        LocalDateTime appliedAt,
+                        String status,
+                        String reason,
+                        String cancelReason,
+                        String processedByName,
+                        LocalDateTime processedAt) {
         }
 
         // search + stats theo organization (CÓ LỌC OPPID)

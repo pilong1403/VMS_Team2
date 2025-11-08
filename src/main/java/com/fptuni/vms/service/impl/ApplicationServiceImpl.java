@@ -151,11 +151,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                         var opp = a.getOpportunity();
                         vms.add(new ApplicationRowVM(
                                         a.getAppId(),
-                                        volunteer != null ? volunteer.getFullName() : "—",
-                                        volunteer != null ? volunteer.getAvatarUrl() : null,
-                                        opp != null ? opp.getTitle() : "—",
-                                        a.getAppliedAt() != null ? a.getAppliedAt().toLocalDate() : null,
-                                        a.getStatus() != null ? a.getStatus().name() : "PENDING"));
+                                        (volunteer != null ? volunteer.getFullName() : "—"),
+                                        (volunteer != null ? volunteer.getAvatarUrl() : null),
+                                        (opp != null ? opp.getTitle() : "—"),
+                                        // appliedAt: dùng LocalDateTime để có HH:mm
+                                        a.getAppliedAt(),
+                                        (a.getStatus() != null ? a.getStatus().name() : "PENDING"),
+                                        a.getReason(),
+                                        a.getCancelReason(),
+                                        (a.getProcessedBy() != null ? a.getProcessedBy().getFullName() : null),
+                                        a.getUpdatedAt()));
                 }
                 return new PageImpl<>(vms, pageable, total);
         }

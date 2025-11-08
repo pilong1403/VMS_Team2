@@ -10,7 +10,7 @@ import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.OpportunitySectionService;
 import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.OrganizationService;
-import com.fptuni.vms.service.FeedbackService;  // ← THÊM
+import com.fptuni.vms.service.FeedbackService;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,21 +35,20 @@ public class ApplicationController {
     private final OpportunitySectionService sectionService;
     private final OrganizationService organizationService;
     private final OpportunityService opportunityService;
-    private final FeedbackService feedbackService; // ← THÊM
+    private final FeedbackService feedbackService;
 
     public ApplicationController(ApplicationService service,
-                                 ApplicationRepository applicationRepository,
-                                 OpportunitySectionService sectionService,
-                                 OrganizationService organizationService,
-                                 OpportunityService opportunityService,
-                                 FeedbackService feedbackService   // ← THÊM
-    ) {
+            ApplicationRepository applicationRepository,
+            OpportunitySectionService sectionService,
+            OrganizationService organizationService,
+            OpportunityService opportunityService,
+            FeedbackService feedbackService) {
         this.service = service;
         this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
         this.organizationService = organizationService;
         this.opportunityService = opportunityService;
-        this.feedbackService = feedbackService;     // ← THÊM
+        this.feedbackService = feedbackService;
     }
 
     @GetMapping("/opportunities/{id}")
@@ -106,13 +105,12 @@ public class ApplicationController {
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
         model.addAttribute("sections", sections);
 
-        // ===== chỉ load feedback khi sự kiện kết thúc =====
+        // chỉ load feedback khi sự kiện kết thúc
         boolean isEventEnded = opp.getEndTime() != null && opp.getEndTime().isBefore(LocalDateTime.now());
         if (isEventEnded) {
             List<Feedback> feedbacks = feedbackService.findByOpportunity(opp.getOppId());
             model.addAttribute("reviews", feedbacks);
 
-            // [THÊM] trạng thái feedback của chính user
             if (currentUserId != null) {
                 var myFb = feedbackService.findByOpportunityAndVolunteer(opp.getOppId(), currentUserId);
                 model.addAttribute("myFeedback", myFb);
@@ -122,8 +120,7 @@ public class ApplicationController {
 
                 boolean canEditMyFeedback = false;
                 if (myFb != null && myFb.getCreatedAt() != null) {
-                    canEditMyFeedback = myFb.getCreatedAt()
-                            .isAfter(LocalDateTime.now().minusDays(3));
+                    canEditMyFeedback = myFb.getCreatedAt().isAfter(LocalDateTime.now().minusDays(3));
                 }
                 model.addAttribute("canEditMyFeedback", canEditMyFeedback);
             } else {
@@ -145,23 +142,21 @@ public class ApplicationController {
     /** Submit đơn đăng ký -> redirect danh sách đơn của volunteer */
     @PostMapping("/applications/apply")
     public String apply(@RequestParam("oppId") Integer oppId,
-                        @RequestParam("userId") Integer userId,
-                        @RequestParam(value = "reason", required = false) String reason,
-                        @RequestParam(value = "fullName", required = false) String fullName,
-                        @RequestParam(value = "phone", required = false) String phone,
-                        @RequestParam(value = "address", required = false) String address,
-                        RedirectAttributes ra) {
+            @RequestParam("userId") Integer userId,
+            @RequestParam(value = "reason", required = false) String reason,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "address", required = false) String address,
+            RedirectAttributes ra) {
         try {
             service.apply(oppId, userId, reason, fullName, phone, address);
             ra.addFlashAttribute("success", "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
-            // quay lại đúng trang cơ hội
             return "redirect:/opportunities/" + oppId;
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Có lỗi không mong muốn. Vui lòng thử lại.");
         }
-        // nếu lỗi cũng quay lại trang cơ hội
         return "redirect:/opportunities/" + oppId;
     }
 
@@ -184,7 +179,7 @@ public class ApplicationController {
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
-            @RequestParam(value = "oppId", required = false) Integer oppId, // <— NEW
+            @RequestParam(value = "oppId", required = false) Integer oppId,
             @RequestParam(value = "q", required = false) String q,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
@@ -209,23 +204,27 @@ public class ApplicationController {
             return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
         }
 
-        if (q != null && q.isBlank()) q = null;
-        if (status != null && status.isBlank()) status = null;
+        if (q != null && q.isBlank())
+            q = null;
+        if (status != null && status.isBlank())
+            status = null;
         if (from != null && to != null && from.isAfter(to)) {
-            var t = from; from = to; to = t;
+            var t = from;
+            from = to;
+            to = t;
         }
 
         var result = service.searchOrgApplicationsByOrgId(
-                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1)); // <— NEW
+                orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1));
 
-        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to); // <— NEW
+        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to);
 
         List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
         var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("orgId", orgId);
-        model.addAttribute("oppId", oppId); // <— giữ oppId cho view/filter
+        model.addAttribute("oppId", oppId);
         model.addAttribute("myOpps", myOpps);
         model.addAttribute("fromStr", from != null ? from.format(fmt) : "");
         model.addAttribute("toStr", to != null ? to.format(fmt) : "");
@@ -239,20 +238,21 @@ public class ApplicationController {
 
     // ===== helpers =====
     private String keepListParams(Map<String, String> params) {
-        // <— giữ thêm oppId
         String[] keys = { "oppId", "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
         try {
             for (String k : keys) {
                 String v = params.get(k);
                 if (v != null && !v.isBlank()) {
-                    if (!sb.isEmpty()) sb.append('&');
+                    if (!sb.isEmpty())
+                        sb.append('&');
                     sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                             .append('=')
                             .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return sb.toString();
     }
 
@@ -262,7 +262,8 @@ public class ApplicationController {
             String k = e.getKey();
             String v = e.getValue();
             if (v != null && !v.isBlank()) {
-                if (!sb.isEmpty()) sb.append('&');
+                if (!sb.isEmpty())
+                    sb.append('&');
                 sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                         .append('=')
                         .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
@@ -274,14 +275,15 @@ public class ApplicationController {
     /** Duyệt đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/approve")
     public String approveApplication(@PathVariable Integer orgId,
-                                     @PathVariable Integer appId,
-                                     @RequestParam(value = "note", required = false) String note,
-                                     @RequestParam Map<String, String> allParams,
-                                     RedirectAttributes ra,
-                                     HttpSession session) {
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
         try {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null) return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
             service.approveApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -296,14 +298,15 @@ public class ApplicationController {
     /** Từ chối đơn */
     @PostMapping("/organization/{orgId}/applications/{appId}/reject")
     public String rejectApplication(@PathVariable Integer orgId,
-                                    @PathVariable Integer appId,
-                                    @RequestParam(value = "note", required = false) String note,
-                                    @RequestParam Map<String, String> allParams,
-                                    RedirectAttributes ra,
-                                    HttpSession session) {
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
         try {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null) return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
             service.rejectApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã từ chối đơn.");
         } catch (IllegalArgumentException | IllegalStateException e) {
