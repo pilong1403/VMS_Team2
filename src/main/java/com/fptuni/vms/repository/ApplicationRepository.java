@@ -63,7 +63,17 @@ public interface ApplicationRepository {
 
         List<User> findApprovedVolunteersByOppId(Integer oppId);
 
+        /**
+         * Trả về Application (đã duyệt) của 1 cơ hội, có fetch opportunity &
+         * organization (tiện build nội dung mail).
+         */
         List<Application> findApprovedApplicationsByOppId(Integer oppId);
 
         long countApprovedByOppId(Integer oppId);
+
+        // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+        boolean hasOverlappingActiveApplications(Integer volunteerId,
+                        LocalDateTime newStart,
+                        LocalDateTime newEnd,
+                        Integer excludeOppId);
 }

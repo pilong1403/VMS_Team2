@@ -6,170 +6,255 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* Khóa trang, ngăn cuộn ở <body> */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Ngăn thanh cuộn của cả trang */
+        }
         .table > :not(caption) > * > * { vertical-align: middle; }
         .shadow-card { box-shadow: 0 6px 20px rgba(0,0,0,.06); }
     </style>
 </head>
 <body class="bg-light">
-<div class="d-flex" style="min-height:100vh">
 
-    <!-- Sidebar -->
-    <div th:replace="~{fragments/organization/sidebar :: sidebar (activePage='opportunities')}"></div>
+<div class="d-flex" style="height: 100vh">
 
-    <main class="container-fluid p-4">
+    <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
-        <!-- Alerts -->
-        <div th:if="${ok}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${ok}">Thành công</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <div th:if="${err}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${err}">Có lỗi xảy ra</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-warning alert-dismissible fade show" role="alert">
-            <span th:text="${error}">Bạn chưa có tổ chức được duyệt.</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="d-flex flex-column flex-grow-1" style="height: 100vh;">
 
-        <div class="d-flex align-items-center mb-3">
-            <h4 class="me-auto mb-0">Danh sách sự kiện của tổ chức</h4>
-            <a class="btn btn-success" th:href="@{/org/opps/new}">+ Tạo sự kiện</a>
-        </div>
+        <div th:replace="~{fragments/organization/header :: header}"></div>
 
-        <!-- Filters -->
-        <form class="row gy-2 gx-2 mb-3 align-items-end" method="get" th:action="@{/org/opps}">
-            <div class="col-md-4">
-                <label for="searchInput" class="form-label mb-1">Tìm kiếm</label>
-                <input id="searchInput" type="text" class="form-control" name="q"
-                       placeholder="Tiêu đề / địa điểm" th:value="${q}">
+        <main class="flex-grow-1 p-4" style="overflow-y: auto;">
+
+            <!-- Alerts -->
+            <div th:if="${ok}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${ok}">Thành công</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${err}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${err}">Có lỗi xảy ra</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-warning alert-dismissible fade show" role="alert">
+                <span th:text="${error}">Bạn chưa có tổ chức được duyệt.</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <div class="col-md-3">
-                <label for="statusSelect" class="form-label mb-1">Trạng thái</label>
-                <select id="statusSelect" class="form-select" name="status">
-                    <option value="" th:selected="${status == null}">Tất cả</option>
-                    <option th:each="s : ${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).values()}"
-                            th:value="${s}"
-                            th:text="${statusVN[s.name()] != null ? statusVN[s.name()] : s}"
-                            th:selected="${status == s}">
-                    </option>
-                </select>
+            <div class="d-flex align-items-center mb-3">
+                <h4 class="me-auto mb-0">Danh sách sự kiện của tổ chức</h4>
+                <a class="btn btn-success" th:href="@{/org/opps/new}">+ Tạo sự kiện</a>
             </div>
 
-            <div class="col-md-2">
-                <label for="sizeSelect" class="form-label mb-1">Kích thước trang</label>
-                <select id="sizeSelect" class="form-select" name="size">
-                    <option th:each="n : ${#numbers.sequence(5,20,5)}"
-                            th:value="${n}" th:text="${n}"
-                            th:selected="${page != null and page.size == n}">
-                    </option>
-                </select>
-            </div>
-
-            <div class="col-md-3 text-md-end">
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary flex-fill" type="submit">Lọc</button>
-                    <a class="btn btn-outline-secondary flex-fill" th:href="@{/org/opps}">Xóa lọc</a>
+            <!-- Controls: tìm kiếm / trạng thái / số bản ghi / sắp xếp -->
+            <form class="row gy-2 gx-2 mb-3 align-items-end" method="get" th:action="@{/org/opps}">
+                <div class="col-md-4">
+                    <label for="searchInput" class="form-label mb-1">Tìm kiếm</label>
+                    <input id="searchInput" type="text" class="form-control" name="q"
+                           placeholder="Tiêu đề / địa điểm" th:value="${q}">
                 </div>
+
+                <div class="col-md-3">
+                    <label for="statusSelect" class="form-label mb-1">Trạng thái</label>
+                    <select id="statusSelect" class="form-select" name="status">
+                        <option value="" th:selected="${status == null}">Tất cả</option>
+                        <option th:each="s : ${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).values()}"
+                                th:value="${s}"
+                                th:text="${statusVN[s.name()] != null ? statusVN[s.name()] : s}"
+                                th:selected="${status == s}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="sizeSelect" class="form-label mb-1">Số bản ghi/trang</label>
+                    <select id="sizeSelect" class="form-select" name="size">
+                        <option value="10" th:selected="${num == 10 || (num == null and page != null and page.size == 10)}">10</option>
+                        <option value="20" th:selected="${num == 20 || (page != null and page.size == 20)}">20</option>
+                        <option value="50" th:selected="${num == 50 || (page != null and page.size == 50)}">50</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="orderSelect" class="form-label mb-1">Sắp xếp</label>
+                    <select id="orderSelect" class="form-select" name="timeOrder">
+                        <option value="desc" th:selected="${timeOrder == null || timeOrder == 'desc'}">Mới nhất</option>
+                        <option value="asc" th:selected="${timeOrder == 'asc'}">Cũ nhất</option>
+                        <option value="deadline" th:selected="${timeOrder == 'deadline'}">Sớm đến hạn</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3 text-md-end">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary flex-fill" type="submit">Lọc</button>
+                        <a class="btn btn-outline-secondary flex-fill" th:href="@{/org/opps}">Xóa lọc</a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Table -->
+            <div class="table-responsive bg-white rounded shadow-card">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="min-width:260px">Tiêu đề</th>
+                        <th>Địa điểm</th>
+                        <th>Bắt đầu</th>
+                        <th>Kết thúc</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o : ${page != null ? page.content : T(java.util.Collections).emptyList()}">
+                        <td class="fw-semibold" th:text="${o.title}">Tiêu đề</td>
+                        <td th:text="${o.location}">Địa điểm</td>
+                        <td class="small" th:text="${#temporals.format(o.startTime,'dd/MM/yyyy HH:mm')}">01/01/2025 08:00</td>
+                        <td class="small text-muted" th:text="${#temporals.format(o.endTime,'dd/MM/yyyy HH:mm')}">01/01/2025 17:00</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${
+                                    o.status.name() == 'OPEN' ? ' text-bg-primary' :
+                                    (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' :
+                                    (o.status.name() == 'CLOSED' ? ' text-bg-dark' : ' text-bg-warning'))
+                                  }"
+                                  th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
+                              Đang mở
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary me-1"
+                               th:if="${o.status.name() != 'CLOSED'}"
+                               th:href="@{|/org/opps/${o.oppId}/edit|}">
+                                Sửa
+                            </a>
+
+                            <form th:if="${o.status.name() == 'OPEN' and (o.endTime == null or o.endTime.isAfter(T(java.time.LocalDateTime).now()))}"
+                                  class="d-inline"
+                                  th:action="@{|/org/opps/${o.oppId}/cancel|}" method="post"
+                                  onsubmit="return confirm('Hủy sự kiện này?')">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
+                            </form>
+
+                            <a class="btn btn-sm btn-outline-secondary ms-1"
+                               th:href="@{|/opportunities/${o.oppId}|}" target="_blank">
+                                Xem
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${page == null or page.totalElements == 0}">
+                        <td colspan="6" class="text-center text-muted py-4"
+                            th:text="${q != null and !#strings.isEmpty(q) ? 'Không tìm thấy sự kiện nào khớp với từ khóa.' : 'Chưa có sự kiện nào.'}">
+                            Chưa có sự kiện nào.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-        </form>
 
-        <!-- List -->
-        <div class="table-responsive bg-white rounded shadow-card">
-            <table class="table align-middle mb-0">
-                <thead class="table-light">
-                <tr>
-                    <th style="min-width:260px">Tiêu đề</th>
-                    <th>Địa điểm</th>
-                    <th>Bắt đầu</th>
-                    <th>Kết thúc</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end">Hành động</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="o : ${page != null ? page.content : T(java.util.Collections).emptyList()}">
-                    <td class="fw-semibold" th:text="${o.title}">Tiêu đề</td>
-                    <td th:text="${o.location}">Địa điểm</td>
-                    <td class="small" th:text="${#temporals.format(o.startTime,'dd/MM/yyyy HH:mm')}">01/01/2025 08:00</td>
-                    <td class="small text-muted" th:text="${#temporals.format(o.endTime,'dd/MM/yyyy HH:mm')}">01/01/2025 17:00</td>
-                    <td>
-            <span class="badge"
-                  th:classappend="${
-                    o.status.name() == 'OPEN' ? ' text-bg-primary' :
-                    (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' :
-                    (o.status.name() == 'CLOSED' ? ' text-bg-dark' : ' text-bg-warning'))
-                  }"
-                  th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
-              Đang mở
-            </span>
-                    </td>
-                    <td class="text-end">
-                        <!-- Sửa: cho phép khi KHÔNG phải CLOSED (đúng luật: CLOSED thì không sửa gì) -->
-                        <a class="btn btn-sm btn-outline-primary me-1"
-                           th:if="${o.status.name() != 'CLOSED'}"
-                           th:href="@{|/org/opps/${o.oppId}/edit|}">
-                            Sửa
-                        </a>
+            <!-- Pagination kiểu Approvals -->
+            <div class="d-flex align-items-center mt-3" th:if="${totalPages >= 1}">
+                <div class="me-3 small text-muted">
+                    Trang [[${currentPage}]]/[[${totalPages}]]
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
 
-                        <!-- Hủy: chỉ khi đang OPEN và chưa kết thúc -->
-                        <form th:if="${o.status.name() == 'OPEN' and (o.endTime == null or o.endTime.isAfter(T(java.time.LocalDateTime).now()))}"
-                              class="d-inline"
-                              th:action="@{|/org/opps/${o.oppId}/cancel|}" method="post"
-                              onsubmit="return confirm('Hủy sự kiện này?')">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
-                        </form>
+                        <!-- Prev -->
+                        <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${currentPage - 1}, size=${num}, timeOrder=${timeOrder})}">
+                                &laquo;
+                            </a>
+                        </li>
 
-                        <a class="btn btn-sm btn-outline-secondary ms-1"
-                           th:href="@{|/opportunities/${o.oppId}|}" target="_blank">
-                            Xem
-                        </a>
-                    </td>
-                </tr>
+                        <!-- Leading 1 + ellipsis -->
+                        <li class="page-item" th:if="${startPage > 2}">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=1, size=${num}, timeOrder=${timeOrder})}">1</a>
+                        </li>
+                        <li class="page-item disabled" th:if="${startPage > 2}">
+                            <span class="page-link">...</span>
+                        </li>
 
-                <!-- Empty state -->
-                <tr th:if="${page == null or page.totalElements == 0}">
-                    <td colspan="6" class="text-center text-muted py-4"
-                        th:text="${q != null and !#strings.isEmpty(q) ? 'Không tìm thấy sự kiện nào khớp với từ khóa.' : 'Chưa có sự kiện nào.'}">
-                        Chưa có sự kiện nào.
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+                        <!-- Window -->
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:text="${i}"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${i}, size=${num}, timeOrder=${timeOrder})}">
+                            </a>
+                        </li>
 
-        <!-- Pagination -->
-        <div class="d-flex align-items-center mt-3" th:if="${page != null and page.totalPages > 1}">
-            <div class="me-3 small text-muted">
-                <span th:text="'Trang ' + (${page.number} + 1) + '/' + ${page.totalPages}">Trang 1/1</span>
+                        <!-- Trailing ellipsis + last -->
+                        <li class="page-item disabled" th:if="${(endPage + 2) < totalPages}">
+                            <span class="page-link">...</span>
+                        </li>
+                        <li class="page-item" th:if="${(endPage + 2) < totalPages}">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${totalPages}, size=${num}, timeOrder=${timeOrder})}"
+                               th:text="${totalPages}"></a>
+                        </li>
+
+                        <!-- Next -->
+                        <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${currentPage + 1}, size=${num}, timeOrder=${timeOrder})}">
+                                &raquo;
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
-            <nav>
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/org/opps(q=${q}, status=${status}, page=${page.number - 1}, size=${page.size})}">
-                            Trước
-                        </a>
-                    </li>
-                    <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
-                        th:classappend="${i == page.number} ? 'active'">
-                        <a class="page-link" th:text="${i + 1}"
-                           th:href="@{/org/opps(q=${q}, status=${status}, page=${i}, size=${page.size})}">1</a>
-                    </li>
-                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/org/opps(q=${q}, status=${status}, page=${page.number + 1}, size=${page.size})}">
-                            Sau
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </main>
+
+        </main>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // header profile
+    document.addEventListener('DOMContentLoaded', function () {
+        const profileDropdown = document.getElementById('profileDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (profileDropdown) {
+            profileDropdown.addEventListener('click', function (event) {
+                event.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+        }
+
+        window.addEventListener('click', function () {
+            if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    });
+
+    // sidebar profile
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarProfile = document.getElementById('sidebarProfile');
+        const sidebarDropdownMenu = document.getElementById('sidebarDropdownMenu');
+
+        if (sidebarProfile) {
+            sidebarProfile.addEventListener('click', function (event) {
+                event.stopPropagation();
+                sidebarDropdownMenu.classList.toggle('show');
+            });
+        }
+
+        window.addEventListener('click', function () {
+            if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) {
+                sidebarDropdownMenu.classList.remove('show');
+            }
+        });
+    });
+</script>
 </body>
 </html>

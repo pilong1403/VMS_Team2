@@ -263,7 +263,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Page<Opportunity> searchByOrg(int orgId, String q,
-            Opportunity.OpportunityStatus status, Pageable pageable) {
+                                         Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable) {
 
         StringBuilder where = new StringBuilder(" WHERE org.orgId = :orgId ");
         Map<String, Object> params = new HashMap<>();
@@ -280,7 +280,15 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             params.put("st", status);
         }
 
-        String order = " ORDER BY o.createdAt DESC ";
+        // --- sort giống controls Approvals ---
+        String order;
+        if ("asc".equalsIgnoreCase(timeOrder)) {
+            order = " ORDER BY o.createdAt ASC ";
+        } else if ("deadline".equalsIgnoreCase(timeOrder)) {
+            order = " ORDER BY o.endTime ASC ";
+        } else { // default "desc" (mới nhất)
+            order = " ORDER BY o.createdAt DESC ";
+        }
 
         String dataJpql = "SELECT o FROM Opportunity o " +
                 "JOIN o.organization org " +
@@ -303,6 +311,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
         return new PageImpl<>(content, pageable, total);
     }
+
 
     // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
     @Override

@@ -5,12 +5,12 @@ import com.fptuni.vms.model.OpportunitySection;
 import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.model.User;
 import com.fptuni.vms.model.Feedback;
-import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.OpportunitySectionService;
 import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.OrganizationService;
 import com.fptuni.vms.service.FeedbackService;
+import com.fptuni.vms.service.UserService; // NEW
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,89 +23,111 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class ApplicationController {
 
+    private static final Set<Opportunity.OpportunityStatus> PUBLIC_STATUSES = Set.of(Opportunity.OpportunityStatus.OPEN,
+            Opportunity.OpportunityStatus.CLOSED,
+            Opportunity.OpportunityStatus.CANCELLED);
+
     private final ApplicationService service;
-    private final ApplicationRepository applicationRepository;
     private final OpportunitySectionService sectionService;
     private final OrganizationService organizationService;
     private final OpportunityService opportunityService;
     private final FeedbackService feedbackService;
+    private final UserService userService; // NEW
 
     public ApplicationController(ApplicationService service,
-            ApplicationRepository applicationRepository,
             OpportunitySectionService sectionService,
             OrganizationService organizationService,
             OpportunityService opportunityService,
-            FeedbackService feedbackService) {
+            FeedbackService feedbackService,
+            UserService userService) {
         this.service = service;
-        this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
         this.organizationService = organizationService;
         this.opportunityService = opportunityService;
         this.feedbackService = feedbackService;
+        this.userService = userService; // NEW
     }
 
+    // ====== OPPORTUNITY DETAIL ======
     @GetMapping("/opportunities/{id}")
     public String view(@PathVariable Integer id, Model model, HttpSession session) {
-        Opportunity opp = applicationRepository.findOpportunityById(id);
+        // Lấy opp qua service
+        Opportunity opp = opportunityService.findById(id);
         if (opp == null) {
             model.addAttribute("error", "Không tìm thấy cơ hội.");
-            model.addAttribute("reviews", Collections.emptyList());
-            model.addAttribute("sections", Collections.emptyList());
+            model.addAttribute("reviews", List.of());
+            model.addAttribute("sections", List.of());
             return "opportunity/opportunity-detail";
         }
 
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        model.addAttribute("currentUserId", currentUserId);
+
+        // Quyền xem: công khai hoặc chủ tổ chức
+        boolean isOwner = isOwner(currentUserId, opp);
+        boolean isPublic = opp.getStatus() != null && PUBLIC_STATUSES.contains(opp.getStatus());
+        if (!isPublic && !isOwner) {
+            model.addAttribute("error", "Không tìm thấy cơ hội hoặc bạn không đủ quyền xem.");
+            model.addAttribute("reviews", List.of());
+            model.addAttribute("sections", List.of());
+            return "opportunity/opportunity-detail";
+        }
+
+        // Common model
         model.addAttribute("opp", opp);
         model.addAttribute("org", opp.getOrganization());
         if (opp.getOrganization() != null && opp.getOrganization().getOwner() != null) {
             model.addAttribute("orgOwner", opp.getOrganization().getOwner());
         }
 
-        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
-        model.addAttribute("currentUserId", currentUserId);
-
         if (currentUserId != null) {
             model.addAttribute("items", service.listMyApplications(currentUserId));
-            User currentUser = applicationRepository.findUserById(currentUserId);
+            User currentUser = userService.getUserById(currentUserId);
             model.addAttribute("currentUser", currentUser);
         } else {
-            model.addAttribute("items", Collections.emptyList());
+            model.addAttribute("items", List.of());
             model.addAttribute("currentUser", null);
         }
 
-        boolean isExpired = opp.getStartTime() != null
-                && !opp.getStartTime().isAfter(LocalDateTime.now());
+        // Trạng thái & nút hành động
+        boolean isCancelled = opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED;
+        boolean isExpired = opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now());
 
-        long approvedCount = service.findApprovedUsersByOppId(opp.getOppId()).size();
+        long approvedCount = service.countApprovedByOppId(opp.getOppId());
         Integer needVols = opp.getNeededVolunteers();
         boolean isFull = (needVols != null) && (approvedCount >= needVols);
 
         boolean alreadyApplied = currentUserId != null
-                && applicationRepository.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
+                && service.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
 
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
+                && !isCancelled
                 && currentUserId != null
                 && !alreadyApplied;
 
+        model.addAttribute("isCancelled", isCancelled);
         model.addAttribute("isExpired", isExpired);
         model.addAttribute("isFull", isFull);
         model.addAttribute("canApply", canApply);
         model.addAttribute("alreadyApplied", alreadyApplied);
         model.addAttribute("appliedCount", approvedCount);
 
-        // sections
+        // Badge
+        model.addAttribute("statusDisplayName", toStatusDisplay(opp.getStatus()));
+        model.addAttribute("statusBadgeClass", toStatusBadgeClass(opp.getStatus()));
+
+        // Sections
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
         model.addAttribute("sections", sections);
 
-        // chỉ load feedback khi sự kiện kết thúc
+        // Feedback
         boolean isEventEnded = opp.getEndTime() != null && opp.getEndTime().isBefore(LocalDateTime.now());
         if (isEventEnded) {
             List<Feedback> feedbacks = feedbackService.findByOpportunity(opp.getOppId());
@@ -128,9 +150,8 @@ public class ApplicationController {
                 model.addAttribute("canCreateMyFeedback", false);
                 model.addAttribute("canEditMyFeedback", false);
             }
-
         } else {
-            model.addAttribute("reviews", Collections.emptyList());
+            model.addAttribute("reviews", List.of());
             model.addAttribute("myFeedback", null);
             model.addAttribute("canCreateMyFeedback", false);
             model.addAttribute("canEditMyFeedback", false);
@@ -139,7 +160,7 @@ public class ApplicationController {
         return "opportunity/opportunity-detail";
     }
 
-    /** Submit đơn đăng ký -> redirect danh sách đơn của volunteer */
+    /** Submit đơn đăng ký */
     @PostMapping("/applications/apply")
     public String apply(@RequestParam("oppId") Integer oppId,
             @RequestParam("userId") Integer userId,
@@ -160,7 +181,7 @@ public class ApplicationController {
         return "redirect:/opportunities/" + oppId;
     }
 
-    /** Route tiện lợi: không cần orgId trong URL, tự tìm theo user và redirect */
+    // ====== ORG LIST REDIRECT (KHÔNG CẦN orgId) ======
     @GetMapping("/organization/applications")
     public String redirectMyOrgApplications(@RequestParam Map<String, String> allParams, HttpSession session) {
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
@@ -175,7 +196,7 @@ public class ApplicationController {
         return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 
-    /** Danh sách đơn theo tổ chức (filter, paging) — LỌC THEO oppId nếu có */
+    // ====== ORG LIST (FILTER/PAGING) ======
     @GetMapping("/organization/{orgId}/applications")
     public String listApplicationsByOrganization(
             @PathVariable Integer orgId,
@@ -189,6 +210,8 @@ public class ApplicationController {
             Model model, HttpSession session,
             @RequestParam Map<String, String> allParams) {
 
+        model.addAttribute("activePage", "approval");
+
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         if (currentUserId == null) {
             return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
@@ -199,6 +222,7 @@ public class ApplicationController {
             return "redirect:/?e=ORG_NOT_FOUND_FOR_OWNER";
         }
 
+        // Bảo vệ: nếu URL orgId != org của user => redirect về org của user, giữ query
         if (!myOrg.getOrgId().equals(orgId)) {
             String qs = buildQueryString(allParams);
             return "redirect:/organization/" + myOrg.getOrgId() + "/applications" + (qs.isBlank() ? "" : "?" + qs);
@@ -237,6 +261,81 @@ public class ApplicationController {
     }
 
     // ===== helpers =====
+    private boolean isOwner(Integer currentUserId, Opportunity opp) {
+        if (currentUserId == null || opp == null || opp.getOrganization() == null
+                || opp.getOrganization().getOwner() == null) {
+            return false;
+        }
+        return Objects.equals(opp.getOrganization().getOwner().getUserId(), currentUserId);
+    }
+
+    private String toStatusDisplay(Opportunity.OpportunityStatus st) {
+        if (st == null)
+            return "Không rõ";
+        return switch (st) {
+            case OPEN -> "Đang mở";
+            case CLOSED -> "Đã đóng";
+            case CANCELLED -> "Đã hủy";
+            default -> "Không công khai";
+        };
+    }
+
+    private String toStatusBadgeClass(Opportunity.OpportunityStatus st) {
+        if (st == null)
+            return "badge bg-secondary";
+        return switch (st) {
+            case OPEN -> "badge bg-success";
+            case CLOSED -> "badge bg-secondary";
+            case CANCELLED -> "badge bg-danger";
+            default -> "badge bg-dark";
+        };
+    }
+
+    // ====== APPROVE / REJECT ======
+    @PostMapping("/organization/{orgId}/applications/{appId}/approve")
+    public String approveApplication(@PathVariable Integer orgId,
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
+        try {
+            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            service.approveApplication(orgId, appId, processedById, note);
+            ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Không thể duyệt đơn. Vui lòng thử lại.");
+        }
+        String qs = keepListParams(allParams);
+        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
+    }
+
+    @PostMapping("/organization/{orgId}/applications/{appId}/reject")
+    public String rejectApplication(@PathVariable Integer orgId,
+            @PathVariable Integer appId,
+            @RequestParam(value = "note", required = false) String note,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes ra,
+            HttpSession session) {
+        try {
+            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (processedById == null)
+                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
+            service.rejectApplication(orgId, appId, processedById, note);
+            ra.addFlashAttribute("success", "Đã từ chối đơn.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Không thể từ chối đơn. Vui lòng thử lại.");
+        }
+        String qs = keepListParams(allParams);
+        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
+    }
+
     private String keepListParams(Map<String, String> params) {
         String[] keys = { "oppId", "q", "status", "from", "to", "page", "size" };
         StringBuilder sb = new StringBuilder();
@@ -270,51 +369,5 @@ public class ApplicationController {
             }
         }
         return sb.toString();
-    }
-
-    /** Duyệt đơn */
-    @PostMapping("/organization/{orgId}/applications/{appId}/approve")
-    public String approveApplication(@PathVariable Integer orgId,
-            @PathVariable Integer appId,
-            @RequestParam(value = "note", required = false) String note,
-            @RequestParam Map<String, String> allParams,
-            RedirectAttributes ra,
-            HttpSession session) {
-        try {
-            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null)
-                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-            service.approveApplication(orgId, appId, processedById, note);
-            ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Không thể duyệt đơn. Vui lòng thử lại.");
-        }
-        String qs = keepListParams(allParams);
-        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
-    }
-
-    /** Từ chối đơn */
-    @PostMapping("/organization/{orgId}/applications/{appId}/reject")
-    public String rejectApplication(@PathVariable Integer orgId,
-            @PathVariable Integer appId,
-            @RequestParam(value = "note", required = false) String note,
-            @RequestParam Map<String, String> allParams,
-            RedirectAttributes ra,
-            HttpSession session) {
-        try {
-            Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
-            if (processedById == null)
-                return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-            service.rejectApplication(orgId, appId, processedById, note);
-            ra.addFlashAttribute("success", "Đã từ chối đơn.");
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Không thể từ chối đơn. Vui lòng thử lại.");
-        }
-        String qs = keepListParams(allParams);
-        return "redirect:/organization/" + orgId + "/applications" + (qs.isBlank() ? "" : "?" + qs);
     }
 }

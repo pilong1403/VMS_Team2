@@ -33,6 +33,10 @@ public class OrganizationApprovalController {
             @RequestParam(value = "num", defaultValue = "10") int size,
             @RequestParam(value = "timeOrder", required = false) String timeOrder, // asc|desc (UI giữ nguyên)
             Model model) {
+
+
+        model.addAttribute("activePage","approval"); // hiển thị highlight trên sidebar
+
         // Lấy tổ chức của owner hiện tại
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());

@@ -176,7 +176,6 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         return total == null ? 0L : total;
     }
 
-    // ================== Query theo tổ chức (CÓ LỌC oppId) ==================
     @Override
     public List<Application> findOrgApplications(Integer orgId, Integer oppId, String q,
             Application.ApplicationStatus status,
@@ -386,5 +385,39 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .setParameter("s2", Application.ApplicationStatus.COMPLETED)
                 .getSingleResult();
         return cnt == null ? 0L : cnt;
+    }
+
+    // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+    @Override
+    public boolean hasOverlappingActiveApplications(Integer volunteerId,
+            LocalDateTime newStart,
+            LocalDateTime newEnd,
+            Integer excludeOppId) {
+        if (volunteerId == null || newStart == null || newEnd == null)
+            return false;
+
+        String jpql = """
+                SELECT COUNT(a.appId)
+                  FROM Application a
+                  JOIN a.opportunity o
+                 WHERE a.volunteer.userId = :uid
+                   AND a.status IN (:s1, :s2)        /* PENDING, APPROVED */
+                   AND (:excludeId IS NULL OR o.oppId <> :excludeId)
+                   AND o.startTime IS NOT NULL
+                   AND o.endTime   IS NOT NULL
+                   AND o.startTime < :newEnd         /* overlap core */
+                   AND o.endTime   > :newStart
+                """;
+
+        Long cnt = em.createQuery(jpql, Long.class)
+                .setParameter("uid", volunteerId)
+                .setParameter("s1", Application.ApplicationStatus.PENDING)
+                .setParameter("s2", Application.ApplicationStatus.APPROVED)
+                .setParameter("excludeId", excludeOppId)
+                .setParameter("newStart", newStart)
+                .setParameter("newEnd", newEnd)
+                .getSingleResult();
+
+        return cnt != null && cnt > 0;
     }
 }

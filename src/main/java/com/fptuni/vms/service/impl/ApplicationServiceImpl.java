@@ -6,7 +6,6 @@ import com.fptuni.vms.model.User;
 import com.fptuni.vms.repository.ApplicationRepository;
 import com.fptuni.vms.service.ApplicationService;
 import jakarta.persistence.PersistenceException;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -27,35 +29,65 @@ public class ApplicationServiceImpl implements ApplicationService {
                 this.repo = repo;
         }
 
+        // ========= APPLY =========
         @Override
         public Application apply(Integer oppId, Integer volunteerId, String reason) {
                 Opportunity opp = repo.findOpportunityById(oppId);
                 if (opp == null)
                         throw new IllegalArgumentException("Cơ hội không tồn tại: " + oppId);
 
+                // Giữ đầy đủ các rule từ bản 1 (nâng cao)
+                if (opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED)
+                        throw new IllegalStateException("Cơ hội đã bị hủy.");
                 if (opp.getStatus() != Opportunity.OpportunityStatus.OPEN)
-                        throw new IllegalStateException("Cơ hội không còn mở");
+                        throw new IllegalStateException("Cơ hội không còn mở.");
 
+                if (opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now()))
+                        throw new IllegalStateException("Đã quá hạn đăng ký.");
                 if (opp.getEndTime() != null && !opp.getEndTime().isAfter(LocalDateTime.now()))
-                        throw new IllegalStateException("Cơ hội đã kết thúc");
+                        throw new IllegalStateException("Cơ hội đã kết thúc.");
 
                 User volunteer = repo.findUserById(volunteerId);
                 if (volunteer == null)
                         throw new IllegalArgumentException("Tình nguyện viên không tồn tại: " + volunteerId);
 
                 if (repo.existsByOppIdAndVolunteerId(oppId, volunteerId))
-                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này");
+                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
+
+                // Capacity
+                Integer need = opp.getNeededVolunteers();
+                if (need != null) {
+                        long active = repo.countByOppId(oppId);
+                        if (active >= need)
+                                throw new IllegalStateException("Cơ hội đã đủ số lượng đăng ký.");
+                }
+
+                // Overlap check PENDING/APPROVED của volunteer
+                if (opp.getStartTime() != null && opp.getEndTime() != null) {
+                        boolean overlapped = repo.hasOverlappingActiveApplications(
+                                        volunteerId,
+                                        opp.getStartTime(),
+                                        opp.getEndTime(),
+                                        opp.getOppId());
+                        if (overlapped) {
+                                throw new IllegalStateException(
+                                                "Bạn đang có lịch trùng với một cơ hội khác đã đăng ký (đang chờ duyệt/đã duyệt).");
+                        }
+                }
 
                 Application app = new Application();
                 app.setOpportunity(opp);
                 app.setVolunteer(volunteer);
                 app.setAppliedAt(LocalDateTime.now());
                 app.setReason(reason);
+                app.setStatus(Application.ApplicationStatus.PENDING);
+                app.setUpdatedAt(LocalDateTime.now());
 
                 try {
                         return repo.save(app);
                 } catch (PersistenceException ex) {
-                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này");
+                        // unique/constraint
+                        throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
                 }
         }
 
@@ -65,6 +97,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 var user = repo.findUserById(volunteerId);
                 if (user == null)
                         throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
+
                 boolean dirty = false;
                 if (fullName != null && !fullName.isBlank() && !fullName.equals(user.getFullName())) {
                         user.setFullName(fullName);
@@ -84,12 +117,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return apply(oppId, volunteerId, reason);
         }
 
+        // ========= VOLUNTEER VIEWS =========
         @Override
         public List<Application> listMyApplications(Integer volunteerId) {
                 return repo.findAllByVolunteerId(volunteerId);
         }
 
-        // tìm kiếm/loc/sort + phân trang cho volunteer PhiLong
+        // (THÊM từ bản 2) tìm kiếm/lọc/sort + phân trang cho volunteer
         @Override
         public Page<Application> searchMyApplications(Integer volunteerId,
                         String status,
@@ -118,6 +152,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return new PageImpl<>(rows, pageable, total);
         }
 
+        // ========= ORGANIZATION VIEWS =========
         @Override
         public Page<ApplicationRowVM> searchOrgApplicationsByOrgId(Integer orgId,
                         Integer oppId,
@@ -134,10 +169,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                         try {
                                 st = Application.ApplicationStatus.valueOf(status.trim().toUpperCase());
                         } catch (IllegalArgumentException ignored) {
-                        }
+                                /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
-                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay();
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
                 List<Application> rows = repo.findOrgApplications(
                                 orgId, oppId, q, st, fromDT, toDT,
@@ -145,6 +180,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 pageable.getPageSize());
                 long total = repo.countOrgApplications(orgId, oppId, q, st, fromDT, toDT);
 
+                // DÙNG VM ĐẦY ĐỦ (khớp UI modal chi tiết)
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
                 for (Application a : rows) {
                         var volunteer = a.getVolunteer();
@@ -154,14 +190,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                                         (volunteer != null ? volunteer.getFullName() : "—"),
                                         (volunteer != null ? volunteer.getAvatarUrl() : null),
                                         (opp != null ? opp.getTitle() : "—"),
-                                        // appliedAt: dùng LocalDateTime để có HH:mm
+                                        // appliedAt dùng LocalDateTime để hiển thị HH:mm dd/MM/yyyy
                                         a.getAppliedAt(),
                                         (a.getStatus() != null ? a.getStatus().name() : "PENDING"),
                                         a.getReason(),
                                         a.getCancelReason(),
                                         (a.getProcessedBy() != null ? a.getProcessedBy().getFullName() : null),
+                                        // processedAt: reuse updatedAt (phù hợp HTML đang dùng)
                                         a.getUpdatedAt()));
                 }
+
                 return new PageImpl<>(vms, pageable, total);
         }
 
@@ -180,7 +218,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                                 /* keep null */ }
                 }
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
-                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay();
+                LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
                 Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId, oppId, q, st, fromDT, toDT);
 
@@ -207,6 +245,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return out;
         }
 
+        // ========= APPROVE / REJECT =========
         @Override
         public void approveApplication(Integer orgId, Integer appId, Integer processedById, String note) {
                 var app = repo.findByIdAndOrgId(appId, orgId);
@@ -220,6 +259,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         if (user != null)
                                 app.setProcessedBy(user);
                 }
+                // Giữ nguyên logic cũ: note reuse vào cancelReason
                 if (note != null && !note.isBlank())
                         app.setCancelReason(note.trim());
 
@@ -249,6 +289,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 repo.save(app);
         }
 
+        // ========= QUERY HELPERS =========
         @Override
         public List<User> findApprovedUsersByOppId(Integer oppId) {
                 return repo.findApprovedVolunteersByOppId(oppId);
@@ -257,5 +298,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         @Override
         public long countApprovedByOppId(Integer oppId) {
                 return repo.countApprovedByOppId(oppId);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId) {
+                if (oppId == null || volunteerId == null)
+                        return false;
+                return repo.existsByOppIdAndVolunteerId(oppId, volunteerId);
         }
 }

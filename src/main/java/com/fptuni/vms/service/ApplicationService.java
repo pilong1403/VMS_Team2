@@ -66,4 +66,6 @@ public interface ApplicationService {
         List<User> findApprovedUsersByOppId(Integer oppId);
 
         long countApprovedByOppId(Integer oppId);
+
+        boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
 }
