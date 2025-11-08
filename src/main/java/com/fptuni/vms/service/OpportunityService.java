@@ -35,7 +35,8 @@ public interface OpportunityService {
     Opportunity save(Opportunity o);
 
     Page<Opportunity> searchByOrg(int orgId, String q,
-            Opportunity.OpportunityStatus status, int page, int size);
+                                  Opportunity.OpportunityStatus status, int page, int size, String timeOrder);
+
     // Opportunity findById(int id);
 
     // ================= PHI LONG ITER 3 =================//

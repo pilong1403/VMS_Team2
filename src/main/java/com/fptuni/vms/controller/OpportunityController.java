@@ -74,28 +74,63 @@ public class OpportunityController {
     @GetMapping
     public String listForOwner(@RequestParam(value = "q", required = false) String q,
                                @RequestParam(value = "status", required = false) Opportunity.OpportunityStatus status,
-                               @RequestParam(value = "page", defaultValue = "0") int page,
+                               @RequestParam(value = "page", defaultValue = "1") int page,       // 1-based cho tiện bind với UI giống Approvals
                                @RequestParam(value = "size", defaultValue = "10") int size,
+                               @RequestParam(value = "timeOrder", required = false) String timeOrder, // "asc" | "desc" | "deadline"
                                Model model) {
-        model.addAttribute("activePage","OppManagement"); // hiển thị highlight trên sidebar
+        model.addAttribute("activePage", "OppManagement");
 
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {
-            model.addAttribute("error",
-                    "Không tìm thấy thông tin tổ chức hợp lệ. Vui lòng kiểm tra hoặc liên hệ quản trị viên.");
+            model.addAttribute("error", "Không tìm thấy thông tin tổ chức hợp lệ. Vui lòng kiểm tra hoặc liên hệ quản trị viên.");
             model.addAttribute("page", Page.empty());
             model.addAttribute("statusVN", viStatus());
+            // Các biến UI để pagination/filters không lỗi null
+            model.addAttribute("q", q);
+            model.addAttribute("status", status);
+            model.addAttribute("timeOrder", timeOrder);
+            model.addAttribute("currentPage", 1);
+            model.addAttribute("totalPages", 1);
+            model.addAttribute("startPage", 1);
+            model.addAttribute("endPage", 1);
+            model.addAttribute("num", size);
             return "organization/opportunity-list";
         }
 
-        var result = opportunityService.searchByOrg(org.getOrgId(), q, status, page, size);
+        // Repository/PageRequest là 0-based => trừ 1
+        int zeroBased = Math.max(page - 1, 0);
+
+        Page<Opportunity> result = opportunityService.searchByOrg(
+                org.getOrgId(), q, status, zeroBased, size, timeOrder  // <== thêm timeOrder
+        );
+
         model.addAttribute("page", result);
         model.addAttribute("q", q);
         model.addAttribute("status", status);
         model.addAttribute("statusVN", viStatus());
+        model.addAttribute("timeOrder", timeOrder);
+
+        // --- window trang giống Approvals ---
+        int currentPage = result.getNumber() + 1; // về 1-based cho UI
+        int totalPages = result.getTotalPages() == 0 ? 1 : result.getTotalPages();
+        int window = 5; // hiển thị 5 nút trang
+        int startPage = Math.max(1, currentPage - 2);
+        int endPage = Math.min(totalPages, startPage + window - 1);
+        // nếu thiếu nút do gần cuối, đẩy start lùi lại
+        if (endPage - startPage + 1 < window) {
+            startPage = Math.max(1, endPage - window + 1);
+        }
+
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("num", size); // tên biến “num” để reuse giống Approvals
+
         return "organization/opportunity-list";
     }
+
 
     @GetMapping("/new")
     public String createForm(Model model) {
