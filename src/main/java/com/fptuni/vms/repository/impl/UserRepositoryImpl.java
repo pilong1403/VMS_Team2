@@ -217,7 +217,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> getUsersByRole(Integer roleId) {
-        return em.createQuery("SELECT u FROM User u WHERE u.role.id = :roleId ORDER BY u.fullName ASC", User.class)
+        return em.createQuery("SELECT u FROM User u WHERE u.role.roleId = :roleId ORDER BY u.fullName ASC", User.class)
                 .setParameter("roleId", roleId)
                 .getResultList();
     }

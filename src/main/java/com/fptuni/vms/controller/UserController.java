@@ -120,10 +120,10 @@ public class UserController {
         if (avatarFile != null && !avatarFile.isEmpty()) {
             avatarUrl = cloudStorageService.uploadFile(avatarFile);
             if (avatarUrl == null) {
-                avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg";
+                avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1760954395/User_Avt_Default_chq9k6.jpg";
             }
         } else {
-            avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1759905098/Avatar_Kha_Banh_b0wvt1.jpg";
+            avatarUrl = "https://res.cloudinary.com/vmscloudinary/image/upload/v1760954395/User_Avt_Default_chq9k6.jpg";
         }
         user.setAvatarUrl(avatarUrl);
 
@@ -168,7 +168,7 @@ public class UserController {
 
 
 
-    @GetMapping("/admin/users/{id}/detail")
+    @GetMapping("/{id}/detail")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getUserDetail(@PathVariable("id") Integer id) {
         User u = userService.getUserById(id);
@@ -204,7 +204,7 @@ public class UserController {
         userService.exportUserToExcel(user, response.getOutputStream());
     }
 
-    @GetMapping("/admin/users/{id}/json")
+    @GetMapping("/{id}/json")
     @ResponseBody
     public User getUserJson(@PathVariable Integer id) {
         return userService.getUserById(id);

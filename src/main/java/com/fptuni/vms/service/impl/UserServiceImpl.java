@@ -2,8 +2,10 @@ package com.fptuni.vms.service.impl;
 
 import com.fptuni.vms.dto.response.ChangePasswordForm;
 import com.fptuni.vms.dto.response.ProfileForm;
+import com.fptuni.vms.model.Organization;
 import com.fptuni.vms.model.Role;
 import com.fptuni.vms.model.User;
+import com.fptuni.vms.repository.OrganizationRepository;
 import com.fptuni.vms.repository.UserRepository;
 import com.fptuni.vms.service.CloudinaryService;
 import com.fptuni.vms.service.UserService;
@@ -13,6 +15,8 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,14 +41,17 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final RoleServiceImpl roleService;
+    private final OrganizationRepository organizationRepository; // << thêm
+
 
     public UserServiceImpl(UserRepository userRepository,
                            CloudinaryService cloudinaryService,
-                           PasswordEncoder passwordEncoder, RoleServiceImpl roleService) {
+                           PasswordEncoder passwordEncoder, RoleServiceImpl roleService, OrganizationRepository organizationRepository) {
         this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
         this.passwordEncoder = passwordEncoder;
         this.roleService = roleService;
+        this.organizationRepository = organizationRepository;
     }
 
     @Override
@@ -142,11 +149,75 @@ public class UserServiceImpl implements UserService {
 
 
 
-    // ===== CRUD =====
     @Override
     public void saveUser(User user) {
-        userRepository.save(user);
+        if (user.getEmail() != null) {
+            user.setEmail(user.getEmail().trim().toLowerCase());
+        }
+
+        // Nếu không nhập mật khẩu (tạo từ Admin), đặt mặc định rồi mã hoá
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode("123456"));
+        } else if (!user.getPasswordHash().startsWith("$2")) {
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        }
+        // 1) Lưu user
+        User saved = userRepository.save(user);
+
+        // (Guard) đảm bảo đã có ID
+        if (saved.getUserId() == null) {
+            saved = findByEmail(saved.getEmail()).orElse(saved);
+        }
+
+        // 2) Xác định ORG_OWNER (theo id hoặc name)
+        Role orgOwnerRole = roleService.getRoleByName("ORG_OWNER"); // có thể null
+        Integer orgOwnerRoleId = (orgOwnerRole != null ? orgOwnerRole.getRoleId() : null);
+
+        Integer roleId   = (saved.getRole() != null ? saved.getRole().getRoleId()   : null);
+        String  roleName = (saved.getRole() != null ? saved.getRole().getRoleName() : null);
+
+        boolean isOrgOwner =
+                (roleName != null && "ORG_OWNER".equalsIgnoreCase(roleName))
+                        || (roleId != null && orgOwnerRoleId != null && roleId.equals(orgOwnerRoleId));
+
+        if (!isOrgOwner || saved.getUserId() == null) return;
+
+        // 3) Chưa có tổ chức cho owner này?
+        if (organizationRepository.findByOwnerId(saved.getUserId()).isPresent()) return;
+
+        try {
+            // 4) Lấy admin hiện tại (nếu có) để set reg_reviewed_by
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String adminEmail = (auth != null ? auth.getName() : null);
+            User admin = (adminEmail != null) ? findByEmail(adminEmail).orElse(null) : null;
+
+            // 5) Tạo Organization ở trạng thái APPROVED
+            String name = (saved.getFullName() != null && !saved.getFullName().isBlank())
+                    ? saved.getFullName() : ("Tổ chức của " + saved.getEmail());
+
+            Organization org = new Organization();
+            org.setOwner(saved);
+            org.setName(name);
+            org.setDescription("Tổ chức do " + name + " sở hữu");
+
+            org.setRegStatus(Organization.RegStatus.APPROVED); // bạn yêu cầu APPROVED
+            org.setRegDocUrl("https://res.cloudinary.com/vmscloudinary/image/upload/v1762658986/%C4%90%C3%A3_nh%E1%BA%ADn_%C4%91%C6%A1n_tr%E1%BB%B1c_ti%E1%BA%BFp_ueqvgw.png");
+            org.setRegNote("Đơn đã được kiểm tra và chấp thuận khi làm việc trực tiếp với admin");
+            org.setRegSubmittedAt(LocalDateTime.now());
+            org.setRegReviewedAt(LocalDateTime.now());
+
+            if (admin != null && admin.getRole() != null
+                    && "ADMIN".equalsIgnoreCase(admin.getRole().getRoleName())) {
+                org.setRegReviewedBy(admin);
+            }
+
+            organizationRepository.save(org);
+        } catch (Exception ex) {
+            // log ra, không để văng exception làm fail tạo user
+            ex.printStackTrace();
+        }
     }
+
 
 
 
@@ -303,10 +374,10 @@ public class UserServiceImpl implements UserService {
 
         // Hàng ví dụ
         String[][] sampleData = {
-                {"Nguyễn Văn A", "vana@example.com", "Matkhau123", "0909123456", "Phường 1 - Quận 1 - TP.HCM"},
-                {"Trần Thị B", "thib@example.com", "Pass4567", "0912345678", "Phường Ninh Kiều - TP Cần Thơ"},
-                {"Lê Văn C", "vanc@example.com", "Volunteer1", "0923456789", "Phường Bến Nghé - Quận 1 - TP.HCM"},
-                {"Phạm Thị D", "thid@example.com", "Password9", "0934567890", "Phường Thảo Điền - TP Thủ Đức - TP.HCM"}
+                {"Nguyễn Văn A", "vana@example.com", "Matkhau123@", "0909123456", "Phường 1 - Quận 1 - TP.HCM"},
+                {"Trần Thị B", "thib@example.com", "Pass4567!", "0912345678", "Phường Ninh Kiều - TP Cần Thơ"},
+                {"Lê Văn C", "vanc@example.com", "Volunteer1#", "0923456789", "Phường Bến Nghé - Quận 1 - TP.HCM"},
+                {"Phạm Thị D", "thid@example.com", "Password9@", "0934567890", "Phường Thảo Điền - TP Thủ Đức - TP.HCM"}
         };
 
         for (int i = 0; i < sampleData.length; i++) {
@@ -344,7 +415,7 @@ public class UserServiceImpl implements UserService {
             Sheet sheet = workbook.getSheetAt(0);
 
             Pattern emailPattern = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-            Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,}$");
+            Pattern passwordPattern = Pattern.compile("^(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$");
             Pattern phonePattern = Pattern.compile("^0\\d{9,10}$");
             Pattern namePattern = Pattern.compile("^[\\p{L} .'-]+$");
             Pattern addressPattern = Pattern.compile("^[\\p{L}0-9 ,./-]+$"); // Cho phép chữ, số, dấu phẩy, dấu chấm, gạch
@@ -404,7 +475,7 @@ public class UserServiceImpl implements UserService {
 
                 // Validate password
                 if (!passwordPattern.matcher(password).matches()) {
-                    errors.add("Mật khẩu phải ≥ 8 ký tự và gồm cả số và chữ");
+                    errors.add("Mật khẩu phải ≥ 8 ký tự và gồm số & ký tự đặc biệt");
                 }
 
                 // Validate địa chỉ
@@ -467,14 +538,31 @@ public class UserServiceImpl implements UserService {
             }
 
             for (User u : volunteers) {
-                u.setRole(volunteerRole); // Gán role
-                u.setStatus(User.UserStatus.ACTIVE); // Trạng thái mặc định
-                if (u.getPasswordHash() == null) {
-                    // nếu file excel chưa có mật khẩu, generate ngẫu nhiên
-                    u.setPasswordHash(passwordEncoder.encode("123456"));
+                // Bỏ qua các dòng lỗi (được gắn LOCKED từ bước parse)
+                if (u.getStatus() == User.UserStatus.LOCKED) continue;   // FIX 1: không lưu dòng lỗi
+
+                u.setRole(volunteerRole);
+                u.setStatus(User.UserStatus.ACTIVE);
+
+                // Chuẩn hoá email
+                if (u.getEmail() != null) u.setEmail(u.getEmail().trim().toLowerCase());
+
+                // Mật khẩu:
+                String rawOrHashed = u.getPasswordHash();
+                if (rawOrHashed == null || rawOrHashed.isBlank()) {
+                    rawOrHashed = "123456"; // mặc định khi thiếu
                 }
-                userRepository.insertVolunteer(u); // hoặc save(user);
+
+                // Nếu CHƯA phải BCrypt thì mã hoá
+                if (!rawOrHashed.startsWith("$2a$") && !rawOrHashed.startsWith("$2b$") && !rawOrHashed.startsWith("$2y$")) {
+                    u.setPasswordHash(passwordEncoder.encode(rawOrHashed));   // FIX 2: mã hoá BCrypt
+                } else {
+                    u.setPasswordHash(rawOrHashed); // đã là bcrypt thì giữ nguyên
+                }
+
+                userRepository.insertVolunteer(u);
             }
+
 
             return true;
         } catch (Exception e) {

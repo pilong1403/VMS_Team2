@@ -321,8 +321,14 @@
                         <p><strong>Trạng thái:</strong>
                             <span th:text="${selectedOrg.regStatus}"></span>
                         </p>
+                        <!-- Mô tả tổ chức -->
+                        <p><strong>Mô tả tổ chức:</strong></p>
+                        <p th:text="${!#strings.isEmpty(selectedOrg.description) ? selectedOrg.description : '(Không có mô tả chi tiết)'}"></p>
+
+                        <!-- Mô tả bằng chứng -->
                         <p><strong>Mô tả bằng chứng:</strong></p>
-                        <p th:text="${selectedOrg.description != null ? selectedOrg.description : 'Không có mô tả chi tiết.'}"></p>
+                        <p th:text="${!#strings.isEmpty(selectedOrg.regNote) ? selectedOrg.regNote : '(Không có mô tả chi tiết)'}"></p>
+
 
                         <div th:if="${selectedOrg.regDocUrl != null}">
                             <strong>Tệp minh chứng:</strong>
