@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page; // import thêm để dùng Page
+
 @Controller
 @RequestMapping("/profile")
 public class ProfileController {
@@ -395,9 +397,16 @@ public class ProfileController {
         }
     }
 
-    // My Applications
+    // My Applications PhiLong
     @GetMapping("/applications")
-    public String myApplications(Model model, Authentication authentication) {
+    public String myApplications(
+            Model model,
+            Authentication authentication,
+            @RequestParam(name = "q", defaultValue = "") String q,
+            @RequestParam(name = "status", defaultValue = "") String filterStatus,
+            @RequestParam(name = "sort", defaultValue = "newest") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page) {
+
         User currentUser = SecurityUtils.getCurrentUser(authentication);
         if (currentUser == null) {
             return "redirect:/login";
@@ -412,7 +421,24 @@ public class ProfileController {
             return "redirect:/login";
         }
 
-        model.addAttribute("items", applicationService.listMyApplications(currentUser.getUserId()));
+        int size = 5;
+        Page<Application> paged = applicationService.searchMyApplications(
+                currentUser.getUserId(),
+                filterStatus,
+                q,
+                sort,
+                page,
+                size);
+
+        model.addAttribute("items", paged.getContent());
+        model.addAttribute("totalPages", paged.getTotalPages());
+        model.addAttribute("currentPage", page);
+
+        // giữ lại các tham số filter/sort để binding ra view
+        model.addAttribute("q", q);
+        model.addAttribute("filterStatus", filterStatus);
+        model.addAttribute("sort", sort);
+
         model.addAttribute("user", freshUser);
         model.addAttribute("activePage", "applications");
 

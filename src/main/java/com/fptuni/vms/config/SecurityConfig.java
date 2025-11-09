@@ -35,62 +35,64 @@ public class SecurityConfig {
                 csrfAttr.setCsrfRequestAttributeName("_csrf");
 
                 http
-                                .csrf(csrf -> csrf
-                                                .csrfTokenRepository(csrfRepo)
-                                                .csrfTokenRequestHandler(csrfAttr))
+                        .csrf(csrf -> csrf
+                                .csrfTokenRepository(csrfRepo)
+                                .csrfTokenRequestHandler(csrfAttr))
 
-                                // Không dùng login form mặc định
-                                .formLogin(form -> form.disable())
+                        // Không dùng login form mặc định
+                        .formLogin(form -> form.disable())
 
-                                // Tắt request cache để tránh redirect không mong muốn từ DevTools
-                                .requestCache(cache -> cache.disable())
+                        // Tắt request cache để tránh redirect không mong muốn từ DevTools
+                        .requestCache(cache -> cache.disable())
 
-                                // Khi chưa đăng nhập, chuyển tới /login; khi bị cấm, tới /403
-                                .exceptionHandling(ex -> ex
-                                                .authenticationEntryPoint(
-                                                                new LoginUrlAuthenticationEntryPoint("/login"))
-                                                .accessDeniedHandler(denied))
+                        // Khi chưa đăng nhập, chuyển tới /login; khi bị cấm, tới /403
+                        .exceptionHandling(ex -> ex
+                                .authenticationEntryPoint(
+                                        new LoginUrlAuthenticationEntryPoint("/login"))
+                                .accessDeniedHandler(denied))
 
-                                // Logout
-                                .logout(l -> l
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login?e=LOGOUT_OK"))
+                        // Logout
+                        .logout(l -> l
+                                .logoutUrl("/logout")
+                                .logoutSuccessUrl("/login?e=LOGOUT_OK"))
 
-                                // Phân quyền/cho phép
-                                .authorizeHttpRequests(auth -> auth
-                                                // PUBLIC (không cần đăng nhập)
-                                                .requestMatchers(
-                                                                "/", "/home", "/opportunities", "/opportunities/**",
-                                                                "/about",
-                                                                "/login", "/403",
-                                                                "/oauth2/**", "/login/oauth2/**",
-                                                                "/register", "/register/**",
-                                                                "/auth/org-register", "/auth/org-register/**",
-                                                                "/assets/**", "/css/**", "/js/**", "/images/**",
-                                                                "/forgot-password", "/forgot-password/**",
-                                                                "/webjars/**", "/favicon.ico", "/faqPublic",
-                                                                "/organizations/**")
+                        // Phân quyền/cho phép
+                        .authorizeHttpRequests(auth -> auth
+                                // PUBLIC (không cần đăng nhập)
+                                .requestMatchers(
+                                        "/", "/home", "/opportunities", "/opportunities/**",
+                                        "/about",
+                                        "/login", "/403",
+                                        "/oauth2/**", "/login/oauth2/**",
+                                        "/register", "/register/**",
+                                        "/auth/org-register", "/auth/org-register/**",
+                                        "/assets/**", "/css/**", "/js/**", "/images/**",
+                                        "/forgot-password", "/forgot-password/**",
+                                        "/webjars/**", "/favicon.ico", "/faqPublic",
+                                        "/organizations/**",
+                                        // Cho phép trang lỗi để tránh bị đẩy về /login khi có 4xx/5xx
+                                        "/error", "/error/**")
 
-                                                .permitAll()
-                                                .requestMatchers("/org/register", "/org/register/**").anonymous()
-                                                // ADMIN
-                                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                                                .requestMatchers("/organization/**").hasAuthority("ORG_OWNER")
+                                .permitAll()
+                                .requestMatchers("/org/register", "/org/register/**").anonymous()
+                                // ADMIN
+                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                                .requestMatchers("/organization/**").hasAuthority("ORG_OWNER")
 
-                                                // Điều hướng sau đăng nhập theo vai trò (ví dụ)
-                                                .requestMatchers("/home")
-                                                .hasAnyAuthority("VOLUNTEER", "ADMIN", "ORG_OWNER")
+                                // Điều hướng sau đăng nhập theo vai trò (ví dụ)
+                                .requestMatchers("/home")
+                                .hasAnyAuthority("VOLUNTEER", "ADMIN", "ORG_OWNER")
 
-                                                // Chức năng dành cho chủ tổ chức
-                                                .requestMatchers("/opportunity/**").hasAuthority("ORG_OWNER")
-                                                .requestMatchers("/org/opps/**").hasAuthority("ORG_OWNER")
-                                                // Vùng tự phục vụ
-                                                .requestMatchers("/vol/**")
-                                                .hasAnyAuthority("VOLUNTEER", "ORG_OWNER", "ADMIN")
+                                // Chức năng dành cho chủ tổ chức
+                                .requestMatchers("/opportunity/**").hasAuthority("ORG_OWNER")
+                                .requestMatchers("/org/opps/**").hasAuthority("ORG_OWNER")
+                                // Vùng tự phục vụ
+                                .requestMatchers("/vol/**")
+                                .hasAnyAuthority("VOLUNTEER", "ORG_OWNER", "ADMIN")
 
-                                                // Volunteer specific paths
-                                                .requestMatchers("/volunteer/**")
-                                                .hasAnyAuthority("VOLUNTEER", "ADMIN")
+                                // Volunteer specific paths
+                                .requestMatchers("/volunteer/**")
+                                .hasAnyAuthority("VOLUNTEER", "ADMIN")
 
                                                 // Các URL còn lại yêu cầu đăng nhập
                                                 .anyRequest().authenticated());
@@ -115,6 +117,6 @@ public class SecurityConfig {
                                                     })
                                             );
 
-            return http.build();
+                return http.build();
         }
 }

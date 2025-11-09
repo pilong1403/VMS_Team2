@@ -152,10 +152,11 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     @Override
     public Page<Opportunity> searchByOrg(int orgId, String q,
-            Opportunity.OpportunityStatus status, int page, int size) {
+                                         Opportunity.OpportunityStatus status, int page, int size, String timeOrder) {
         Pageable pageable = PageRequest.of(page, size);
-        return opportunityRepository.searchByOrg(orgId, q, status, pageable);
+        return opportunityRepository.searchByOrg(orgId, q, status, timeOrder, pageable);
     }
+
 
     // @Override
     // public Opportunity findById(int id) {

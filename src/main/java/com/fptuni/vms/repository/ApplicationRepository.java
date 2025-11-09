@@ -18,18 +18,26 @@ public interface ApplicationRepository {
 
         User findUserById(Integer userId);
 
-        // Đếm số application hợp lệ của 1 opportunity
         long countByOppId(Integer oppId);
 
-        // Cho phép lưu (merge) lại thông tin liên hệ của user
         User saveUser(User user);
 
-        // LẤY DANH SÁCH ĐƠN CỦA VOLUNTEER — trả về Application + fetch join đủ dữ liệu
         List<Application> findAllByVolunteerId(Integer volunteerId);
 
-        // ====== Truy vấn theo tổ chức (list + count + stats) — CÓ LỌC OPPID ======
+        List<Application> findMyApplications(Integer volunteerId,
+                        Application.ApplicationStatus status,
+                        String q,
+                        String sortDir,
+                        int offset,
+                        int limit);
+
+        long countMyApplications(Integer volunteerId,
+                        Application.ApplicationStatus status,
+                        String q);
+
+        // theo tổ chức (giữ nguyên)
         List<Application> findOrgApplications(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         Application.ApplicationStatus status,
                         LocalDateTime from,
@@ -38,24 +46,21 @@ public interface ApplicationRepository {
                         int limit);
 
         long countOrgApplications(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         Application.ApplicationStatus status,
                         LocalDateTime from,
                         LocalDateTime to);
 
         Map<Application.ApplicationStatus, Long> computeOrgAppStats(Integer orgId,
-                        Integer oppId, // NEW
+                        Integer oppId,
                         String q,
                         Application.ApplicationStatus status,
                         LocalDateTime from,
                         LocalDateTime to);
 
-        // ====== Lấy 1 application thuộc orgId (kèm fetch volunteer/opportunity) ======
         Application findByIdAndOrgId(Integer appId, Integer orgId);
 
-        // ====== phục vụ gửi mail/thông báo khi opp hủy/sửa ======
-        /** Trả về danh sách User đã được duyệt (APPROVED/COMPLETED) của 1 cơ hội. */
         List<User> findApprovedVolunteersByOppId(Integer oppId);
 
         /**
@@ -64,6 +69,11 @@ public interface ApplicationRepository {
          */
         List<Application> findApprovedApplicationsByOppId(Integer oppId);
 
-        // Đếm số ứng viên đã được duyệt của 1 cơ hội (APPROVED + COMPLETED)
         long countApprovedByOppId(Integer oppId);
+
+        // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+        boolean hasOverlappingActiveApplications(Integer volunteerId,
+                        LocalDateTime newStart,
+                        LocalDateTime newEnd,
+                        Integer excludeOppId);
 }

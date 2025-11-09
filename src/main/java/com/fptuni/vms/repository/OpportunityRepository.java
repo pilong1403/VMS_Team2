@@ -52,7 +52,8 @@ public interface OpportunityRepository {
             Pageable pageable);
 
     Page<Opportunity> searchByOrg(int orgId, String q,
-            Opportunity.OpportunityStatus status, Pageable pageable);
+                                  Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable);
+
 
     List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
                                          LocalDateTime start, LocalDateTime end, int limit);

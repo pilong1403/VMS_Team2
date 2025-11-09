@@ -6,7 +6,8 @@
     <meta charset="UTF-8" />
     <title>Danh sách đơn ứng tuyển</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Bootstrap assets của trang này vẫn giữ nguyên -->
+
+    <!-- Bootstrap assets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
@@ -55,7 +56,7 @@
             white-space: nowrap;
         }
 
-        /* Phù hợp khung layout mới */
+        /* Layout khung mới */
         .app-container {
             display: flex;
             min-height: 100vh;
@@ -76,14 +77,14 @@
 
 <body class="bg-light">
     <div class="app-container">
-        <!-- Sidebar giống file điểm danh -->
+        <!-- Sidebar -->
         <div th:replace="~{fragments/organization/sidebar :: sidebar}"></div>
 
         <div class="main-content">
-            <!-- Header giống file điểm danh -->
+            <!-- Header -->
             <div th:replace="~{fragments/organization/header :: header}"></div>
 
-            <!-- Toàn bộ nội dung trang chuyển vào content-wrapper -->
+            <!-- Content -->
             <div class="content-wrapper">
 
                 <!-- Flash -->
@@ -96,7 +97,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <h4 class="mb-3">Danh sách đơn ứng tuyển </h4>
+                <h4 class="mb-3">Danh sách đơn ứng tuyển</h4>
 
                 <!-- ===== Stats ===== -->
                 <div class="row g-3 mb-3" th:if="${stats != null}">
@@ -164,7 +165,6 @@
                             <!-- giữ oppId khi lọc -->
                             <input type="hidden" name="oppId"
                                 th:value="${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')}" />
-
                             <input type="hidden" name="size" value="5" />
 
                             <div class="col-6 col-md-1">
@@ -190,7 +190,7 @@
                                         <th style="width:30%">Cơ hội</th>
                                         <th style="min-width:160px">Ngày ứng tuyển</th>
                                         <th style="min-width:140px">Trạng thái</th>
-                                        <th class="text-end" style="min-width:220px">Hành động</th>
+                                        <th class="text-end" style="min-width:260px">Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -207,7 +207,7 @@
 
                                         <td>
                                             <div class="fw-semibold" th:text="${row.opportunityTitle}">Dạy học miễn phí
-                                                cho trẻ em vùng cao</div>
+                                            </div>
                                         </td>
 
                                         <td th:text="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">01/01/2025</td>
@@ -216,30 +216,39 @@
                                             th:with="st=${row.status}, ns=${st == null ? 'UNKNOWN' : #strings.toUpperCase(#strings.trim(st))}">
                                             <span class="badge badge-pill"
                                                 th:classappend="${
-                                      #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? ' text-bg-secondary' :
-                                      (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? ' text-bg-primary'   :
-                                      (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? ' text-bg-danger'    :
-                                      (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? ' text-bg-success'   :
-                                      (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? ' text-bg-dark'      :
-                                                                                                             ' text-bg-light'))))}"
+                                              #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? ' text-bg-secondary' :
+                                              (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? ' text-bg-primary'   :
+                                              (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? ' text-bg-danger'    :
+                                              (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? ' text-bg-success'   :
+                                              (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? ' text-bg-dark'      :
+                                                                                                                     ' text-bg-light'))))}"
                                                 th:text="${
-                                      #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? 'Đang chờ'    :
-                                      (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? 'Đã duyệt'    :
-                                      (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? 'Từ chối'     :
-                                      (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? 'Hoàn thành' :
-                                      (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? 'Đã hủy'      :
-                                                                                                            (st == null ? 'Khác' : st)))))}">
+                                              #lists.contains({'PENDING','WAITING','PEND','PENDING_APPROVAL'}, ns) ? 'Đang chờ'    :
+                                              (#lists.contains({'APPROVED','APPROVE','ACCEPTED'}, ns)             ? 'Đã duyệt'    :
+                                              (#lists.contains({'REJECTED','REJECT','DECLINED'}, ns)              ? 'Từ chối'     :
+                                              (#lists.contains({'COMPLETED','COMPLETE','DONE','FINISHED'}, ns)    ? 'Hoàn thành' :
+                                              (#lists.contains({'CANCELLED','CANCELED','CANCEL'}, ns)             ? 'Đã hủy'      :
+                                                                                                                   (st == null ? 'Khác' : st)))))}">
                                                 Đang chờ
                                             </span>
                                         </td>
 
                                         <td class="text-end sticky-actions" th:with="st=${row.status}">
-                                            <a class="btn btn-ghost btn-sm me-1"
-                                                th:href="@{|/organization/${orgId}/applications/${row.appId}|}">
+                                            <!-- Nút mở modal Chi tiết (MERGE từ file 2) -->
+                                            <button type="button" class="btn btn-ghost btn-sm me-1 btn-open-detail"
+                                                data-bs-toggle="modal" data-bs-target="#appDetailModal"
+                                                th:data-app-id="${row.appId}" th:data-vol-name="${row.volunteerName}"
+                                                th:data-vol-avatar="${#strings.isEmpty(row.volunteerAvatar) ? '' : row.volunteerAvatar}"
+                                                th:data-opp-title="${row.opportunityTitle}"
+                                                th:data-applied-at="${#temporals.format(row.appliedAt, 'HH:mm dd/MM/yyyy')}"
+                                                th:data-status="${row.status}" th:data-reason="${row.reason}"
+                                                th:data-cancel-reason="${row.cancelReason}"
+                                                th:data-processed-by="${row.processedByName}"
+                                                th:data-processed-at="${row.processedAt != null ? #temporals.format(row.processedAt, 'HH:mm dd/MM/yyyy') : ''}">
                                                 Xem chi tiết
-                                            </a>
+                                            </button>
 
-                                            <!-- Chỉ hiện khi PENDING -->
+                                            <!-- Chỉ hiện khi PENDING: duyệt/từ chối nhanh -->
                                             <th:block th:if="${#strings.equalsIgnoreCase(st,'PENDING')}">
                                                 <button type="button"
                                                     class="btn btn-sm btn-primary me-1 btn-open-review"
@@ -307,7 +316,7 @@
                     </div>
                 </div>
 
-                <!-- hidden base url giữ nguyên -->
+                <!-- Hidden base url -->
                 <input type="hidden" id="baseAppUrl" th:value="@{|/organization/${orgId}/applications|}" />
 
             </div> <!-- /content-wrapper -->
@@ -319,34 +328,30 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-    <!-- Init -->
+    <!-- Page init & modal logic -->
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            // Khởi tạo date picker
+            // Datepicker
             const fromVal = /*[[${param.from != null ? param.from[0] : ''}]]*/ '';
             const toVal = /*[[${param.to   != null ? param.to[0]   : ''}]]*/ '';
             flatpickr("#fromDate", { dateFormat: "d/m/Y", allowInput: true, defaultDate: fromVal || null });
             flatpickr("#toDate", { dateFormat: "d/m/Y", allowInput: true, defaultDate: toVal || null });
 
-            // Modal logic
+            // ===== Review (duyệt/từ chối nhanh) =====
             const reviewForm = document.getElementById('reviewForm');
             const titleElm = document.getElementById('reviewModalTitle');
             const submitBtn = document.getElementById('reviewSubmitBtn');
-
             const volElm = document.getElementById('rv-vol-name');
             const oppElm = document.getElementById('rv-opp-title');
             const atElm = document.getElementById('rv-applied-at');
             const noteElm = document.getElementById('rv-note');
-
             const baseAppUrl = document.getElementById('baseAppUrl').value;
 
-            // Gắn action động cho form theo nút bấm
             document.querySelectorAll('.btn-open-review').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const act = btn.getAttribute('data-action'); // 'approve' | 'reject'
+                    const act = btn.getAttribute('data-action'); // approve|reject
                     const appId = btn.getAttribute('data-app-id');
 
-                    // Fill thông tin hiển thị
                     volElm.textContent = btn.getAttribute('data-vol-name') || '—';
                     oppElm.textContent = btn.getAttribute('data-opp-title') || '—';
                     atElm.textContent = btn.getAttribute('data-applied-at') || '—';
@@ -355,33 +360,84 @@
                     if (act === 'approve') {
                         titleElm.textContent = 'Duyệt đơn ứng tuyển';
                         submitBtn.textContent = 'Duyệt';
-                        submitBtn.classList.remove('btn-danger');
-                        submitBtn.classList.add('btn-primary');
-                        // /organization/{orgId}/applications/{appId}/approve
+                        submitBtn.classList.remove('btn-danger'); submitBtn.classList.add('btn-primary');
                         reviewForm.setAttribute('action', `${baseAppUrl}/${appId}/approve`);
                     } else {
                         titleElm.textContent = 'Từ chối đơn ứng tuyển';
                         submitBtn.textContent = 'Từ chối';
-                        submitBtn.classList.remove('btn-primary');
-                        submitBtn.classList.add('btn-danger');
-                        // /organization/{orgId}/applications/{appId}/reject
+                        submitBtn.classList.remove('btn-primary'); submitBtn.classList.add('btn-danger');
                         reviewForm.setAttribute('action', `${baseAppUrl}/${appId}/reject`);
                     }
                 });
             });
-
-            // Chặn submit nếu vì lý do nào đó action chưa được set
-            const reviewFormEl = document.getElementById('reviewForm');
-            reviewFormEl && reviewFormEl.addEventListener('submit', (e) => {
-                if (!reviewFormEl.getAttribute('action')) {
+            reviewForm && reviewForm.addEventListener('submit', (e) => {
+                if (!reviewForm.getAttribute('action')) {
                     e.preventDefault();
                     alert('Không xác định được hành động. Vui lòng mở lại popup từ nút Đồng ý/Từ chối.');
                 }
             });
+
+            // ===== Detail modal =====
+            const detailForm = document.getElementById('appDetailForm');
+            const dtActionWrap = document.getElementById('dt-action-buttons');
+            const dtNoteWrap = document.getElementById('dt-review-note-wrap');
+            const dtApproveBtn = document.getElementById('dt-approve-btn');
+            const dtRejectBtn = document.getElementById('dt-reject-btn');
+            const el = (id) => document.getElementById(id);
+            const setText = (id, val) => { el(id).textContent = (val && ('' + val).trim().length > 0) ? val : '—' };
+
+            document.querySelectorAll('.btn-open-detail').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const appId = btn.getAttribute('data-app-id');
+                    const status = (btn.getAttribute('data-status') || '').toUpperCase().trim();
+
+                    // Volunteer
+                    const volName = btn.getAttribute('data-vol-name') || '';
+                    const volAvatar = btn.getAttribute('data-vol-avatar') || '';
+                    const avatarElm = el('dt-vol-avatar');
+                    avatarElm.src = volAvatar ? volAvatar : ('https://ui-avatars.com/api/?name=' + encodeURIComponent(volName || 'Volunteer'));
+                    setText('dt-vol-name', volName);
+
+                    // Opportunity
+                    const oppTitle = btn.getAttribute('data-opp-title') || '';
+                    setText('dt-opp-title', oppTitle);
+
+                    // Application info
+                    const appliedAt = btn.getAttribute('data-applied-at') || '';
+                    setText('dt-status', { 'PENDING': 'Đang chờ', 'APPROVED': 'Đã duyệt', 'REJECTED': 'Từ chối', 'COMPLETED': 'Hoàn thành', 'CANCELLED': 'Đã hủy' }[status] || status || '—');
+                    setText('dt-applied-at', appliedAt);
+
+                    // Processed & reasons
+                    const processedBy = btn.getAttribute('data-processed-by') || '';
+                    const processedAt = btn.getAttribute('data-processed-at') || '';
+                    const processedText = (processedBy || processedAt) ? [processedBy, processedAt].filter(Boolean).join(' • ') : '—';
+                    setText('dt-processed', processedText);
+
+                    setText('dt-reason', btn.getAttribute('data-reason') || '');
+                    setText('dt-cancel-reason', btn.getAttribute('data-cancel-reason') || '');
+
+                    // Toggle action theo trạng thái
+                    if (status === 'PENDING') {
+                        dtActionWrap.style.display = '';
+                        dtNoteWrap.style.display = '';
+                        const baseAppUrl = document.getElementById('baseAppUrl').value;
+                        detailForm.setAttribute('action', `${baseAppUrl}/${appId}/approve`);
+                        dtApproveBtn.onclick = () => detailForm.setAttribute('action', `${baseAppUrl}/${appId}/approve`);
+                        dtRejectBtn.onclick = () => detailForm.setAttribute('action', `${baseAppUrl}/${appId}/reject`);
+                    } else {
+                        dtActionWrap.style.display = 'none';
+                        dtNoteWrap.style.display = 'none';
+                        detailForm.removeAttribute('action');
+                    }
+                });
+            });
+            detailForm && detailForm.addEventListener('submit', (e) => {
+                if (!detailForm.getAttribute('action')) e.preventDefault();
+            });
         });
     </script>
 
-    <!-- Review Modal -->
+    <!-- Review Modal (duyệt/từ chối nhanh) -->
     <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -437,46 +493,138 @@
         </div>
     </div>
 
-<script>
-    // header profile
-    document.addEventListener('DOMContentLoaded', function () {
-        const profileDropdown = document.getElementById('profileDropdown');
-        const dropdownMenu = document.getElementById('dropdownMenu');
+    <!-- Application Detail Modal (thêm mới từ file 2) -->
+    <div class="modal fade" id="appDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form id="appDetailForm" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Chi tiết xử lý đơn ứng tuyển của tình nguyện viên</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <img id="dt-vol-avatar" class="avatar"
+                                                src="https://ui-avatars.com/api/?name=Volunteer" alt="avatar" />
+                                            <div class="fw-semibold" id="dt-vol-name">—</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="small text-muted mb-1">Cơ hội</div>
+                                        <div class="fw-semibold mb-2" id="dt-opp-title">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        if (profileDropdown) {
-            profileDropdown.addEventListener('click', function (event) {
-                event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
-                dropdownMenu.classList.toggle('show');
-            });
-        }
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="small text-muted mb-1">Trạng thái</div>
+                                        <div id="dt-status" class="fw-semibold">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="small text-muted mb-1">Ngày ứng tuyển</div>
+                                        <div id="dt-applied-at" class="fw-semibold">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <div class="small text-muted mb-1">Xử lý gần nhất</div>
+                                        <div id="dt-processed">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        // Đóng dropdown khi click ra ngoài
-        window.addEventListener('click', function (event) {
-            if (dropdownMenu && dropdownMenu.classList.contains('show')) {
-                dropdownMenu.classList.remove('show');
+                        <div class="row g-3 mt-2">
+                            <div class="col-12 col-md-6">
+                                <label class="small text-muted mb-1 d-block">Lý do (volunteer khi apply)</label>
+                                <div id="dt-reason" class="border rounded p-2 bg-light">—</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="small text-muted mb-1 d-block">Lý do huỷ (nếu có)</label>
+                                <div id="dt-cancel-reason" class="border rounded p-2 bg-light">—</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <div id="dt-review-note-wrap" class="mb-2" style="display:none;">
+                            <label for="dt-review-note" class="form-label">Ghi chú xử lý</label>
+                            <textarea id="dt-review-note" name="note" rows="3" class="form-control"
+                                placeholder="Nhập ghi chú khi duyệt/từ chối (tuỳ chọn)"></textarea>
+                        </div>
+
+                        <!-- keep filters -->
+                        <input type="hidden" name="oppId"
+                            th:value="${param.oppId != null && !#lists.isEmpty(param.oppId) ? param.oppId[0] : (oppId ?: '')}" />
+                        <input type="hidden" name="q" th:value="${param.q != null ? param.q[0] : ''}" />
+                        <input type="hidden" name="status" th:value="${param.status != null ? param.status[0] : ''}" />
+                        <input type="hidden" name="from" th:value="${param.from != null ? param.from[0] : fromStr}" />
+                        <input type="hidden" name="to" th:value="${param.to   != null ? param.to[0]   : toStr}" />
+                        <input type="hidden" name="page" th:value="${param.page}" />
+                        <input type="hidden" name="size" th:value="${param.size}" />
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <div id="dt-action-buttons" class="me-auto" style="display:none;">
+                            <button type="submit" id="dt-approve-btn" class="btn btn-primary">Đồng ý</button>
+                            <button type="submit" id="dt-reject-btn" class="btn btn-danger">Từ chối</button>
+                        </div>
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header & Sidebar profile dropdown (giữ nguyên từ file 1) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // header profile
+            const profileDropdown = document.getElementById('profileDropdown');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            if (profileDropdown) {
+                profileDropdown.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    dropdownMenu && dropdownMenu.classList.toggle('show');
+                });
             }
-        });
-    });
-    // sidebar profile
-    document.addEventListener('DOMContentLoaded', function () {
-        const sidebarProfile = document.getElementById('sidebarProfile');
-        const sidebarDropdownMenu = document.getElementById('sidebarDropdownMenu');
-
-        if (sidebarProfile) {
-            sidebarProfile.addEventListener('click', function (event) {
-                event.stopPropagation();
-                sidebarDropdownMenu.classList.toggle('show');
+            window.addEventListener('click', function () {
+                if (dropdownMenu && dropdownMenu.classList.contains('show')) dropdownMenu.classList.remove('show');
             });
-        }
 
-        // Đóng dropdown khi click ra ngoài
-        window.addEventListener('click', function (event) {
-            if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) {
-                sidebarDropdownMenu.classList.remove('show');
+            // sidebar profile
+            const sidebarProfile = document.getElementById('sidebarProfile');
+            const sidebarDropdownMenu = document.getElementById('sidebarDropdownMenu');
+            if (sidebarProfile) {
+                sidebarProfile.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    sidebarDropdownMenu && sidebarDropdownMenu.classList.toggle('show');
+                });
             }
+            window.addEventListener('click', function () {
+                if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) sidebarDropdownMenu.classList.remove('show');
+            });
         });
-    });
-</script>
+    </script>
 
 </body>
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* THAY ĐỔI 1: Khóa trang, ngăn cuộn ở <body> */
+        /* Khóa trang, ngăn cuộn ở <body> */
         html, body {
             height: 100%;
             margin: 0;
@@ -28,6 +28,7 @@
 
         <main class="flex-grow-1 p-4" style="overflow-y: auto;">
 
+            <!-- Alerts -->
             <div th:if="${ok}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <span th:text="${ok}">Thành công</span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -46,6 +47,7 @@
                 <a class="btn btn-success" th:href="@{/org/opps/new}">+ Tạo sự kiện</a>
             </div>
 
+            <!-- Controls: tìm kiếm / trạng thái / số bản ghi / sắp xếp -->
             <form class="row gy-2 gx-2 mb-3 align-items-end" method="get" th:action="@{/org/opps}">
                 <div class="col-md-4">
                     <label for="searchInput" class="form-label mb-1">Tìm kiếm</label>
@@ -66,16 +68,24 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label for="sizeSelect" class="form-label mb-1">Kích thước trang</label>
+                    <label for="sizeSelect" class="form-label mb-1">Số bản ghi/trang</label>
                     <select id="sizeSelect" class="form-select" name="size">
-                        <option th:each="n : ${#numbers.sequence(5,20,5)}"
-                                th:value="${n}" th:text="${n}"
-                                th:selected="${page != null and page.size == n}">
-                        </option>
+                        <option value="10" th:selected="${num == 10 || (num == null and page != null and page.size == 10)}">10</option>
+                        <option value="20" th:selected="${num == 20 || (page != null and page.size == 20)}">20</option>
+                        <option value="50" th:selected="${num == 50 || (page != null and page.size == 50)}">50</option>
                     </select>
                 </div>
 
-                <div class="col-md-3 text-md-end">
+                <div class="col-md-3">
+                    <label for="orderSelect" class="form-label mb-1">Sắp xếp</label>
+                    <select id="orderSelect" class="form-select" name="timeOrder">
+                        <option value="desc" th:selected="${timeOrder == null || timeOrder == 'desc'}">Mới nhất</option>
+                        <option value="asc" th:selected="${timeOrder == 'asc'}">Cũ nhất</option>
+                        <option value="deadline" th:selected="${timeOrder == 'deadline'}">Sớm đến hạn</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3 text-md-end">
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary flex-fill" type="submit">Lọc</button>
                         <a class="btn btn-outline-secondary flex-fill" th:href="@{/org/opps}">Xóa lọc</a>
@@ -83,6 +93,7 @@
                 </div>
             </form>
 
+            <!-- Table -->
             <div class="table-responsive bg-white rounded shadow-card">
                 <table class="table align-middle mb-0">
                     <thead class="table-light">
@@ -102,15 +113,15 @@
                         <td class="small" th:text="${#temporals.format(o.startTime,'dd/MM/yyyy HH:mm')}">01/01/2025 08:00</td>
                         <td class="small text-muted" th:text="${#temporals.format(o.endTime,'dd/MM/yyyy HH:mm')}">01/01/2025 17:00</td>
                         <td>
-            <span class="badge"
-                  th:classappend="${
-                    o.status.name() == 'OPEN' ? ' text-bg-primary' :
-                    (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' :
-                    (o.status.name() == 'CLOSED' ? ' text-bg-dark' : ' text-bg-warning'))
-                  }"
-                  th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
-              Đang mở
-            </span>
+                            <span class="badge"
+                                  th:classappend="${
+                                    o.status.name() == 'OPEN' ? ' text-bg-primary' :
+                                    (o.status.name() == 'CANCELLED' ? ' text-bg-secondary' :
+                                    (o.status.name() == 'CLOSED' ? ' text-bg-dark' : ' text-bg-warning'))
+                                  }"
+                                  th:text="${statusVN[o.status.name()] != null ? statusVN[o.status.name()] : o.status}">
+                              Đang mở
+                            </span>
                         </td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary me-1"
@@ -144,32 +155,61 @@
                 </table>
             </div>
 
-            <div class="d-flex align-items-center mt-3" th:if="${page != null and page.totalPages > 1}">
+            <!-- Pagination kiểu Approvals -->
+            <div class="d-flex align-items-center mt-3" th:if="${totalPages >= 1}">
                 <div class="me-3 small text-muted">
-                    <span th:text="'Trang ' + (${page.number} + 1) + '/' + ${page.totalPages}">Trang 1/1</span>
+                    Trang [[${currentPage}]]/[[${totalPages}]]
                 </div>
                 <nav>
                     <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+
+                        <!-- Prev -->
+                        <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/org/opps(q=${q}, status=${status}, page=${page.number - 1}, size=${page.size})}">
-                                Trước
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${currentPage - 1}, size=${num}, timeOrder=${timeOrder})}">
+                                &laquo;
                             </a>
                         </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
-                            th:classappend="${i == page.number} ? 'active'">
-                            <a class="page-link" th:text="${i + 1}"
-                               th:href="@{/org/opps(q=${q}, status=${status}, page=${i}, size=${page.size})}">1</a>
-                        </li>
-                        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+
+                        <!-- Leading 1 + ellipsis -->
+                        <li class="page-item" th:if="${startPage > 2}">
                             <a class="page-link"
-                               th:href="@{/org/opps(q=${q}, status=${status}, page=${page.number + 1}, size=${page.size})}">
-                                Sau
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=1, size=${num}, timeOrder=${timeOrder})}">1</a>
+                        </li>
+                        <li class="page-item disabled" th:if="${startPage > 2}">
+                            <span class="page-link">...</span>
+                        </li>
+
+                        <!-- Window -->
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:text="${i}"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${i}, size=${num}, timeOrder=${timeOrder})}">
+                            </a>
+                        </li>
+
+                        <!-- Trailing ellipsis + last -->
+                        <li class="page-item disabled" th:if="${(endPage + 2) < totalPages}">
+                            <span class="page-link">...</span>
+                        </li>
+                        <li class="page-item" th:if="${(endPage + 2) < totalPages}">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${totalPages}, size=${num}, timeOrder=${timeOrder})}"
+                               th:text="${totalPages}"></a>
+                        </li>
+
+                        <!-- Next -->
+                        <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/org/opps(q=${q}, status=${status}, page=${currentPage + 1}, size=${num}, timeOrder=${timeOrder})}">
+                                &raquo;
                             </a>
                         </li>
                     </ul>
                 </nav>
             </div>
+
         </main>
 
     </div>
@@ -185,13 +225,12 @@
 
         if (profileDropdown) {
             profileDropdown.addEventListener('click', function (event) {
-                event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                event.stopPropagation();
                 dropdownMenu.classList.toggle('show');
             });
         }
 
-        // Đóng dropdown khi click ra ngoài
-        window.addEventListener('click', function (event) {
+        window.addEventListener('click', function () {
             if (dropdownMenu && dropdownMenu.classList.contains('show')) {
                 dropdownMenu.classList.remove('show');
             }
@@ -210,8 +249,7 @@
             });
         }
 
-        // Đóng dropdown khi click ra ngoài
-        window.addEventListener('click', function (event) {
+        window.addEventListener('click', function () {
             if (sidebarDropdownMenu && sidebarDropdownMenu.classList.contains('show')) {
                 sidebarDropdownMenu.classList.remove('show');
             }
