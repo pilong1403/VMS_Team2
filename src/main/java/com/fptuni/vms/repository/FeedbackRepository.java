@@ -31,4 +31,9 @@ public interface FeedbackRepository {
     void save(Feedback feedback);
 
     void update(Feedback feedback);
+
+    // ================================
+    // 4. STATISTICS
+    // ================================
+    long countAll();
 }

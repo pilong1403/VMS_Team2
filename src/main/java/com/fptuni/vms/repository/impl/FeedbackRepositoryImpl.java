@@ -123,13 +123,13 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
     @Override
     public List<Feedback> findByOpportunity(int oppId) {
         String jpql = """
-            SELECT fb
-            FROM Feedback fb
-            JOIN FETCH fb.user u
-            WHERE fb.opportunity.oppId = :oppId
-              AND fb.feedbackType = 'VOLUNTEER'
-            ORDER BY fb.createdAt DESC
-            """;
+                SELECT fb
+                FROM Feedback fb
+                JOIN FETCH fb.user u
+                WHERE fb.opportunity.oppId = :oppId
+                  AND fb.feedbackType = 'VOLUNTEER'
+                ORDER BY fb.createdAt DESC
+                """;
         return em.createQuery(jpql, Feedback.class)
                 .setParameter("oppId", oppId)
                 .getResultList();
@@ -149,5 +149,12 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
     @Override
     public void update(Feedback feedback) {
         em.merge(feedback);
+    }
+
+    // ===================== 4. STATISTICS =====================
+    @Override
+    public long countAll() {
+        String jpql = "SELECT COUNT(fb) FROM Feedback fb";
+        return em.createQuery(jpql, Long.class).getSingleResult();
     }
 }
