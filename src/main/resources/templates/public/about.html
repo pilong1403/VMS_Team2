@@ -63,7 +63,13 @@
               class="position-absolute bg-white rounded-3 shadow-lg p-4"
               style="bottom: -2rem; left: -2rem; max-width: 200px"
             >
-              <div class="h2 fw-bold mb-1" style="color: #38bdf8">1,500+</div>
+              <div
+                class="h2 fw-bold mb-1"
+                style="color: #38bdf8"
+                th:text="${stats != null ? stats.volunteerCount : 0} + '+'"
+              >
+                0+
+              </div>
               <div class="text-muted small">Tình nguyện viên đã tham gia</div>
             </div>
           </div>
@@ -204,7 +210,7 @@
                   <div class="row align-items-center">
                     <div class="col-md-6 order-md-2">
                       <div class="bg-white rounded-3 p-4 shadow-sm">
-                        <p class="text-muted mb-0 fw-medium">Đạt mốc 500 tình nguyện viên đăng ký</p>
+                        <p class="text-muted mb-0 fw-medium">5 tình nguyện viên đầu tiên đăng ký</p>
                       </div>
                     </div>
                     <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">
@@ -227,7 +233,7 @@
                   <div class="row align-items-center">
                     <div class="col-md-6">
                       <div class="bg-white rounded-3 p-4 shadow-sm">
-                        <p class="text-muted mb-0 fw-medium">Hoàn thành 100 dự án tình nguyện đầu tiên</p>
+                        <p class="text-muted mb-0 fw-medium">Hoàn thành 10 dự án tình nguyện đầu tiên</p>
                       </div>
                     </div>
                     <div class="col-md-6 d-flex justify-content-start justify-content-md-end">
@@ -250,7 +256,7 @@
                   <div class="row align-items-center">
                     <div class="col-md-6 order-md-2">
                       <div class="bg-white rounded-3 p-4 shadow-sm">
-                        <p class="text-muted mb-0 fw-medium">Mở rộng ra 20 tỉnh thành trên cả nước</p>
+                        <p class="text-muted mb-0 fw-medium">Mở rộng ra 12 tỉnh thành trên cả nước</p>
                       </div>
                     </div>
                     <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">
@@ -273,7 +279,10 @@
                   <div class="row align-items-center">
                     <div class="col-md-6">
                       <div class="bg-white rounded-3 p-4 shadow-sm">
-                        <p class="text-muted mb-0 fw-medium">Gây quỹ thành công 2 tỷ đồng cho cộng đồng</p>
+                        <p class="text-muted mb-0 fw-medium">
+                          Kết nối với <span th:text="${stats != null ? stats.organizationCount : 0}">0</span> tổ chức
+                          tình nguyện
+                        </p>
                       </div>
                     </div>
                     <div class="col-md-6 d-flex justify-content-start justify-content-md-end">
@@ -296,7 +305,10 @@
                   <div class="row align-items-center">
                     <div class="col-md-6 order-md-2">
                       <div class="bg-white rounded-3 p-4 shadow-sm">
-                        <p class="text-muted mb-0 fw-medium">Vượt mốc 1,500 tình nguyện viên tích cực</p>
+                        <p class="text-muted mb-0 fw-medium">
+                          Vượt mốc <span th:text="${stats != null ? stats.volunteerCount : 0}">0</span> tình nguyện viên
+                          tích cực
+                        </p>
                       </div>
                     </div>
                     <div class="col-md-6 order-md-1 d-flex justify-content-end justify-content-md-start">

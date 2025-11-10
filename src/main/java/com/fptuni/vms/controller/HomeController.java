@@ -4,6 +4,7 @@ import com.fptuni.vms.dto.view.OpportunityCardDto;
 import com.fptuni.vms.model.Category;
 import com.fptuni.vms.model.Opportunity;
 import com.fptuni.vms.service.ApplicationService;
+import com.fptuni.vms.service.HomeStatsService;
 import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -29,13 +30,16 @@ public class HomeController {
     private final OpportunityService opportunityService;
     private final UserService userService;
     private final ApplicationService applicationService;
+    private final HomeStatsService homeStatsService;
 
     public HomeController(OpportunityService opportunityService,
-                          UserService userService,
-                          ApplicationService applicationService) {
+            UserService userService,
+            ApplicationService applicationService,
+            HomeStatsService homeStatsService) {
         this.opportunityService = opportunityService;
         this.userService = userService;
         this.applicationService = applicationService;
+        this.homeStatsService = homeStatsService;
     }
 
     @GetMapping("/home")
@@ -55,9 +59,14 @@ public class HomeController {
             model.addAttribute("latestOpportunities", latestOpportunities);
             Map<Integer, Map<String, Object>> latestBtnStates = computeButtonStates(latestOpportunities, currentUserId);
             model.addAttribute("latestBtnStates", latestBtnStates);
+
+            // Thêm thống kê
+            Map<String, Object> stats = homeStatsService.getHomeStats();
+            model.addAttribute("stats", stats);
         } catch (Exception e) {
             model.addAttribute("latestOpportunities", List.of());
             model.addAttribute("latestBtnStates", Map.of());
+            model.addAttribute("stats", Map.of());
         }
         return "home/home";
     }
@@ -65,6 +74,24 @@ public class HomeController {
     @GetMapping("/")
     public String publicHome(Model model, HttpSession session) {
         return volunteerHome(model, session);
+    }
+
+    @GetMapping("/about")
+    public String about(Model model, HttpSession session) {
+        try {
+            Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (currentUserId != null) {
+                model.addAttribute("currentUserId", currentUserId);
+                model.addAttribute("currentUser", userService.getUserById(currentUserId));
+            }
+
+            // Thêm thống kê cho trang about
+            Map<String, Object> stats = homeStatsService.getHomeStats();
+            model.addAttribute("stats", stats);
+        } catch (Exception e) {
+            model.addAttribute("stats", Map.of());
+        }
+        return "public/about";
     }
 
     @GetMapping("/home/opportunities")
@@ -156,7 +183,8 @@ public class HomeController {
             if (status != null && !status.isBlank() && safeStatus == null) {
                 opportunityPage = new PageImpl<>(List.of(), pageable, 0);
             } else {
-                if (safeCategoryId != null || location != null || safeStatus != null || search != null || safeTime != null) {
+                if (safeCategoryId != null || location != null || safeStatus != null || search != null
+                        || safeTime != null) {
                     opportunityPage = opportunityService.getOpportunityCardsWithFilters(
                             safeCategoryId, location, safeStatus, search, safeTime, "newest", pageable);
                 } else {
@@ -172,8 +200,8 @@ public class HomeController {
                         (safeStatus == null) ? opportunityPage.getTotalElements() : filtered.size());
             }
 
-            Map<Integer, Map<String, Object>> btnStates =
-                    computeButtonStates(opportunityPage.getContent(), currentUserId);
+            Map<Integer, Map<String, Object>> btnStates = computeButtonStates(opportunityPage.getContent(),
+                    currentUserId);
 
             model.addAttribute("opportunities", opportunityPage.getContent());
             model.addAttribute("currentPage", p);
@@ -213,12 +241,14 @@ public class HomeController {
     // ===== Helpers =====
 
     private static void appendWarn(StringBuilder sb, String msg) {
-        if (sb.length() > 0) sb.append(' ');
+        if (sb.length() > 0)
+            sb.append(' ');
         sb.append(msg);
     }
 
     private Integer parseIntOrNull(String raw) {
-        if (raw == null || raw.isBlank()) return null;
+        if (raw == null || raw.isBlank())
+            return null;
         try {
             return Integer.parseInt(raw.trim());
         } catch (NumberFormatException ex) {
@@ -227,27 +257,32 @@ public class HomeController {
     }
 
     private String sanitizeStatus(String status) {
-        if (status == null || status.isBlank()) return null; // coi rỗng là không lọc
+        if (status == null || status.isBlank())
+            return null; // coi rỗng là không lọc
         String s = status.trim().toUpperCase(Locale.ROOT);
         return ALLOWED_STATUS.contains(s) ? s : null;
     }
 
     private String sanitizeTime(String time) {
-        if (time == null || time.isBlank()) return null; // coi rỗng là không lọc
+        if (time == null || time.isBlank())
+            return null; // coi rỗng là không lọc
         String s = time.trim().toLowerCase(Locale.ROOT);
         return ALLOWED_TIME.contains(s) ? s : null;
     }
 
     private boolean isAllowedStatus(OpportunityCardDto c) {
-        if (c == null || c.getStatus() == null) return false;
+        if (c == null || c.getStatus() == null)
+            return false;
         Opportunity.OpportunityStatus st = c.getStatus();
         return st == Opportunity.OpportunityStatus.OPEN
                 || st == Opportunity.OpportunityStatus.CLOSED
                 || st == Opportunity.OpportunityStatus.CANCELLED;
     }
 
-    private Map<Integer, Map<String, Object>> computeButtonStates(List<OpportunityCardDto> cards, Integer currentUserId) {
-        if (cards == null || cards.isEmpty()) return Map.of();
+    private Map<Integer, Map<String, Object>> computeButtonStates(List<OpportunityCardDto> cards,
+            Integer currentUserId) {
+        if (cards == null || cards.isEmpty())
+            return Map.of();
 
         List<Integer> oppIds = cards.stream()
                 .map(OpportunityCardDto::getOppId)
@@ -273,7 +308,8 @@ public class HomeController {
 
         for (var c : cards) {
             Integer oppId = c.getOppId();
-            if (oppId == null) continue;
+            if (oppId == null)
+                continue;
 
             Opportunity.OpportunityStatus st = c.getStatus();
             LocalDateTime start = c.getStartTime();
