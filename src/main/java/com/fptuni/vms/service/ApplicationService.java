@@ -68,4 +68,7 @@ public interface ApplicationService {
         long countApprovedByOppId(Integer oppId);
 
         boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
+
+        /** Volunteer tự hủy đơn (chỉ khi PENDING, trước giờ bắt đầu). */
+        void cancelByVolunteer(Integer appId, Integer volunteerId, String cancelReason);
 }

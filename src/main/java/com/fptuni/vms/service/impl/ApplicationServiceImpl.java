@@ -307,4 +307,34 @@ public class ApplicationServiceImpl implements ApplicationService {
                         return false;
                 return repo.existsByOppIdAndVolunteerId(oppId, volunteerId);
         }
+
+        @Override
+        public void cancelByVolunteer(Integer appId, Integer volunteerId, String cancelReason) {
+                if (appId == null || volunteerId == null)
+                        throw new IllegalArgumentException("Thiếu thông tin đơn hoặc người dùng.");
+
+                // Lấy application thuộc chính volunteer này (fetch opportunity & org để hiển
+                // thị/nối rule)
+                Application app = repo.findByIdAndVolunteerId(appId, volunteerId);
+                if (app == null)
+                        throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc sở hữu của bạn.");
+
+                if (app.getStatus() != Application.ApplicationStatus.PENDING)
+                        throw new IllegalStateException("Chỉ có thể hủy đơn đang chờ.");
+
+                // Kiểm tra thời gian bắt đầu (trùng với rule DB để UX tốt hơn)
+                var opp = app.getOpportunity();
+                if (opp != null && opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now())) {
+                        throw new IllegalStateException("Không thể hủy sau khi cơ hội đã bắt đầu.");
+                }
+
+                if (cancelReason == null || cancelReason.trim().length() < 10)
+                        throw new IllegalArgumentException("Lý do hủy cần tối thiểu 10 ký tự.");
+
+                app.setStatus(Application.ApplicationStatus.CANCELLED);
+                app.setCancelReason(cancelReason.trim());
+                app.setUpdatedAt(LocalDateTime.now());
+
+                repo.save(app);
+        }
 }

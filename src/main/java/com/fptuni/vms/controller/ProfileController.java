@@ -445,4 +445,26 @@ public class ProfileController {
         return "volunteer/my-applications";
     }
 
+    @PostMapping("/applications/cancel")
+    public String cancelMyApplication(@RequestParam("appId") Integer appId,
+            @RequestParam("cancelReason") String cancelReason,
+            Authentication authentication,
+            RedirectAttributes ra) {
+        User currentUser = SecurityUtils.getCurrentUser(authentication);
+        if (currentUser == null)
+            return "redirect:/login";
+        if (!"VOLUNTEER".equals(currentUser.getRole().getRoleName()))
+            return "redirect:/403";
+
+        try {
+            applicationService.cancelByVolunteer(appId, currentUser.getUserId(), cancelReason);
+            ra.addFlashAttribute("success", "Đã hủy đơn ứng tuyển thành công.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+        } catch (Exception ex) {
+            ra.addFlashAttribute("error", "Có lỗi xảy ra khi hủy đơn: " + ex.getMessage());
+        }
+        return "redirect:/profile/applications";
+    }
+
 }

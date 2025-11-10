@@ -420,4 +420,23 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
         return cnt != null && cnt > 0;
     }
+
+    @Override
+    public Application findByIdAndVolunteerId(Integer appId, Integer volunteerId) {
+        try {
+            return em.createQuery("""
+                    SELECT a
+                      FROM Application a
+                      JOIN FETCH a.opportunity o
+                      JOIN FETCH o.organization org
+                     WHERE a.appId = :appId
+                       AND a.volunteer.userId = :uid
+                    """, Application.class)
+                    .setParameter("appId", appId)
+                    .setParameter("uid", volunteerId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
