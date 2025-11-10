@@ -209,7 +209,6 @@
                                             <div class="fw-semibold" th:text="${row.opportunityTitle}">Dạy học miễn phí
                                             </div>
                                         </td>
-
                                         <td th:text="${#temporals.format(row.appliedAt, 'dd/MM/yyyy')}">01/01/2025</td>
 
                                         <td
@@ -234,7 +233,7 @@
                                         </td>
 
                                         <td class="text-end sticky-actions" th:with="st=${row.status}">
-                                            <!-- Nút mở modal Chi tiết (MERGE từ file 2) -->
+                                            <!-- Nút mở modal Chi tiết -->
                                             <button type="button" class="btn btn-ghost btn-sm me-1 btn-open-detail"
                                                 data-bs-toggle="modal" data-bs-target="#appDetailModal"
                                                 th:data-app-id="${row.appId}" th:data-vol-name="${row.volunteerName}"
@@ -404,8 +403,26 @@
 
                     // Application info
                     const appliedAt = btn.getAttribute('data-applied-at') || '';
-                    setText('dt-status', { 'PENDING': 'Đang chờ', 'APPROVED': 'Đã duyệt', 'REJECTED': 'Từ chối', 'COMPLETED': 'Hoàn thành', 'CANCELLED': 'Đã hủy' }[status] || status || '—');
                     setText('dt-applied-at', appliedAt);
+
+                    // NEW: set badge trạng thái trong modal
+                    const statusTextMap = {
+                        'PENDING': 'Đang chờ',
+                        'APPROVED': 'Đã duyệt',
+                        'REJECTED': 'Từ chối',
+                        'COMPLETED': 'Hoàn thành',
+                        'CANCELLED': 'Đã hủy'
+                    };
+                    const statusClassMap = {
+                        'PENDING': 'text-bg-secondary',
+                        'APPROVED': 'text-bg-primary',
+                        'REJECTED': 'text-bg-danger',
+                        'COMPLETED': 'text-bg-success',
+                        'CANCELLED': 'text-bg-dark'
+                    };
+                    const badge = el('dt-status-badge');
+                    badge.className = 'badge badge-pill px-3 py-2 ' + (statusClassMap[status] || 'text-bg-light');
+                    badge.textContent = statusTextMap[status] || (status || '—');
 
                     // Processed & reasons
                     const processedBy = btn.getAttribute('data-processed-by') || '';
@@ -493,7 +510,7 @@
         </div>
     </div>
 
-    <!-- Application Detail Modal (thêm mới từ file 2) -->
+    <!-- Application Detail Modal -->
     <div class="modal fade" id="appDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -530,7 +547,8 @@
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body">
                                         <div class="small text-muted mb-1">Trạng thái</div>
-                                        <div id="dt-status" class="fw-semibold">—</div>
+                                        <!-- NEW: Badge trạng thái -->
+                                        <span id="dt-status-badge" class="badge badge-pill px-3 py-2">—</span>
                                     </div>
                                 </div>
                             </div>
