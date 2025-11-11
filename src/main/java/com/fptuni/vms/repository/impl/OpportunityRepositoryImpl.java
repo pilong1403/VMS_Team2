@@ -263,7 +263,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Page<Opportunity> searchByOrg(int orgId, String q,
-                                         Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable) {
+            Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable) {
 
         StringBuilder where = new StringBuilder(" WHERE org.orgId = :orgId ");
         Map<String, Object> params = new HashMap<>();
@@ -312,7 +312,6 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         return new PageImpl<>(content, pageable, total);
     }
 
-
     // === Volunteer View : Org scope + keyword + quick chips === PhiLong iter 3
     @Override
     public Page<Opportunity> findOrgOpportunitiesWithFilters(
@@ -332,9 +331,17 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             params.put("catId", categoryId);
         }
         if (status != null) {
+            // Nếu có trạng thái cụ thể => lọc chính xác
             where.append(" AND o.status = :st ");
             params.put("st", status);
+        } else {
+            // Nếu chọn "Tất cả" => chỉ lấy các trạng thái hợp lệ
+            where.append(" AND o.status IN (:st1, :st2, :st3) ");
+            params.put("st1", Opportunity.OpportunityStatus.OPEN);
+            params.put("st2", Opportunity.OpportunityStatus.CLOSED);
+            params.put("st3", Opportunity.OpportunityStatus.CANCELLED);
         }
+
         if (keyword != null && !keyword.isBlank()) {
             where.append("""
                         AND (
@@ -386,19 +393,20 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
-                                                LocalDateTime start, LocalDateTime end, int limit) {
-        if (start == null || end == null) return List.of();
+            LocalDateTime start, LocalDateTime end, int limit) {
+        if (start == null || end == null)
+            return List.of();
 
         String jpql = """
-        SELECT o
-        FROM Opportunity o
-        JOIN o.organization org
-        WHERE org.orgId = :orgId
-          AND o.status IN (:st1, :st2)
-          AND (:excludeId IS NULL OR o.oppId <> :excludeId)
-          AND (:pStart < o.endTime AND :pEnd > o.startTime)
-        ORDER BY o.startTime ASC
-        """;
+                SELECT o
+                FROM Opportunity o
+                JOIN o.organization org
+                WHERE org.orgId = :orgId
+                  AND o.status IN (:st1, :st2)
+                  AND (:excludeId IS NULL OR o.oppId <> :excludeId)
+                  AND (:pStart < o.endTime AND :pEnd > o.startTime)
+                ORDER BY o.startTime ASC
+                """;
 
         var q = em.createQuery(jpql, Opportunity.class)
                 .setParameter("orgId", orgId)
@@ -408,7 +416,8 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                 .setParameter("pStart", start)
                 .setParameter("pEnd", end);
 
-        if (limit > 0) q.setMaxResults(limit);
+        if (limit > 0)
+            q.setMaxResults(limit);
         return q.getResultList();
     }
 
