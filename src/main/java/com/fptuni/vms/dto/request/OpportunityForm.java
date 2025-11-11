@@ -53,9 +53,10 @@ public class OpportunityForm {
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime endTime;
 
-    // Chỉ nhận file, không cho phép client gửi URL thủ công
+    // Chỉ nhận file từ client
     private MultipartFile thumbnailFile;
 
+    // Ngăn client gửi URL thủ công; server có thể set nội bộ sau validate
     @Null(message = "Không cho phép gửi thumbnailUrl từ client")
     @Size(max = 500, message = "URL hình ảnh tối đa 500 ký tự")
     private String thumbnailUrl;
@@ -74,16 +75,7 @@ public class OpportunityForm {
         return e.isAfter(s);
     }
 
-    // Rule: thời điểm bắt đầu phải cách hiện tại ít nhất 24 giờ
-    @AssertTrue(message = "Thời điểm bắt đầu phải sau ít nhất 24 giờ kể từ hiện tại")
-    public boolean isStartNotInPast() {
-        if (startDate == null || startTime == null) return true;
-        LocalDateTime start = LocalDateTime.of(startDate, startTime);
-        LocalDateTime now = LocalDateTime.now();
-        return !start.isBefore(now.plusHours(24));
-    }
-
-    // Getters & Setters
+    // ===== Getters & Setters =====
     public Integer getOppId() { return oppId; }
     public void setOppId(Integer oppId) { this.oppId = oppId; }
     public Integer getCategoryId() { return categoryId; }
