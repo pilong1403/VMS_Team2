@@ -26,9 +26,11 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
 
     @Override
     public List<Opportunity> filterOpportunitiesByOrg(long orgId, String status, String keyword, String timeOrder, int page, int size) {
-        StringBuilder jpqlBuilder = new StringBuilder("SELECT o FROM Opportunity o WHERE o.organization.id = :orgId");
+        StringBuilder jpqlBuilder = new StringBuilder("SELECT o FROM Opportunity o WHERE o.organization.id = :orgId AND o.status <> :draftStatus");
+
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("orgId", orgId);
+        parameters.put("draftStatus", Opportunity.OpportunityStatus.DRAFT);
 
         if ((status != null && !status.trim().isEmpty()) && !status.equalsIgnoreCase("ALL")) {
             jpqlBuilder.append(" AND o.status = :status");
@@ -45,33 +47,41 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         } else if ("desc".equalsIgnoreCase(timeOrder)) {
             jpqlBuilder.append(" ORDER BY o.startTime DESC");
         }
+
         TypedQuery<Opportunity> query = em.createQuery(jpqlBuilder.toString(), Opportunity.class);
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             query.setParameter(entry.getKey(), entry.getValue());
         }
+
         query.setFirstResult((page - 1) * size);
         query.setMaxResults(size);
+
         return query.getResultList();
     }
 
     @Override
     public long countOppAfterFilteredByOrg(long orgId, String status, String keyword) {
-        StringBuilder jpqlBuilder = new StringBuilder("SELECT COUNT(o) FROM Opportunity o WHERE o.organization.id = :orgId");
+        StringBuilder jpqlBuilder = new StringBuilder("SELECT COUNT(o) FROM Opportunity o WHERE o.organization.id = :orgId AND o.status <> :draftStatus");
+
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("orgId", orgId);
+        parameters.put("draftStatus", Opportunity.OpportunityStatus.DRAFT);
 
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
             jpqlBuilder.append(" AND o.status = :status");
             parameters.put("status", Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase()));
         }
+
         if (keyword != null && !keyword.trim().isEmpty()) {
             jpqlBuilder.append(" AND (LOWER(o.title) LIKE LOWER(:keyword))");
             parameters.put("keyword", "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%");
         }
+
         TypedQuery<Long> query = em.createQuery(jpqlBuilder.toString(), Long.class);
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             query.setParameter(entry.getKey(), entry.getValue());
         }
+
         return query.getSingleResult();
     }
 
