@@ -1,6 +1,7 @@
 package com.fptuni.vms.dto.request;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,12 +9,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class OpportunitySectionForm {
 
     @NotNull(message = "Thứ tự phần là bắt buộc")
-    @Min(1)
+    @Min(value = 1, message = "Thứ tự phải ≥ 1")
     private Integer sectionOrder;
 
+    @NotBlank(message = "Tiêu đề phần là bắt buộc")
     @Size(max = 255, message = "Tiêu đề phần tối đa 255 ký tự")
     private String heading;
 
+    @NotBlank(message = "Mô tả chi tiết là bắt buộc")
     @Size(max = 10000, message = "Nội dung tối đa 10000 ký tự")
     private String content;
 

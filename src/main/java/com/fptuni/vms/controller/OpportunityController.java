@@ -46,7 +46,7 @@ public class OpportunityController {
         this.notificationService = notificationService;
     }
 
-    private static final long MAX_IMAGE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/gif", "image/webp");
 
     private static Map<String, String> viStatus() {
@@ -173,6 +173,18 @@ public class OpportunityController {
                        @RequestParam(value = "confirmPublish", defaultValue = "false") String confirmPublish) {
 
         Opportunity old = (form.getOppId() != null) ? opportunityService.findById(form.getOppId()) : null;
+// loại bỏ khoảng trắng thừa
+        if (form.getTitle() != null)    form.setTitle(form.getTitle().trim());
+        if (form.getSubtitle() != null) form.setSubtitle(form.getSubtitle().trim());
+        if (form.getLocation() != null) form.setLocation(form.getLocation().trim());
+
+        if (form.getSections() != null) {
+            form.getSections().forEach(s -> {
+                if (s.getHeading() != null) s.setHeading(s.getHeading().trim());
+                if (s.getContent() != null) s.setContent(s.getContent().trim());
+                if (s.getCaption() != null) s.setCaption(s.getCaption().trim());
+            });
+        }
 
         // build time
         LocalDateTime start = null, end = null;

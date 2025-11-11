@@ -27,6 +27,7 @@ public class OpportunityForm {
     private String subtitle;
 
     @Size(max = 255, message = "Địa điểm tối đa 255 ký tự")
+    @NotBlank(message = "Địa điểm là bắt buộc")
     private String location;
 
     @NotNull(message = "Số tình nguyện viên cần là bắt buộc")

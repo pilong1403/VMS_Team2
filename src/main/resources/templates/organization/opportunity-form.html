@@ -45,7 +45,7 @@
 
 <div class="container py-4">
 
-    <div id="flashArea" class="mb-2">
+    <div id="flashArea" class="mb-2" aria-live="polite">
         <div th:if="${ok}" class="alert alert-success alert-dismissible fade show" role="alert">
             <span th:text="${ok}">Thao tác thành công.</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -150,7 +150,7 @@
                             <!-- THUMBNAIL -->
                             <div class="col-md-3">
                                 <label class="form-label" for="thumbInput">Ảnh đại diện</label>
-                                <input id="thumbInput" class="form-control" type="file"
+                                <input id="thumbInput" class="form-control sectionFile" type="file"
                                        th:classappend="${#fields.hasErrors('thumbnailFile')} ? ' is-invalid' : ''"
                                        th:field="*{thumbnailFile}" accept="image/*">
                                 <div class="form-error" th:if="${#fields.hasErrors('thumbnailFile')}" th:errors="*{thumbnailFile}"></div>
@@ -254,7 +254,9 @@
                                     <label class="form-label" th:for="${'sec-heading-' + it.index}">Tiêu đề phần</label>
                                     <input th:id="${'sec-heading-' + it.index}" type="text" class="form-control"
                                            th:classappend="${#fields.hasErrors('sections[' + it.index + '].heading')} ? ' is-invalid' : ''"
-                                           th:field="*{sections[__${it.index}__].heading}">
+                                           th:field="*{sections[__${it.index}__].heading}"
+                                           required pattern=".*\S.*" maxlength="255"
+                                           title="Tiêu đề không được để trống hoặc chỉ khoảng trắng (≤255 ký tự)">
                                     <div class="form-error"
                                          th:if="${#fields.hasErrors('sections[' + it.index + '].heading')}"
                                          th:errors="*{sections[__${it.index}__].heading}"></div>
@@ -263,7 +265,9 @@
                                     <label class="form-label" th:for="${'sec-content-' + it.index}">Mô tả chi tiết</label>
                                     <textarea th:id="${'sec-content-' + it.index}" rows="4" class="form-control"
                                               th:classappend="${#fields.hasErrors('sections[' + it.index + '].content')} ? ' is-invalid' : ''"
-                                              th:field="*{sections[__${it.index}__].content}"></textarea>
+                                              th:field="*{sections[__${it.index}__].content}"
+                                              required pattern=".*\S.*" maxlength="10000"
+                                              title="Nội dung không được để trống hoặc chỉ khoảng trắng (≤10000 ký tự)"></textarea>
                                     <div class="form-error"
                                          th:if="${#fields.hasErrors('sections[' + it.index + '].content')}"
                                          th:errors="*{sections[__${it.index}__].content}"></div>
@@ -305,7 +309,7 @@
                                     <label class="form-label" th:for="${'sec-caption-' + it.index}">Chú thích hình ảnh</label>
                                     <input th:id="${'sec-caption-' + it.index}" type="text" class="form-control"
                                            th:classappend="${#fields.hasErrors('sections[' + it.index + '].caption')} ? ' is-invalid' : ''"
-                                           th:field="*{sections[__${it.index}__].caption}">
+                                           th:field="*{sections[__${it.index}__].caption}" maxlength="255">
                                     <div class="form-error"
                                          th:if="${#fields.hasErrors('sections[' + it.index + '].caption')}"
                                          th:errors="*{sections[__${it.index}__].caption}"></div>
@@ -329,12 +333,16 @@
                                 </div>
                                 <div class="col-md-10">
                                     <label class="form-label">Tiêu đề phần</label>
-                                    <input type="text" class="form-control sec-heading">
+                                    <input type="text" class="form-control sec-heading"
+                                           required pattern=".*\S.*" maxlength="255"
+                                           title="Tiêu đề không được để trống hoặc chỉ khoảng trắng (≤255 ký tự)">
                                     <div class="form-error" style="display:none;"></div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Mô tả chi tiết</label>
-                                    <textarea rows="4" class="form-control sec-content"></textarea>
+                                    <textarea rows="4" class="form-control sec-content"
+                                              required pattern=".*\S.*" maxlength="10000"
+                                              title="Nội dung không được để trống hoặc chỉ khoảng trắng (≤10000 ký tự)"></textarea>
                                     <div class="form-error" style="display:none;"></div>
                                 </div>
                                 <div class="col-md-6">
@@ -353,7 +361,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Chú thích hình ảnh</label>
-                                    <input type="text" class="form-control sec-caption">
+                                    <input type="text" class="form-control sec-caption" maxlength="255">
                                     <div class="form-error" style="display:none;"></div>
                                 </div>
                             </div>
@@ -433,14 +441,62 @@
     const thumbPreview = document.getElementById('thumbPreview');
     const thumbNewWrap = document.getElementById('thumbNewWrap');
 
+    // --- Image constraints (client-side, khớp server) ---
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg","image/png","image/gif","image/webp"]);
+
+    function showInputError(input, message) {
+        input.classList.add('is-invalid');
+        const group = input.closest('.col-md-2, .col-md-10, .col-md-6, .col-12');
+        if (group) {
+            let err = group.querySelector('.form-error');
+            if (!err) {
+                err = document.createElement('div');
+                err.className = 'form-error';
+                group.appendChild(err);
+            }
+            err.textContent = message;
+            err.style.display = 'block';
+        }
+    }
+
+    function validateImageInput(inputEl) {
+        if (!inputEl || !inputEl.files || inputEl.files.length === 0) return true;
+        const f = inputEl.files[0];
+        if (!ALLOWED_IMAGE_TYPES.has(f.type)) {
+            showInputError(inputEl, 'Chỉ chấp nhận ảnh jpg/png/gif/webp');
+            return false;
+        }
+        if (f.size > MAX_IMAGE_BYTES) {
+            showInputError(inputEl, 'Kích thước ảnh tối đa 5MB');
+            return false;
+        }
+        return true;
+    }
+
+    function validateAllImages() {
+        let ok = true;
+        const fileInputs = document.querySelectorAll('#thumbInput, .sectionFile, .sec-file');
+        fileInputs.forEach(inp => {
+            hideErrorForInput(inp);
+            if (!validateImageInput(inp)) ok = false;
+        });
+        return ok;
+    }
+
     if (thumbInput) {
         thumbInput.addEventListener('change', e => {
+            hideErrorForInput(thumbInput);
+            if (!validateImageInput(thumbInput)) {
+                if (thumbNewWrap) thumbNewWrap.style.display = 'none';
+                if (thumbPreview) { thumbPreview.removeAttribute('src'); thumbPreview.style.display = 'none'; }
+                thumbInput.value = '';
+                return;
+            }
+
             const f = e.target.files[0];
 
-            // Ẩn ảnh cũ trên UI nếu chọn ảnh mới (không gắn cờ xóa)
-            const oldThumbWrap = document.querySelector('.old-thumb-wrap');
-            if (f && oldThumbWrap) oldThumbWrap.classList.add('d-none');
-
+            // KHÔNG ẩn ảnh cũ khi chọn ảnh mới — hiển thị song song
             if (!f) {
                 if (thumbNewWrap) thumbNewWrap.style.display = 'none';
                 if (thumbPreview) {
@@ -480,12 +536,18 @@
         const imgNew    = wrapper.querySelector('img.new-image');
         if (fileInput && imgNew) {
             fileInput.addEventListener('change', e => {
+                hideErrorForInput(fileInput);
+                if (!validateImageInput(fileInput)) {
+                    if (newWrap) newWrap.style.display = 'none';
+                    imgNew.style.display = 'none';
+                    imgNew.removeAttribute('src');
+                    fileInput.value = '';
+                    return;
+                }
+
                 const f = e.target.files && e.target.files[0];
 
-                // Ẩn ảnh cũ trên UI nếu chọn ảnh mới (không gắn cờ xóa)
-                const oldWrap = wrapper.querySelector('.old-sec-wrap');
-                if (f && oldWrap) oldWrap.classList.add('d-none');
-
+                // KHÔNG ẩn ảnh cũ khi chọn ảnh mới — hiển thị song song
                 if (!f) {
                     if (newWrap) newWrap.style.display = 'none';
                     imgNew.style.display = 'none';
@@ -636,10 +698,29 @@
         oldReindex();
         validateSectionOrdersClient();
     };
+
+    // Trim toàn bộ text trước khi submit
+    function trimAllFields() {
+        const textInputs = formEl.querySelectorAll('input[type="text"], textarea');
+        textInputs.forEach(el => {
+            if (typeof el.value === 'string') el.value = el.value.trim();
+        });
+    }
+
     formEl.addEventListener('submit', (e) => {
-        if (!validateSectionOrdersClient()) {
+        trimAllFields();
+        const ordersOk = validateSectionOrdersClient();
+        const imagesOk = validateAllImages();
+        if (!ordersOk || !imagesOk) {
             e.preventDefault(); e.stopPropagation();
             return;
+        }
+    });
+
+    // Ngăn Enter submit ngoài ý muốn (vẫn cho textarea)
+    formEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+            e.preventDefault();
         }
     });
 
@@ -690,51 +771,36 @@
         if (btnSubmit) btnSubmit.disabled = true;
     }
 
-    // --- Xóa thumbnail cũ: ẩn ngay + gắn cờ ---
+    // --- Xóa thumbnail cũ: chỉ ẩn ảnh cũ + gắn cờ, KHÔNG đụng ảnh mới ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-remove-thumb');
         if (!btn) return;
 
-        const wrap = btn.closest('.old-thumb-wrap');        // nhắm đúng wrapper
-        if (wrap) wrap.classList.add('d-none');            // ẩn tức thời
+        const wrap = btn.closest('.old-thumb-wrap');
+        if (wrap) wrap.classList.add('d-none');
 
         const hiddenUrl = document.querySelector('input[name="thumbnailUrl"]');
-        if (hiddenUrl) hiddenUrl.value = '__CLEAR__';      // gắn cờ xóa phía server
+        if (hiddenUrl) hiddenUrl.value = '__CLEAR__';
 
-        const ti = document.getElementById('thumbInput');  // reset file input nếu có
-        if (ti) ti.value = '';
-
-        if (thumbNewWrap) thumbNewWrap.style.display = 'none';
-        if (thumbPreview) {
-            thumbPreview.style.display = 'none';
-            thumbPreview.removeAttribute('src');
-        }
+        // KHÔNG xóa thumbInput, KHÔNG ẩn preview ảnh mới
     });
 
-    // --- Xóa ảnh section cũ: ẩn ngay + gắn cờ ---
+    // --- Xóa ảnh section cũ: chỉ ẩn ảnh cũ + gắn cờ, KHÔNG đụng ảnh mới ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-remove-sec-image');
         if (!btn) return;
 
-        const oldWrap = btn.closest('.old-sec-wrap');      // nhắm đúng wrapper
-        if (oldWrap) oldWrap.classList.add('d-none');      // ẩn tức thời
+        const oldWrap = btn.closest('.old-sec-wrap');
+        if (oldWrap) oldWrap.classList.add('d-none');
 
         const colWrap = btn.closest('.col-md-6');
-        if (colWrap) {
-            const hidden = colWrap.querySelector('input[type="hidden"][name$=".imageUrl"]');
-            if (hidden) hidden.value = '__CLEAR__';        // gắn cờ xóa
+        if (!colWrap) return;
 
-            const fileInput = colWrap.querySelector('input[type="file"]');
-            if (fileInput) fileInput.value = '';
+        // Gắn cờ CLEAR cho ảnh cũ
+        const hidden = colWrap.querySelector('input[type="hidden"][name$=".imageUrl"]');
+        if (hidden) hidden.value = '__CLEAR__';
 
-            const newWrap = colWrap.querySelector('.section-new-wrap');
-            const newPreview = colWrap.querySelector('img.new-image');
-            if (newWrap) newWrap.style.display = 'none';
-            if (newPreview) {
-                newPreview.style.display = 'none';
-                newPreview.removeAttribute('src');
-            }
-        }
+        // KHÔNG xóa fileInput và KHÔNG ẩn preview ảnh mới
     });
 </script>
 </body>
