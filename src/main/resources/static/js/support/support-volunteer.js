@@ -16,6 +16,9 @@ function openEditSupportTicketModal(btn) {
     const attachmentInput = document.getElementById('attachmentUpdate');
     const proofContainer = document.getElementById('detailProofLinkContainer');
 
+    titleError.textContent = '';
+    descError.textContent = '';
+
 
     titleElement.textContent = 'Cập nhật đơn #' + ticketId;
     ticketIdInput.value = ticketId;
@@ -42,7 +45,7 @@ function openEditSupportTicketModal(btn) {
     document.getElementById('updateModal').classList.add('show');
 }
 
-// check submit cập nhật đơn yêu cầu
+// check submit UPDATE đơn yêu cầu
 const form = document.getElementById('updateTicketForm');
 const submitButton = document.getElementById('submit-update-btn');
 const titleInput = document.getElementById('edit-title');
@@ -108,6 +111,18 @@ submitButton.addEventListener('click', function (event) {
         // Nếu có bất kỳ lỗi nào
         console.log('Validation thất bại, form bị chặn.');
     }
+
+    titleInput.addEventListener('input', function() {
+        if (titleError.textContent !== '') {
+            titleError.textContent = '';
+        }
+    });
+
+    descInput.addEventListener('input', function() {
+        if (descError.textContent !== '') {
+            descError.textContent = '';
+        }
+    });
 });
 
 // tạo đơn yêu cầu
@@ -181,6 +196,20 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Validation thành công, đang gửi form...');
         }
     });
+
+    subjectInput.addEventListener('input', function() {
+        if (subjectError.textContent !== '') {
+            subjectError.textContent = '';
+        }
+    });
+
+    descInput.addEventListener('input', function() {
+        if (descError.textContent !== '') {
+            descError.textContent = '';
+        }
+    });
+
+
 });
 
 

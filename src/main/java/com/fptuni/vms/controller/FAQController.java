@@ -194,10 +194,10 @@ public class FAQController {
 
         if (listFaqList == null || listFaqList.isEmpty()) {
             model.addAttribute("listFaqList", java.util.Collections.emptyList());
-            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalPages", 1);
             model.addAttribute("currentPage", 1);
             model.addAttribute("startPage", 1);
-            model.addAttribute("endPage", 0);
+            model.addAttribute("endPage", 1);
             model.addAttribute("status", status);
             model.addAttribute("num", num);
             model.addAttribute("category", category);

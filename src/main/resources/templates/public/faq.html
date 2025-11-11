@@ -102,6 +102,15 @@
                         </form>
                     </div>
                 </div>
+                <div id="error-alert" th:if="${error != null}" th:text="${error}"
+                     style="background-color:#f8d7da; color:#842029; border:1px solid #f5c2c7;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                </div>
+
+                <div id="success-alert" th:if="${success != null}" th:text="${success}"
+                     style="background-color:#d1e7dd; color:#0f5132; border:1px solid #badbcc;
+                             padding:12px 18px; border-radius:6px; margin:10px 0; font-weight:bold;">
+                </div>
             </div>
         </div>
     </section>
