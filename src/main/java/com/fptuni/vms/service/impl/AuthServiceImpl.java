@@ -36,7 +36,6 @@ public class AuthServiceImpl implements AuthService {
         this.encoder  = encoder;
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public User login(String email, String rawPassword) throws AuthException {
@@ -45,35 +44,53 @@ public class AuthServiceImpl implements AuthService {
         }
         String normalized = email.trim().toLowerCase();
 
+        // Tìm user theo email
         User u = userRepo.findByEmailWithRole(normalized)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_CREDENTIALS));
 
-        // Kiểm tra mật khẩu trước
+        // Kiểm tra mật khẩu
         if (!encoder.matches(rawPassword, u.getPasswordHash())) {
             throw new AuthException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         String roleName = u.getRole().getRoleName();
 
+        // Kiểm tra tài khoản Org Owner
         if ("ORG_OWNER".equals(roleName)) {
-            var orgOpt = orgRepo.findByOwnerId(u.getUserId()); // dùng đúng method của bạn
-            if (u.getStatus() == User.UserStatus.LOCKED && orgOpt.isPresent()) {
-                String reg = orgOpt.get().getRegStatus().name(); // hoặc getRegStatus().toString()
+            var orgOpt = orgRepo.findByOwnerId(u.getUserId()); // Lấy hồ sơ tổ chức của người dùng
+            if (orgOpt.isPresent()) {
+                String reg = orgOpt.get().getRegStatus().name(); // Lấy trạng thái hồ sơ tổ chức
+
+                // Kiểm tra trạng thái hồ sơ tổ chức
                 if ("PENDING".equalsIgnoreCase(reg)) {
                     throw new AuthException(AuthErrorCode.ORG_PENDING,
-                            "Hồ sơ tổ chức đang chờ duyệt. Vui lòng đợi quản trị viên xét duyệt.");
+                            "Tài khoản của bạn chưa thể đăng nhập vì hồ sơ tổ chức đang chờ duyệt.");
                 }
+
                 if ("REJECTED".equalsIgnoreCase(reg)) {
                     throw new AuthException(AuthErrorCode.ORG_REJECTED,
                             "Hồ sơ tổ chức của bạn đã bị từ chối. Vui lòng đăng ký lại.");
                 }
+
+                // Hồ sơ tổ chức đã được APPROVED, kiểm tra trạng thái tài khoản
                 if ("APPROVED".equalsIgnoreCase(reg)) {
-                    throw new AuthException(AuthErrorCode.ACCOUNT_LOCKED,
-                            "Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên để được hỗ trợ.");
+                    // Kiểm tra trạng thái tài khoản
+                    if (u.getStatus() == User.UserStatus.LOCKED) {
+                        throw new AuthException(AuthErrorCode.ACCOUNT_LOCKED,
+                                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.");
+                    }
+                    if (u.getStatus() == User.UserStatus.ACTIVE) {
+                        // Tài khoản ACTIVE và hồ sơ tổ chức APPROVED => Cho phép đăng nhập
+                        return u;
+                    }
                 }
+            } else {
+                // Nếu không tìm thấy hồ sơ tổ chức, thông báo lỗi
+                throw new AuthException(AuthErrorCode.ORG_REJECTED,
+                        "Không tìm thấy hồ sơ tổ chức của bạn. Vui lòng liên hệ quản trị viên.");
             }
         } else {
-            // các role khác
+            // Các role khác (không phải Org Owner), kiểm tra tài khoản bị khóa
             if (u.getStatus() == User.UserStatus.LOCKED) {
                 throw new AuthException(AuthErrorCode.ACCOUNT_LOCKED);
             }
