@@ -29,7 +29,6 @@
 
         .old-image { position: relative; z-index: 1; }
 
-        /* holder cho preview mới */
         .preview-holder {
             position: relative;
             display: inline-block;
@@ -148,7 +147,7 @@
                                 <div class="form-error" th:if="${#fields.hasErrors('neededVolunteers')}" th:errors="*{neededVolunteers}"></div>
                             </div>
 
-                            <!-- THUMBNAIL + nút X -->
+                            <!-- THUMBNAIL -->
                             <div class="col-md-3">
                                 <label class="form-label" for="thumbInput">Ảnh đại diện</label>
                                 <input id="thumbInput" class="form-control" type="file"
@@ -157,18 +156,27 @@
                                 <div class="form-error" th:if="${#fields.hasErrors('thumbnailFile')}" th:errors="*{thumbnailFile}"></div>
 
                                 <!-- ảnh cũ -->
-                                <div class="mt-2 position-relative d-inline-block"
+                                <div class="mt-2"
                                      th:if="${form.thumbnailUrl != null and !form.thumbnailUrl.isEmpty()}">
-                                    <img th:src="${form.thumbnailUrl}" class="thumb-preview img-fluid rounded old-image" alt="">
-                                    <button type="button"
-                                            class="btn btn-sm btn-light border position-absolute top-0 end-0 m-1 btn-remove-thumb"
-                                            title="Xóa ảnh">×</button>
+                                    <div class="small text-muted mb-1">Ảnh hiện tại:</div>
+                                    <div class="position-relative d-inline-block old-thumb-wrap">
+                                        <img th:src="${form.thumbnailUrl}" class="thumb-preview img-fluid rounded old-image" alt="">
+                                        <button type="button"
+                                                class="btn btn-sm btn-light border position-absolute top-0 end-0 m-1 btn-remove-thumb"
+                                                title="Xóa ảnh">×</button>
+                                    </div>
                                 </div>
 
                                 <input type="hidden" th:field="*{thumbnailUrl}"/>
 
-                                <!-- preview ảnh mới: sẽ được bọc bằng JS -->
-                                <img id="thumbPreview" class="thumb-preview img-fluid rounded mt-2" alt="" style="display:none;">
+                                <!-- preview ảnh mới -->
+                                <div id="thumbNewWrap" class="mt-2" style="display:none;">
+                                    <div class="small text-muted mb-1">Ảnh mới (chưa lưu):</div>
+                                    <div class="preview-holder d-inline-block">
+                                        <img id="thumbPreview" class="thumb-preview img-fluid rounded" alt="">
+                                        <button type="button" class="btn btn-sm btn-light border btn-preview-remove">×</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -272,16 +280,25 @@
                                          th:errors="*{sections[__${it.index}__].imageFile}"></div>
 
                                     <!-- ảnh cũ -->
-                                    <div class="mt-2 position-relative d-inline-block"
+                                    <div class="mt-2"
                                          th:if="${s.imageUrl != null and !#strings.isEmpty(s.imageUrl)}">
-                                        <img class="section-preview img-fluid rounded old-image" th:src="${s.imageUrl}" alt="">
-                                        <button type="button"
-                                                class="btn btn-sm btn-light border position-absolute top-0 end-0 m-1 btn-remove-sec-image"
-                                                title="Xóa ảnh này">×</button>
+                                        <div class="small text-muted mb-1">Ảnh hiện tại:</div>
+                                        <div class="position-relative d-inline-block old-sec-wrap">
+                                            <img class="section-preview img-fluid rounded old-image" th:src="${s.imageUrl}" alt="">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-light border position-absolute top-0 end-0 m-1 btn-remove-sec-image"
+                                                    title="Xóa ảnh này">×</button>
+                                        </div>
                                     </div>
 
-                                    <!-- preview ảnh mới (sẽ được bọc và thêm nút X bằng JS) -->
-                                    <img class="section-preview mt-2 img-fluid rounded new-image" style="display:none;" alt="">
+                                    <!-- ảnh mới -->
+                                    <div class="mt-2 section-new-wrap" style="display:none;">
+                                        <div class="small text-muted mb-1">Ảnh mới (chưa lưu):</div>
+                                        <div class="preview-holder d-inline-block">
+                                            <img class="section-preview img-fluid rounded new-image" style="display:block;" alt="">
+                                            <button type="button" class="btn btn-sm btn-light border btn-preview-remove">×</button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
@@ -297,6 +314,7 @@
                         </div>
                     </div>
 
+                    <!-- template -->
                     <template id="sectionTemplate">
                         <div class="border rounded p-3 mb-3 section-item">
                             <div class="d-flex justify-content-between mb-2">
@@ -324,7 +342,14 @@
                                     <input class="form-control sec-file" type="file" accept="image/*">
                                     <input type="hidden" class="sec-image-url">
                                     <div class="form-error" style="display:none;"></div>
-                                    <img class="section-preview mt-2 img-fluid rounded new-image" style="display:none;" alt="">
+
+                                    <div class="mt-2 section-new-wrap" style="display:none;">
+                                        <div class="small text-muted mb-1">Ảnh mới (chưa lưu):</div>
+                                        <div class="preview-holder d-inline-block">
+                                            <img class="section-preview img-fluid rounded new-image" style="display:block;" alt="">
+                                            <button type="button" class="btn btn-sm btn-light border btn-preview-remove">×</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Chú thích hình ảnh</label>
@@ -403,44 +428,44 @@
     const tmpl = document.getElementById('sectionTemplate');
     const btnAdd = document.getElementById('btnAddSection');
 
-    // ==== PREVIEW THUMBNAIL CÓ NÚT X ====
+    // ==== THUMBNAIL: preview + nút X ====
     const thumbInput = document.getElementById('thumbInput');
     const thumbPreview = document.getElementById('thumbPreview');
+    const thumbNewWrap = document.getElementById('thumbNewWrap');
 
     if (thumbInput) {
         thumbInput.addEventListener('change', e => {
             const f = e.target.files[0];
-            if (!f) return;
+
+            // Ẩn ảnh cũ trên UI nếu chọn ảnh mới (không gắn cờ xóa)
+            const oldThumbWrap = document.querySelector('.old-thumb-wrap');
+            if (f && oldThumbWrap) oldThumbWrap.classList.add('d-none');
+
+            if (!f) {
+                if (thumbNewWrap) thumbNewWrap.style.display = 'none';
+                if (thumbPreview) {
+                    thumbPreview.removeAttribute('src');
+                    thumbPreview.style.display = 'none';
+                }
+                return;
+            }
 
             const url = URL.createObjectURL(f);
-            thumbPreview.src = url;
-            thumbPreview.style.display = 'block';
+            if (thumbPreview) {
+                thumbPreview.src = url;
+                thumbPreview.style.display = 'block';
+            }
+            if (thumbNewWrap) thumbNewWrap.style.display = 'block';
 
-            // tạo holder nếu chưa có
-            let holder = thumbPreview.parentElement;
-            if (!holder.classList.contains('preview-holder')) {
-                const wrap = document.createElement('div');
-                wrap.className = 'preview-holder mt-2 d-inline-block';
-                thumbPreview.parentElement.insertBefore(wrap, thumbPreview);
-                wrap.appendChild(thumbPreview);
-
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-sm btn-light border btn-preview-remove';
-                btn.textContent = '×';
-                wrap.appendChild(btn);
-
-                btn.addEventListener('click', () => {
-                    wrap.style.display = 'none';
+            const btnX = thumbNewWrap ? thumbNewWrap.querySelector('.btn-preview-remove') : null;
+            if (btnX) {
+                btnX.onclick = () => {
+                    // chỉ bỏ ảnh mới, KHÔNG clear thumbnailUrl
+                    thumbNewWrap.style.display = 'none';
                     thumbPreview.removeAttribute('src');
                     thumbPreview.style.display = 'none';
                     thumbInput.value = '';
-
-                    const hiddenUrl = document.querySelector('input[name="thumbnailUrl"]');
-                    if (hiddenUrl) hiddenUrl.value = '__CLEAR__';
-                });
-            } else {
-                holder.style.display = 'inline-block';
+                };
             }
         });
     }
@@ -449,46 +474,38 @@
         const btn = wrapper.querySelector('.btnRemoveSection');
         if (btn) btn.addEventListener('click', () => { wrapper.remove(); reindex(); });
 
-        // preview ảnh mới trong section có nút X
+        // preview ảnh mới trong section + nút X
         const fileInput = wrapper.querySelector('input[type=file]');
-        const imgNew = wrapper.querySelector('img.new-image');
+        const newWrap   = wrapper.querySelector('.section-new-wrap');
+        const imgNew    = wrapper.querySelector('img.new-image');
         if (fileInput && imgNew) {
             fileInput.addEventListener('change', e => {
                 const f = e.target.files && e.target.files[0];
+
+                // Ẩn ảnh cũ trên UI nếu chọn ảnh mới (không gắn cờ xóa)
+                const oldWrap = wrapper.querySelector('.old-sec-wrap');
+                if (f && oldWrap) oldWrap.classList.add('d-none');
+
                 if (!f) {
+                    if (newWrap) newWrap.style.display = 'none';
                     imgNew.style.display = 'none';
                     imgNew.removeAttribute('src');
-                    const holder = imgNew.closest('.preview-holder');
-                    if (holder) holder.style.display = 'none';
                     return;
                 }
                 const url = URL.createObjectURL(f);
                 imgNew.src = url;
                 imgNew.style.display = 'block';
+                if (newWrap) newWrap.style.display = 'block';
 
-                let holder = imgNew.closest('.preview-holder');
-                if (!holder) {
-                    holder = document.createElement('div');
-                    holder.className = 'preview-holder mt-2 d-inline-block';
-                    imgNew.parentElement.insertBefore(holder, imgNew);
-                    holder.appendChild(imgNew);
-
-                    const btnX = document.createElement('button');
-                    btnX.type = 'button';
-                    btnX.className = 'btn btn-sm btn-light border btn-preview-remove';
-                    btnX.textContent = '×';
-                    holder.appendChild(btnX);
-
-                    btnX.addEventListener('click', () => {
-                        holder.style.display = 'none';
+                const btnX = newWrap ? newWrap.querySelector('.btn-preview-remove') : null;
+                if (btnX) {
+                    btnX.onclick = () => {
+                        // chỉ bỏ ảnh mới, KHÔNG đụng tới hidden imageUrl
+                        newWrap.style.display = 'none';
                         imgNew.removeAttribute('src');
                         imgNew.style.display = 'none';
                         fileInput.value = '';
-                        const hidden = wrapper.querySelector('input[type="hidden"][name$=".imageUrl"]');
-                        if (hidden) hidden.value = '__CLEAR__';
-                    });
-                } else {
-                    holder.style.display = 'inline-block';
+                    };
                 }
             });
         }
@@ -673,58 +690,51 @@
         if (btnSubmit) btnSubmit.disabled = true;
     }
 
-    // Xóa thumbnail cũ
+    // --- Xóa thumbnail cũ: ẩn ngay + gắn cờ ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-remove-thumb');
         if (!btn) return;
 
-        const holder = btn.closest('.position-relative, .d-inline-block, .mt-2');
-        if (holder) holder.style.display = 'none';
+        const wrap = btn.closest('.old-thumb-wrap');        // nhắm đúng wrapper
+        if (wrap) wrap.classList.add('d-none');            // ẩn tức thời
 
         const hiddenUrl = document.querySelector('input[name="thumbnailUrl"]');
-        if (hiddenUrl) hiddenUrl.value = '__CLEAR__';
+        if (hiddenUrl) hiddenUrl.value = '__CLEAR__';      // gắn cờ xóa phía server
 
-        const ti = document.getElementById('thumbInput');
+        const ti = document.getElementById('thumbInput');  // reset file input nếu có
         if (ti) ti.value = '';
 
-        const tp = document.getElementById('thumbPreview');
-        if (tp) {
-            tp.style.display = 'none';
-            tp.removeAttribute('src');
+        if (thumbNewWrap) thumbNewWrap.style.display = 'none';
+        if (thumbPreview) {
+            thumbPreview.style.display = 'none';
+            thumbPreview.removeAttribute('src');
         }
     });
 
-    // Xóa ảnh section cũ
+    // --- Xóa ảnh section cũ: ẩn ngay + gắn cờ ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-remove-sec-image');
         if (!btn) return;
 
-        const oldImgWrap = btn.closest('.position-relative, .d-inline-block, .mt-2');
-        if (oldImgWrap) oldImgWrap.style.display = 'none';
+        const oldWrap = btn.closest('.old-sec-wrap');      // nhắm đúng wrapper
+        if (oldWrap) oldWrap.classList.add('d-none');      // ẩn tức thời
 
-        const wrap = btn.closest('.col-md-6');
-        if (wrap) {
-            const hidden = wrap.querySelector('input[type="hidden"][name$=".imageUrl"]');
-            if (hidden) hidden.value = '__CLEAR__';
+        const colWrap = btn.closest('.col-md-6');
+        if (colWrap) {
+            const hidden = colWrap.querySelector('input[type="hidden"][name$=".imageUrl"]');
+            if (hidden) hidden.value = '__CLEAR__';        // gắn cờ xóa
 
-            const fileInput = wrap.querySelector('input[type="file"]');
+            const fileInput = colWrap.querySelector('input[type="file"]');
             if (fileInput) fileInput.value = '';
 
-            const newPreview = wrap.querySelector('img.new-image');
+            const newWrap = colWrap.querySelector('.section-new-wrap');
+            const newPreview = colWrap.querySelector('img.new-image');
+            if (newWrap) newWrap.style.display = 'none';
             if (newPreview) {
                 newPreview.style.display = 'none';
                 newPreview.removeAttribute('src');
-                const holder = newPreview.closest('.preview-holder');
-                if (holder) holder.style.display = 'none';
             }
         }
-    });
-
-    // chọn file ngoài các section template cũng preview được
-    document.addEventListener('change', (e) => {
-        const fileInput = e.target.closest('input[type="file"]');
-        if (!fileInput) return;
-        // đã xử lý các trường hợp chính ở trên
     });
 </script>
 </body>
