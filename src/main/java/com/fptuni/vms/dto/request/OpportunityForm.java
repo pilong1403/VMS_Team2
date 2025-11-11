@@ -53,11 +53,10 @@ public class OpportunityForm {
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime endTime;
 
-    // Chỉ nhận file từ client
+    // nhận file từ client
     private MultipartFile thumbnailFile;
 
-    // Ngăn client gửi URL thủ công; server có thể set nội bộ sau validate
-    @Null(message = "Không cho phép gửi thumbnailUrl từ client")
+    // KHÔNG @Null nữa để nhận "__CLEAR__"
     @Size(max = 500, message = "URL hình ảnh tối đa 500 ký tự")
     private String thumbnailUrl;
 
@@ -66,7 +65,6 @@ public class OpportunityForm {
     @Size(min = 1, message = "Cần ít nhất 1 phần nội dung")
     private List<OpportunitySectionForm> sections = new ArrayList<>();
 
-    // Rule: kết thúc phải sau bắt đầu
     @AssertTrue(message = "Ngày/giờ kết thúc phải sau thời điểm bắt đầu")
     public boolean isEndAfterStart() {
         if (startDate == null || startTime == null || endDate == null || endTime == null) return true;
@@ -75,7 +73,6 @@ public class OpportunityForm {
         return e.isAfter(s);
     }
 
-    // ===== Getters & Setters =====
     public Integer getOppId() { return oppId; }
     public void setOppId(Integer oppId) { this.oppId = oppId; }
     public Integer getCategoryId() { return categoryId; }

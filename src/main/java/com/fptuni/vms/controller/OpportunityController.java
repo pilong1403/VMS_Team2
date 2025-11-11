@@ -58,7 +58,6 @@ public class OpportunityController {
         );
     }
 
-    /** Trạng thái hợp lệ theo trạng thái hiện tại (basis). */
     private List<Opportunity.OpportunityStatus> allowedStatusesFor(Opportunity.OpportunityStatus current) {
         if (current == null) {
             return List.of(Opportunity.OpportunityStatus.DRAFT, Opportunity.OpportunityStatus.OPEN);
@@ -173,10 +172,9 @@ public class OpportunityController {
                        Model model,
                        @RequestParam(value = "confirmPublish", defaultValue = "false") String confirmPublish) {
 
-        // === Nạp opp cũ để so sánh (đổi giờ hay không) ===
         Opportunity old = (form.getOppId() != null) ? opportunityService.findById(form.getOppId()) : null;
 
-        // === Ghép thời gian từ form ===
+        // build time
         LocalDateTime start = null, end = null;
         if (form.getStartDate() != null && form.getStartTime() != null) {
             start = LocalDateTime.of(form.getStartDate(), form.getStartTime());
@@ -185,12 +183,12 @@ public class OpportunityController {
             end = LocalDateTime.of(form.getEndDate(), form.getEndTime());
         }
 
-        // === “end > start” (phụ trợ cho Bean Validation) ===
+        // end > start
         if (start != null && end != null && !end.isAfter(start)) {
             binding.rejectValue("endDate", "invalid", "Ngày/giờ kết thúc phải sau thời điểm bắt đầu");
         }
 
-        // === 24h rule: chỉ khi tạo mới hoặc có đổi giờ bắt đầu ===
+        // 24h rule
         if (start != null) {
             boolean startChanged = (old == null) || !start.equals(old.getStartTime());
             if (startChanged) {
@@ -202,7 +200,7 @@ public class OpportunityController {
             }
         }
 
-        // === Validate file thumbnail ===
+        // validate thumbnail
         if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
             MultipartFile f = form.getThumbnailFile();
             if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType())) {
@@ -213,7 +211,7 @@ public class OpportunityController {
             }
         }
 
-        // === Validate ảnh từng section ===
+        // validate section images
         for (int i = 0; i < form.getSections().size(); i++) {
             var sf = form.getSections().get(i);
             if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
@@ -228,7 +226,7 @@ public class OpportunityController {
             }
         }
 
-        // === Validate thứ tự section (server) ===
+        // validate order
         Set<Integer> seen = new HashSet<>();
         for (int i = 0; i < form.getSections().size(); i++) {
             var sf = form.getSections().get(i);
@@ -242,14 +240,13 @@ public class OpportunityController {
             }
         }
 
-        // === Kiểm tra tổ chức ===
+        // org check
         User me = SecurityUtils.getCurrentUser();
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {
             binding.reject("org.missing", "Không tìm thấy thông tin tổ chức hợp lệ.");
         }
 
-        // === Nếu có lỗi đến đây: render lại form ===
         if (binding.hasErrors()) {
             Opportunity.OpportunityStatus basis = (form.getOppId() == null)
                     ? Opportunity.OpportunityStatus.DRAFT
@@ -270,7 +267,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === Chặn lưu nếu đã bắt đầu/hủy/kết thúc ===
+        // lock if started/canceled/closed
         if (old != null) {
             boolean startedLock = old.getStartTime() != null && !LocalDateTime.now().isBefore(old.getStartTime());
             if (startedLock || old.getStatus() == Opportunity.OpportunityStatus.CANCELLED
@@ -287,7 +284,7 @@ public class OpportunityController {
             }
         }
 
-        // === Ràng buộc trạng thái theo basis ===
+        // status rule
         Opportunity.OpportunityStatus oldStatus = (old == null)
                 ? Opportunity.OpportunityStatus.DRAFT
                 : old.getStatus();
@@ -310,7 +307,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === (start, end) đã có ở trên, dùng kiểm tra overlap ===
+        // overlap
         List<Opportunity> overlaps = opportunityService.findOverlapsForOrg(
                 org.getOrgId(),
                 form.getOppId(),
@@ -339,7 +336,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === Xác nhận publish khi DRAFT -> OPEN ===
+        // confirm publish
         boolean needPublishConfirm =
                 (requested == Opportunity.OpportunityStatus.OPEN) &&
                         (old == null || oldStatus == Opportunity.OpportunityStatus.DRAFT) &&
@@ -354,7 +351,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === Map entity ===
+        // map entity
         Opportunity opp = (old == null) ? new Opportunity() : old;
         opp.setOrganization(org);
         Category cat = new Category();
@@ -368,8 +365,11 @@ public class OpportunityController {
         opp.setStartTime(start);
         opp.setEndTime(end);
 
-        // === Upload thumbnail (nếu có) ===
+        // ================================
+        // THUMBNAIL: upload / giữ / XÓA
+        // ================================
         if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
+            // upload mới
             String url = cloudStorage.uploadFile(form.getThumbnailFile());
             if (url == null) {
                 binding.rejectValue("thumbnailFile", "upload.fail", "Upload ảnh thất bại");
@@ -380,14 +380,30 @@ public class OpportunityController {
                         oldStatus, false);
                 return "organization/opportunity-form";
             }
-            // set vào form để hiển thị lại view; @Null không ảnh hưởng vì Bean Validation đã chạy trước đó
             form.setThumbnailUrl(url);
-        }
-        if (form.getThumbnailUrl() != null) {
-            opp.setThumbnailUrl(form.getThumbnailUrl());
+            opp.setThumbnailUrl(url);
+        } else {
+            // không upload mới -> kiểm tra cờ clear
+            String thumbFlag = form.getThumbnailUrl(); // có thể là null / "" / "__CLEAR__" / URL
+            boolean askedToClear = thumbFlag != null && (thumbFlag.isBlank() || "__CLEAR__".equals(thumbFlag));
+            if (askedToClear) {
+                // nếu muốn thì xóa file cũ trên cloud tại đây
+                opp.setThumbnailUrl(null);
+                form.setThumbnailUrl(null);
+            } else {
+                // giữ
+                if (thumbFlag != null) {
+                    opp.setThumbnailUrl(thumbFlag);
+                } else if (old != null) {
+                    opp.setThumbnailUrl(old.getThumbnailUrl());
+                    form.setThumbnailUrl(old.getThumbnailUrl());
+                }
+            }
         }
 
-        // === Sections: giữ ảnh cũ nếu không upload mới ===
+        // ================================
+        // SECTIONS: upload / giữ / XÓA
+        // ================================
         List<OpportunitySection> toSave = new ArrayList<>();
         int idx = 1;
 
@@ -406,6 +422,8 @@ public class OpportunityController {
             int order = (sf.getSectionOrder() != null ? sf.getSectionOrder() : idx);
 
             String finalImageUrl = null;
+
+            // 1. có upload mới
             if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
                 String uploaded = cloudStorage.uploadFile(sf.getImageFile());
                 if (uploaded == null) {
@@ -413,14 +431,20 @@ public class OpportunityController {
                 } else {
                     finalImageUrl = uploaded;
                 }
-            }
-
-            if (finalImageUrl == null) {
-                OpportunitySection oldSec = oldByOrder.get(order);
-                if (oldSec != null && oldSec.getImageUrl() != null && !oldSec.getImageUrl().isBlank()) {
-                    finalImageUrl = oldSec.getImageUrl();
-                } else if (sf.getImageUrl() != null && !sf.getImageUrl().isBlank()) {
-                    finalImageUrl = sf.getImageUrl();
+            } else {
+                // 2. không upload mới -> xem cờ
+                String cur = sf.getImageUrl(); // null / "" / "__CLEAR__" / url
+                boolean askedToClear = cur != null && (cur.isBlank() || "__CLEAR__".equals(cur));
+                if (askedToClear) {
+                    finalImageUrl = null; // xóa
+                } else if (cur != null) {
+                    finalImageUrl = cur;  // client gửi url (giữ)
+                } else {
+                    // fallback từ DB cũ
+                    OpportunitySection oldSec = oldByOrder.get(order);
+                    if (oldSec != null && oldSec.getImageUrl() != null && !oldSec.getImageUrl().isBlank()) {
+                        finalImageUrl = oldSec.getImageUrl();
+                    }
                 }
             }
 
@@ -445,7 +469,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === Lưu ===
+        // save
         try {
             opp = opportunityService.save(opp);
             sectionService.replaceSections(opp, toSave);
@@ -459,7 +483,7 @@ public class OpportunityController {
             return "organization/opportunity-form";
         }
 
-        // === Notify ===
+        // notify
         String publicLink = "/opportunities/" + opp.getOppId();
         List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
 
@@ -513,7 +537,6 @@ public class OpportunityController {
         return "redirect:/org/opps";
     }
 
-    /** Bổ sung allowedStatuses + readOnly/locked theo basisStatus và startedLock */
     private void populateCommon(Model model, OpportunityForm form, String title,
                                 Opportunity.OpportunityStatus basisStatus,
                                 boolean startedLock) {
@@ -539,6 +562,7 @@ public class OpportunityController {
                 form.getEndDate() != null && form.getEndTime() != null
                         ? LocalDateTime.of(form.getEndDate(), form.getEndTime()) : null
         ));
+        model.addAttribute("basisStatus", basisStatus);
     }
 
     private String computeDynamicLabel(Opportunity.OpportunityStatus st, LocalDateTime start, LocalDateTime end) {
