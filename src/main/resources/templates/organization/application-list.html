@@ -643,6 +643,58 @@
             });
         });
     </script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            //  Modal Đồng ý / Từ chối nhanh
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', function (e) {
+                    const note = document.getElementById('rv-note').value.trim();
+
+                    if (note.length === 0) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập ghi chú để xử lý đơn ứng tuyển.');
+                        document.getElementById('rv-note').focus();
+                        return false;
+                    }
+                    if (note.length < 10) {
+                        e.preventDefault();
+                        alert('Ghi chú cần ít nhất 10 ký tự.');
+                        document.getElementById('rv-note').focus();
+                        return false;
+                    }
+                });
+            }
+
+            // Modal Xem chi tiết (Duyệt / Từ chối trong chi tiết)
+            const detailForm = document.getElementById('appDetailForm');
+            if (detailForm) {
+                detailForm.addEventListener('submit', function (e) {
+                    const noteElm = document.getElementById('dt-review-note');
+                    const noteWrap = document.getElementById('dt-review-note-wrap');
+                    const note = noteElm.value.trim();
+
+                    // Chỉ kiểm tra khi vùng ghi chú hiển thị (tức trạng thái PENDING)
+                    if (noteWrap && noteWrap.style.display !== 'none') {
+                        if (note.length === 0) {
+                            e.preventDefault();
+                            alert('Vui lòng nhập ghi chú xử lý.');
+                            noteElm.focus();
+                            return false;
+                        }
+                        if (note.length < 10) {
+                            e.preventDefault();
+                            alert('Ghi chú xử lý cần ít nhất 10 ký tự.');
+                            noteElm.focus();
+                            return false;
+                        }
+                    }
+                });
+            }
+
+        });
+    </script>
+
 
 </body>
 

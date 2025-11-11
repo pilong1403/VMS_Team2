@@ -124,8 +124,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         break;
       case "phone":
-        if (value && !/^[0-9]{10,11}$/.test(value.replace(/\s/g, ""))) {
-          message = "Số điện thoại phải có 10-11 chữ số";
+        if (!value) {
+          message = "Số điện thoại không được để trống";
+          isValid = false;
+        } else if (!/^0\d{9}$/.test(value)) {
+          message = "Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0";
           isValid = false;
         }
         break;
