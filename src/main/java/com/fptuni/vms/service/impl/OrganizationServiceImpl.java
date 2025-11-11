@@ -32,10 +32,34 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (role == null || !"ORG_OWNER".equalsIgnoreCase(role.getRoleName())) {
             throw new OrgException("OWNER_ROLE_REQUIRED");
         }
-        if (organizationRepository.existsByOwner(owner)) {
-            throw new OrgException("OWNER_ALREADY_HAS_ORG");
+
+        // Do có UQ_org_owner, mỗi owner chỉ có 1 org record
+        var existedOpt = organizationRepository.findByOwnerId(owner.getUserId());
+        if (existedOpt.isPresent()) {
+            Organization existed = existedOpt.get();
+            switch (existed.getRegStatus()) {
+                case PENDING -> throw new OrgException("OWNER_ALREADY_HAS_ORG");
+                case APPROVED -> throw new OrgException("OWNER_ALREADY_HAS_ORG");
+                case REJECTED -> {
+                    // Cho phép nộp lại: update bản ghi cũ
+                    existed.setName(name);
+                    existed.setDescription(description);
+                    existed.setRegDocUrl(regDocUrl);
+                    existed.setRegNote(note);
+                    existed.setRegStatus(Organization.RegStatus.PENDING);
+                    existed.setRegSubmittedAt(LocalDateTime.now());
+                    existed.setRegReviewedBy(null);
+                    existed.setRegReviewedAt(null);
+                    try {
+                        return organizationRepository.save(existed);
+                    } catch (DataIntegrityViolationException e) {
+                        throw new OrgException("CONSTRAINT_VIOLATION");
+                    }
+                }
+            }
         }
 
+        // Không có record cũ -> tạo mới
         Organization o = new Organization();
         o.setOwner(owner);
         o.setName(name);
@@ -51,6 +75,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new OrgException("CONSTRAINT_VIOLATION");
         }
     }
+
 
 
     @Override

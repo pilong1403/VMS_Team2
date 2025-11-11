@@ -129,8 +129,7 @@ public class AuthServiceImpl implements AuthService {
         if (fullName == null || fullName.isBlank()
                 || email == null || email.isBlank()
                 || rawPassword == null || rawPassword.isBlank()) {
-            throw new AuthException(AuthErrorCode.INVALID_INPUT,
-                    "Thiếu họ tên, email hoặc mật khẩu.");
+            throw new AuthException(AuthErrorCode.INVALID_INPUT, "Thiếu họ tên, email hoặc mật khẩu.");
         }
 
         String normalizedEmail = email.trim().toLowerCase();
@@ -140,26 +139,48 @@ public class AuthServiceImpl implements AuthService {
         if (rawPassword.length() < 8) {
             throw new AuthException(AuthErrorCode.WEAK_PASSWORD, "Mật khẩu quá ngắn (>= 8 ký tự).");
         }
-        if (userRepo.existsByEmail(normalizedEmail)) {
+
+        // Nếu email đã tồn tại, kiểm tra nhánh "đăng ký lại" cho ORG_OWNER có org REJECTED
+        var existedOpt = userRepo.findByEmailWithRole(normalizedEmail);
+        if (existedOpt.isPresent()) {
+            User existed = existedOpt.get();
+            String roleName = existed.getRole() != null ? existed.getRole().getRoleName() : null;
+
+            if ("ORG_OWNER".equalsIgnoreCase(roleName)) {
+                var orgOpt = orgRepo.findByOwnerId(existed.getUserId());
+                if (orgOpt.isPresent()
+                        && orgOpt.get().getRegStatus() == com.fptuni.vms.model.Organization.RegStatus.REJECTED) {
+                    // Cho phép "đăng ký lại": cập nhật user hiện có để tránh unique email
+                    existed.setFullName(fullName.trim());
+                    existed.setPhone(phone != null ? phone.trim() : null);
+                    existed.setAddress(address != null ? address.trim() : null);
+                    existed.setAvatarUrl(avatarUrl);
+                    existed.setPasswordHash(encoder.encode(rawPassword));
+                    existed.setStatus(UserStatus.LOCKED); // khóa lại chờ duyệt hồ sơ mới
+                    return userRepo.save(existed); // merge
+                }
+            }
+            // Các trường hợp còn lại => chặn
             throw new AuthException(AuthErrorCode.EMAIL_EXISTS, "Email đã được sử dụng.");
         }
 
+        // Tạo mới bình thường
         Role ownerRole = roleRepo.findByRoleName("ORG_OWNER")
-                .orElseThrow(() -> new AuthException(AuthErrorCode.SYSTEM_ERROR,
-                        "Không tìm thấy role ORG_OWNER."));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.SYSTEM_ERROR, "Không tìm thấy role ORG_OWNER."));
 
         User u = new User();
         u.setFullName(fullName.trim());
         u.setEmail(normalizedEmail);
         u.setPhone(phone != null ? phone.trim() : null);
-        u.setAddress(address != null ? address.trim() : null); // lưu vào users.address (đúng DB)
-        u.setAvatarUrl(avatarUrl);                              // nếu bạn truyền vào
+        u.setAddress(address != null ? address.trim() : null);
+        u.setAvatarUrl(avatarUrl);
         u.setPasswordHash(encoder.encode(rawPassword));
         u.setRole(ownerRole);
         u.setStatus(UserStatus.LOCKED);
 
         return userRepo.save(u);
     }
+
     @Override
     @Transactional(readOnly = true)
     public void assertNewAccountEmailUsable(String email) throws AuthException {
@@ -170,11 +191,30 @@ public class AuthServiceImpl implements AuthService {
         if (!EMAIL_RE.matcher(normalized).matches()) {
             throw new AuthException(AuthErrorCode.INVALID_EMAIL, "Email không hợp lệ.");
         }
-        if (userRepo.existsByEmail(normalized)) {
-            throw new AuthException(
-                    AuthErrorCode.EMAIL_EXISTS,
-                    "Email đã tồn tại trong hệ thống. Vui lòng sử dụng tài khoản khác."
-            );
+
+        // Nếu email chưa tồn tại => OK
+        if (!userRepo.existsByEmail(normalized)) return;
+
+        // Email đã tồn tại -> xem có thuộc owner bị REJECTED hay không
+        var uOpt = userRepo.findByEmailWithRole(normalized);
+        if (uOpt.isEmpty()) {
+            throw new AuthException(AuthErrorCode.EMAIL_EXISTS, "Email đã tồn tại trong hệ thống.");
         }
+
+        User u = uOpt.get();
+        String roleName = (u.getRole() != null ? u.getRole().getRoleName() : null);
+
+        // Chỉ cho phép “đăng ký lại” nếu là ORG_OWNER và hồ sơ org đang REJECTED
+        if ("ORG_OWNER".equalsIgnoreCase(roleName)) {
+            var orgOpt = orgRepo.findByOwnerId(u.getUserId()); // repo đã có method này
+            if (orgOpt.isPresent() && orgOpt.get().getRegStatus() == com.fptuni.vms.model.Organization.RegStatus.REJECTED) {
+                // Cho phép dùng lại email để đăng ký (sẽ là nhánh update user)
+                return;
+            }
+        }
+
+        // Các trường hợp còn lại vẫn chặn
+        throw new AuthException(AuthErrorCode.EMAIL_EXISTS, "Email đã tồn tại trong hệ thống. Vui lòng sử dụng tài khoản khác.");
     }
+
 }
