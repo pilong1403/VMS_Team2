@@ -740,3 +740,18 @@ input.error-border {
 .hidden-section{
     display:none !important;
 }
+.self-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    padding:6px 10px;
+    border:1px solid #fde68a;      /* viền vàng nhạt */
+    background:#fffbeb;            /* nền vàng nhạt */
+    color:#92400e;                  /* chữ nâu */
+    border-radius:10px;             /* bo góc hộp */
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;             /* chống xuống dòng như ảnh bạn gửi */
+}
+.self-badge i{ font-size:12px; }

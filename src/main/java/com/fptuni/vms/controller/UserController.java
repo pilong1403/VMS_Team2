@@ -48,7 +48,7 @@ public class UserController {
             @RequestParam(value = "sortField", defaultValue = "createdAt") String sortField,
             @RequestParam(value = "sortDir", defaultValue = "DESC") String sortDir,
             @RequestParam(value = "viewUser", required = false) Integer viewUserId,
-
+            HttpSession session,
             Model model) {
 
         List<User> users = userService.searchUsers(
@@ -93,6 +93,9 @@ public class UserController {
 
         model.addAttribute("activePage", "users");
         model.addAttribute("roles", roleService.getAllRoles());
+        // Lấy id user đang đăng nhập từ session (đồng bộ với chỗ khác bạn dùng)
+        Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+        model.addAttribute("currentUserId", currentUserId);
         return "admin/userManagement";
     }
 
@@ -139,8 +142,17 @@ public class UserController {
 
     // Khóa / Mở khóa user
     @PostMapping("/{id}/toggle-status")
-    public String toggleStatus(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+    public String toggleStatus(@PathVariable("id") Integer id,
+                               RedirectAttributes redirectAttributes,
+                               HttpSession session) { // << thêm session
         try {
+            Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            if (currentUserId != null && currentUserId.equals(id)) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Bạn không thể khóa/mở khóa chính tài khoản đang đăng nhập.");
+                return "redirect:/admin/users";
+            }
+
             User u = userService.getUserById(id);
             if (u == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng có ID: " + id);
@@ -165,6 +177,7 @@ public class UserController {
         }
         return "redirect:/admin/users";
     }
+
 
 
 

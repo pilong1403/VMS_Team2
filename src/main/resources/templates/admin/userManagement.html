@@ -125,7 +125,6 @@
 
                 </span></th>
                     <th>Email</th>
-                    <th>Số điện thoại</th>
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
                     <th>Ngày tạo
@@ -159,7 +158,6 @@
                     </td>
                     <td th:text="${u.fullName}">Tên</td>
                     <td th:text="${u.email}">Email</td>
-                    <td th:text="${u.phone}">SĐT</td>
                     <td th:text="${u.role.roleName}">Vai trò</td>
                     <td>
                           <span th:classappend="${#strings.trim(u.status).equalsIgnoreCase('ACTIVE') ? 'status-active' : 'status-locked'}"
@@ -168,16 +166,19 @@
                     <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">Ngày</td>
                     <td style="text-align:right">
                         <!-- Nút khóa / mở -->
-                        <form th:action="@{'/admin/users/' + ${u.userId} + '/toggle-status'}"
+                        <form th:if="${u.userId != currentUserId}"
+                              th:action="@{'/admin/users/' + ${u.userId} + '/toggle-status'}"
                               method="post" style="display:inline;">
                             <button type="submit"
                                     class="btn btn-sm"
                                     th:classappend="${u.status.name() == 'ACTIVE'} ? ' btn-pink' : ' btn-green'"
-                                    th:text="${u.status.name() == 'ACTIVE'} ? 'Khóa' : 'Mở'"
-                            >
+                                    th:text="${u.status.name() == 'ACTIVE'} ? 'Khóa' : 'Mở'">
                             </button>
                         </form>
 
+                        <span th:if="${u.userId == currentUserId}" class="self-badge">
+                              <i class="fa-solid fa-user-shield"></i> Tài khoản của bạn
+                        </span>
 
                     </td>
 
