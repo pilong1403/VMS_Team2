@@ -51,7 +51,7 @@ public class VolunteerRatingController {
     // danh sách hoạt động
     @GetMapping("/opportunities")
     public String listOpportunities(@RequestParam(defaultValue = "0") int page,
-                                    @RequestParam(defaultValue = "5") int size,
+                                    @RequestParam(defaultValue = "4") int size,
                                     @RequestParam(required = false) String keyword,
                                     @RequestParam(defaultValue = "all") String eventStatus, // all, upcoming, ongoing, finished
                                     @RequestParam(defaultValue = "recent") String sort,     // recent, oldest, name, participants

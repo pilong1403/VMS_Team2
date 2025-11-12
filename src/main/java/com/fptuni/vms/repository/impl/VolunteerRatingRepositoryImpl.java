@@ -29,118 +29,103 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
         LocalDateTime now = LocalDateTime.now();
 
         StringBuilder jpql = new StringBuilder("""
-                    SELECT new com.fptuni.vms.dto.response.OpportunitySummaryDto(
-                        o.oppId,
-                        o.title,
-                        o.location,
-                        o.startTime,
-                        o.endTime,
+        SELECT new com.fptuni.vms.dto.response.OpportunitySummaryDto(
+            o.oppId,
+            o.title,
+            o.location,
+            o.startTime,
+            o.endTime,
+            (SELECT COUNT(a)
+               FROM Application a
+               WHERE a.opportunity.oppId = o.oppId
+                 AND a.status IN ('APPROVED','COMPLETED')
+            ),
+            (SELECT COUNT(vr)
+               FROM VolunteerRating vr
+               WHERE vr.opportunity.oppId = o.oppId
+            ),
+            (SELECT COUNT(a2)
+               FROM Application a2
+               LEFT JOIN Attendance att2 ON att2.application.appId = a2.appId
+               WHERE a2.opportunity.oppId = o.oppId
+                 AND att2.checkinTime IS NOT NULL
+                 AND NOT EXISTS (
+                     SELECT 1 FROM VolunteerRating vr2
+                     WHERE vr2.opportunity.oppId = o.oppId
+                       AND vr2.rateeUser.userId = a2.volunteer.userId
+                 )
+            ),
+            CASE
+                WHEN o.status = 'CANCELLED' THEN 'CANCELLED'
+                WHEN o.startTime > :now THEN 'UPCOMING'
+                WHEN o.endTime   < :now THEN 'FINISHED'
+                ELSE 'ONGOING'
+            END
+        )
+        FROM Opportunity o
+        WHERE o.organization.orgId = :orgId
+          AND o.status <> 'DRAFT'
+    """);
 
-                            (SELECT COUNT(a)
-                            FROM Application a
-                            WHERE a.opportunity.oppId = o.oppId
-                            AND a.status IN ('APPROVED','COMPLETED')
-                                               ),
-                        (SELECT COUNT(vr)
-                         FROM VolunteerRating vr
-                         WHERE vr.opportunity.oppId = o.oppId
-                        ),
-
-                        (SELECT COUNT(a2)
-                         FROM Application a2
-                         LEFT JOIN Attendance att2 ON att2.application.appId = a2.appId
-                         WHERE a2.opportunity.oppId = o.oppId
-                           AND att2.checkinTime IS NOT NULL
-                           AND NOT EXISTS (
-                               SELECT 1 FROM VolunteerRating vr2
-                               WHERE vr2.opportunity.oppId = o.oppId
-                                 AND vr2.rateeUser.userId = a2.volunteer.userId
-                           )
-                        ),
-
-                        CASE
-                            WHEN o.startTime > :now THEN 'UPCOMING'
-                            WHEN o.endTime   < :now THEN 'FINISHED'
-                            ELSE 'ONGOING'
-                        END
-                    )
-                    FROM Opportunity o
-                    WHERE o.organization.orgId = :orgId
-                """);
-
-        // Filter keyword
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND LOWER(o.title) LIKE LOWER(:kw) ");
         }
 
-        // Filter eventStatus
-        switch (eventStatus == null ? "ALL" : eventStatus.toUpperCase()) {
-            case "UPCOMING" -> jpql.append(" AND o.startTime > :now ");
-            case "ONGOING" -> jpql.append(" AND o.startTime <= :now AND o.endTime >= :now ");
-            case "FINISHED" -> jpql.append(" AND o.endTime < :now ");
-            default -> {
-                /* ALL - no filter */ }
+        String es = (eventStatus == null ? "ALL" : eventStatus).toUpperCase();
+        switch (es) {
+            case "UPCOMING"  -> jpql.append(" AND o.status <> 'CANCELLED' AND o.startTime > :now ");
+            case "ONGOING"   -> jpql.append(" AND o.status <> 'CANCELLED' AND o.startTime <= :now AND o.endTime >= :now ");
+            case "FINISHED"  -> jpql.append(" AND o.status <> 'CANCELLED' AND o.endTime < :now ");
+            case "CANCELLED" -> jpql.append(" AND o.status = 'CANCELLED' ");
+            default -> { /* ALL */ }
         }
 
-        // Sorting
         switch (sort == null ? "recent" : sort.toLowerCase()) {
-            case "start" -> jpql.append(" ORDER BY o.startTime ASC ");
-            case "end" -> jpql.append(" ORDER BY o.endTime DESC ");
-            case "name" -> jpql.append(" ORDER BY o.title ASC ");
-            default -> jpql.append(" ORDER BY o.createdAt DESC ");
+            case "start"        -> jpql.append(" ORDER BY o.startTime ASC ");
+            case "end"          -> jpql.append(" ORDER BY o.endTime DESC ");
+            case "name"         -> jpql.append(" ORDER BY o.title ASC ");
+            case "participants" -> jpql.append(" ORDER BY 6 DESC "); // participantCount
+            default             -> jpql.append(" ORDER BY o.createdAt DESC ");
         }
 
-        TypedQuery<OpportunitySummaryDto> query = em
-                .createQuery(jpql.toString(), OpportunitySummaryDto.class)
+        var q = em.createQuery(jpql.toString(), OpportunitySummaryDto.class)
                 .setParameter("orgId", orgId)
-                .setParameter("now", now) // luôn set vì SELECT/CASE dùng :now
+                .setParameter("now", now)
                 .setFirstResult(offset)
                 .setMaxResults(limit);
-
-        if (keyword != null && !keyword.isBlank()) {
-            query.setParameter("kw", "%" + keyword + "%");
-        }
-
-        return query.getResultList();
+        if (keyword != null && !keyword.isBlank()) q.setParameter("kw", "%" + keyword + "%");
+        return q.getResultList();
     }
-
 
     @Override
     public long countOpportunitiesByOrg(int orgId, String keyword, String eventStatus) {
         StringBuilder jpql = new StringBuilder("""
-                    SELECT COUNT(o)
-                    FROM Opportunity o
-                    WHERE o.organization.orgId = :orgId
-                """);
+        SELECT COUNT(o)
+        FROM Opportunity o
+        WHERE o.organization.orgId = :orgId
+          AND o.status <> 'DRAFT'
+    """);
 
         LocalDateTime now = LocalDateTime.now();
 
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND LOWER(o.title) LIKE LOWER(:kw) ");
         }
-        switch (eventStatus.toUpperCase()) {
-            case "UPCOMING":
-                jpql.append(" AND o.startTime > :now ");
-                break;
-            case "ONGOING":
-                jpql.append(" AND o.startTime <= :now AND o.endTime >= :now ");
-                break;
-            case "FINISHED":
-                jpql.append(" AND o.endTime < :now ");
-                break;
+
+        String es = (eventStatus == null ? "ALL" : eventStatus).toUpperCase();
+        switch (es) {
+            case "UPCOMING"  -> jpql.append(" AND o.status <> 'CANCELLED' AND o.startTime > :now ");
+            case "ONGOING"   -> jpql.append(" AND o.status <> 'CANCELLED' AND o.startTime <= :now AND o.endTime >= :now ");
+            case "FINISHED"  -> jpql.append(" AND o.status <> 'CANCELLED' AND o.endTime < :now ");
+            case "CANCELLED" -> jpql.append(" AND o.status = 'CANCELLED' ");
+            default -> { /* ALL */ }
         }
 
-        TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class)
+        var q = em.createQuery(jpql.toString(), Long.class)
                 .setParameter("orgId", orgId);
-
-        if (keyword != null && !keyword.isBlank()) {
-            query.setParameter("kw", "%" + keyword + "%");
-        }
-        if (!"ALL".equalsIgnoreCase(eventStatus)) {
-            query.setParameter("now", now);
-        }
-
-        return query.getSingleResult();
+        if (keyword != null && !keyword.isBlank()) q.setParameter("kw", "%" + keyword + "%");
+        if (!"ALL".equals(es) && !"CANCELLED".equals(es)) q.setParameter("now", now);
+        return q.getSingleResult();
     }
 
     // ===================== 2. LIST VOLUNTEERS FOR OPPORTUNITY
@@ -151,25 +136,27 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
             String sort, int offset, int limit) {
 
         StringBuilder jpql = new StringBuilder("""
-            SELECT new com.fptuni.vms.dto.response.OpportunityVolunteerRatingDto(
-                u.userId, u.fullName, u.avatarUrl,
-                o.oppId, o.title, o.location, o.startTime, o.endTime,
-                att.checkinTime, att.checkoutTime, att.totalHours,
-                vr.id, vr.stars, vr.comment, vr.createdAt,
-                CASE
-                            WHEN vr.id IS NOT NULL THEN 'RATED'
-                            WHEN att.checkinTime IS NULL THEN 'NOT_ATTENDED'
-                            WHEN att.checkoutTime IS NULL THEN 'IN_PROGRESS'
-                            ELSE 'PENDING'
-                        END
-            )
-            FROM Application a
-            JOIN a.volunteer u
-            JOIN a.opportunity o
-            LEFT JOIN Attendance att ON att.application.appId = a.appId
-            LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = u.userId
-            WHERE o.organization.orgId = :orgId AND o.oppId = :opportunityId
-        """);
+                        SELECT new com.fptuni.vms.dto.response.OpportunityVolunteerRatingDto(
+                            u.userId, u.fullName, u.avatarUrl,
+                            o.oppId, o.title, o.location, o.startTime, o.endTime,
+                            att.checkinTime, att.checkoutTime, att.totalHours,
+                            vr.id, vr.stars, vr.comment, vr.createdAt,
+                            CASE
+                                WHEN vr.id IS NOT NULL THEN 'RATED'
+                                WHEN att.checkinTime IS NULL THEN 'NOT_ATTENDED'
+                                WHEN att.checkoutTime IS NULL THEN 'IN_PROGRESS'
+                                ELSE 'PENDING'
+                            END
+                        )
+                        FROM Application a
+                        JOIN a.volunteer u
+                        JOIN a.opportunity o
+                        LEFT JOIN Attendance att ON att.application.appId = a.appId
+                        LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = u.userId
+                        WHERE o.organization.orgId = :orgId
+                          AND o.oppId = :opportunityId
+                          AND a.status IN ('APPROVED','COMPLETED')
+                    """);
 
         // Filter keyword
         if (keyword != null && !keyword.isBlank()) {
@@ -230,15 +217,16 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
 
     @Override
     public long countVolunteersForOpportunity(int orgId, int opportunityId, String keyword, String statusFilter) {
-        StringBuilder jpql = new StringBuilder(
-                """
-                            SELECT COUNT(a)
-                            FROM Application a
-                            JOIN a.opportunity o
-                            LEFT JOIN Attendance att ON att.application.appId = a.appId
-                            LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = a.volunteer.userId
-                            WHERE o.organization.orgId = :orgId AND o.oppId = :opportunityId
-                        """);
+        StringBuilder jpql = new StringBuilder("""
+                    SELECT COUNT(a)
+                    FROM Application a
+                    JOIN a.opportunity o
+                    LEFT JOIN Attendance att ON att.application.appId = a.appId
+                    LEFT JOIN VolunteerRating vr ON vr.opportunity.oppId = o.oppId AND vr.rateeUser.userId = a.volunteer.userId
+                    WHERE o.organization.orgId = :orgId
+                      AND o.oppId = :opportunityId
+                      AND a.status IN ('APPROVED','COMPLETED')
+                """);
 
         if (keyword != null && !keyword.isBlank()) {
             jpql.append(" AND LOWER(a.volunteer.fullName) LIKE LOWER(:kw) ");

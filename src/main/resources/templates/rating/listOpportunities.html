@@ -28,6 +28,7 @@
                         <option value="upcoming" th:selected="${eventStatus == 'upcoming'}">Sắp diễn ra</option>
                         <option value="ongoing" th:selected="${eventStatus == 'ongoing'}">Đang diễn ra</option>
                         <option value="finished" th:selected="${eventStatus == 'finished'}">Đã kết thúc</option>
+                        <option value="cancelled" th:selected="${eventStatus == 'cancelled'}">Đã hủy</option>
                     </select>
 
                     <select name="sort" class="select">
@@ -49,7 +50,7 @@
                 <div class="card" th:each="o : ${opportunities}">
                     <div class="card-head">
                         <div class="info">
-                            <div  class="name" th:text="${'Tên tổ chức sự kiện: '+o.opportunityTitle}">Tên hoạt động</div>
+                            <div  class="name" th:text="${o.opportunityTitle}">Tên hoạt động</div>
 
                             <div class="muted">
                                 <span> Thời gian bắt đầu: </span>
@@ -67,12 +68,24 @@
                         </div>
 
                         <!-- Status -->
+                        <!-- Status -->
                         <div class="status-pill"
-                             th:classappend="${o.endTime.isBefore(#temporals.createNow()) ? 'success' :
-                                              (o.startTime.isAfter(#temporals.createNow()) ? 'warning' : 'primary')}"
-                             th:text="${o.endTime.isBefore(#temporals.createNow()) ? 'Đã kết thúc' :
-                                      (o.startTime.isAfter(#temporals.createNow()) ? 'Sắp diễn ra' : 'Đang diễn ra')}">
+                             th:classappend="${
+                                    o.status == 'ONGOING'   ? ' success'  :
+                                    (o.status == 'UPCOMING' ? ' primary'  :
+                                    (o.status == 'FINISHED' ? ' warning'  :
+                                    (o.status == 'CANCELLED'? ' danger'   : '')))
+                                 }"
+                             th:text="${
+                                    o.status == 'ONGOING'   ? 'Đang diễn ra' :
+                                    (o.status == 'UPCOMING' ? 'Sắp diễn ra'  :
+                                    (o.status == 'FINISHED' ? 'Đã kết thúc'  :
+                                    (o.status == 'CANCELLED'? 'Đã hủy'       : '')))
+                                 }">
                         </div>
+
+
+
                     </div>
 
                     <div class="actions">
@@ -83,10 +96,12 @@
                         </a>
 
                         <a class="btn success"
-                           th:classappend="${!o.endTime.isBefore(#temporals.createNow()) ? 'disabled' : ''}"
+                           th:classappend="${(o.status != 'FINISHED') ? ' disabled' : ''}"
                            th:href="@{'/organization/ratings/opportunity/' + ${o.opportunityId}}">
                             Đánh giá
                         </a>
+
+
                     </div>
                 </div>
             </section>

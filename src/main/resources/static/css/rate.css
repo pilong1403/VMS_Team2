@@ -356,3 +356,41 @@ textarea{
     100% { opacity: 0; transform: translateX(50px); }
 }
 
+
+/* Base */
+.status-pill{
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    border: 1px solid transparent; /* để pill nào cũng có viền nhẹ */
+}
+
+/* ĐANG DIỄN RA – xanh lá */
+.status-pill.success{
+    background:#ecfdf5;    /* xanh lá rất nhạt */
+    color:#065f46;         /* xanh lá đậm */
+    border-color:#bbf7d0;  /* viền xanh lá nhạt */
+}
+
+/* SẮP DIỄN RA – xanh nước biển */
+.status-pill.primary{
+    background:#eff6ff;    /* xanh dương rất nhạt */
+    color:#1e3a8a;         /* xanh dương đậm */
+    border-color:#bfdbfe;  /* viền xanh dương nhạt */
+}
+
+/* ĐÃ KẾT THÚC – cam */
+.status-pill.warning{
+    background:#fff7ed;    /* cam rất nhạt */
+    color:#9a3412;         /* cam nâu đậm */
+    border-color:#fed7aa;  /* viền cam nhạt */
+}
+
+/* ĐÃ HỦY – đỏ (đang dùng) */
+.status-pill.danger{
+    background:#fde8e8;
+    color:#b91c1c;
+    border-color:#fecaca;
+}
+
