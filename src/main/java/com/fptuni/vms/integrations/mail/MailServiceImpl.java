@@ -66,9 +66,17 @@ public class MailServiceImpl implements MailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("Kết quả xét duyệt hồ sơ tổ chức: " + orgName);
-        message.setText("Xin chào,\n\nHồ sơ '" + orgName + "' đã được DUYỆT."
-                + (note != null && !note.isBlank() ? "\n\nGhi chú: " + note : "")
-                + "\n\nTrân trọng,\nBan quản trị hệ thống.");
+
+        // Thêm dòng chứa email đăng ký vào nội dung
+        String content = "Xin chào,\n\n"
+                + "Hồ sơ '" + orgName + "' đã được DUYỆT.\n\n"
+                + "Thông tin tài khoản đăng ký:\n"
+                + "• Email: " + to + "\n\n"
+                + (note != null && !note.isBlank() ? "Ghi chú: " + note + "\n\n" : "")
+                + "Vui lòng đăng nhập bằng email trên. Nếu quên mật khẩu, hãy sử dụng chức năng 'Quên mật khẩu' để đặt lại.\n\n"
+                + "Trân trọng,\nBan quản trị hệ thống.";
+
+        message.setText(content);
         mailSender.send(message);
 
     }
