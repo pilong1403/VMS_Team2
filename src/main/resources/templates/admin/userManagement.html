@@ -287,8 +287,14 @@
                     <div class="form-group"><label>Vai trò *</label>
                         <select id="roleId" name="role.roleId" required>
                             <option value="">-- Chọn vai trò --</option>
-                            <option th:each="r: ${roles}" th:value="${r.roleId}" th:text="${r.roleName}"></option>
+
+                            <option th:each="r : ${roles}"
+                                    th:if="${r.roleName == 'VOLUNTEER' or r.roleName == 'ORG_OWNER'}"
+                                    th:value="${r.roleId}"
+                                    th:text="${r.roleName}">
+                            </option>
                         </select>
+
                     </div>
                     <div class="form-group">
 
