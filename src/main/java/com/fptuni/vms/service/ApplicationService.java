@@ -71,4 +71,7 @@ public interface ApplicationService {
 
         /** Volunteer tự hủy đơn (chỉ khi PENDING, trước giờ bắt đầu). */
         void cancelByVolunteer(Integer appId, Integer volunteerId, String cancelReason);
+
+        long countApprovedApplications(Integer oppId);
+
 }

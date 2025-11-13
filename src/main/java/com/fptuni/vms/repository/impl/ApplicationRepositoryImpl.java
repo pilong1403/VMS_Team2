@@ -439,4 +439,19 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
             return null;
         }
     }
+    @Override
+    public long countApprovedApplications(Integer oppId) {
+        Long cnt = em.createQuery("""
+            SELECT COUNT(a.appId)
+            FROM Application a
+            WHERE a.opportunity.oppId = :oppId
+              AND a.status IN (:s1, :s2)
+            """, Long.class)
+                .setParameter("oppId", oppId)
+                .setParameter("s1", Application.ApplicationStatus.APPROVED)
+                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
+                .getSingleResult();
+        return cnt == null ? 0L : cnt;
+    }
+
 }

@@ -194,6 +194,18 @@ public class OpportunityController {
         if (form.getEndDate() != null && form.getEndTime() != null) {
             end = LocalDateTime.of(form.getEndDate(), form.getEndTime());
         }
+// Kiểm tra ràng buộc số lượng tình nguyện viên
+        long approvedApplicants = applicationService.countApprovedApplications(form.getOppId());
+        Integer needed = form.getNeededVolunteers();
+
+        if (needed != null && approvedApplicants > 0 && needed < approvedApplicants) {
+            binding.rejectValue(
+                    "neededVolunteers",
+                    "invalid.minApproved",
+                    "Số TNV cần tối thiểu là " + approvedApplicants +
+                            " (hiện đã có " + approvedApplicants + " tình nguyện viên đã được duyệt)."
+            );
+        }
 
         // end > start
         if (start != null && end != null && !end.isAfter(start)) {

@@ -337,4 +337,10 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 repo.save(app);
         }
+
+        @Override
+        public long countApprovedApplications(Integer oppId) {
+                return repo.countApprovedByOppId(oppId);  // Sử dụng phương thức đã có trong repository
+        }
+
 }

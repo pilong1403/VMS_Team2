@@ -78,4 +78,6 @@ public interface ApplicationRepository {
                         Integer excludeOppId);
 
         Application findByIdAndVolunteerId(Integer appId, Integer volunteerId);
+
+        long countApprovedApplications(Integer oppId);
 }
