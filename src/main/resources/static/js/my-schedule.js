@@ -127,7 +127,6 @@ function updateModalContent(eventData, startDate, endDate, appliedDate) {
   document.getElementById("modal-description").textContent = eventData.description || "Chưa có mô tả chi tiết";
   document.getElementById("modal-needed-volunteers").textContent = eventData.neededVolunteers || "0";
   document.getElementById("modal-applied-at").textContent = formatDateTime(appliedDate);
-  document.getElementById("modal-app-id").textContent = eventData.appId;
 }
 
 function updateModalThumbnail(thumbnailUrl) {
@@ -224,6 +223,7 @@ function switchToCalendarView() {
   currentView = "calendar";
   document.getElementById("calendar-view").style.display = "block";
   document.getElementById("list-view").style.display = "none";
+  document.getElementById("statistics-cards").style.display = "none";
   document.getElementById("calendar-view-btn").className = "btn btn-primary";
   document.getElementById("list-view-btn").className = "btn btn-outline-secondary";
   renderCalendar();
@@ -233,6 +233,7 @@ function switchToListView() {
   currentView = "list";
   document.getElementById("calendar-view").style.display = "none";
   document.getElementById("list-view").style.display = "block";
+  document.getElementById("statistics-cards").style.display = "flex";
   document.getElementById("list-view-btn").className = "btn btn-primary";
   document.getElementById("calendar-view-btn").className = "btn btn-outline-secondary";
 }
@@ -392,7 +393,6 @@ function populateModalFromData(eventData) {
   document.getElementById("modal-description").textContent = eventData.description || "Chưa có mô tả chi tiết";
   document.getElementById("modal-needed-volunteers").textContent = eventData.neededVolunteers || "0";
   document.getElementById("modal-applied-at").textContent = formatDateTime(appliedDate);
-  document.getElementById("modal-app-id").textContent = eventData.appId;
 
   updateModalThumbnail(eventData.thumbnailUrl);
   updateModalStatus(eventData.status);
@@ -401,4 +401,14 @@ function populateModalFromData(eventData) {
 
 document.addEventListener("DOMContentLoaded", function () {
   initializeMySchedule();
+
+  // Check URL parameter to determine initial view
+  const urlParams = new URLSearchParams(window.location.search);
+  const viewParam = urlParams.get("view");
+
+  if (viewParam === "list") {
+    switchToListView();
+  } else {
+    switchToCalendarView();
+  }
 });

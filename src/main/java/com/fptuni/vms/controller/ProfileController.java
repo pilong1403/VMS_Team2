@@ -21,6 +21,7 @@ import com.fptuni.vms.dto.EventHistoryDto;
 import com.fptuni.vms.service.UserService;
 import com.fptuni.vms.service.ApplicationService;
 import com.fptuni.vms.service.FeedbackService;
+import com.fptuni.vms.service.CategoryService;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
@@ -39,12 +40,14 @@ public class ProfileController {
     private final UserService userService;
     private final ApplicationService applicationService;
     private final FeedbackService feedbackService;
+    private final CategoryService categoryService;
 
     public ProfileController(UserService userService, ApplicationService applicationService,
-            FeedbackService feedbackService) {
+            FeedbackService feedbackService, CategoryService categoryService) {
         this.userService = userService;
         this.applicationService = applicationService;
         this.feedbackService = feedbackService;
+        this.categoryService = categoryService;
     }
 
     @GetMapping
@@ -238,7 +241,15 @@ public class ProfileController {
     }
 
     @GetMapping("/my-schedule")
-    public String mySchedule(Model model, Authentication authentication) {
+    public String mySchedule(
+            Model model,
+            Authentication authentication,
+            @RequestParam(name = "view", defaultValue = "calendar") String view,
+            @RequestParam(name = "q", defaultValue = "") String q,
+            @RequestParam(name = "category", defaultValue = "") String filterCategory,
+            @RequestParam(name = "sort", defaultValue = "earliest") String sort,
+            @RequestParam(name = "page", defaultValue = "0") int page) {
+
         User currentUser = SecurityUtils.getCurrentUser(authentication);
 
         if (currentUser == null) {
@@ -260,17 +271,70 @@ public class ProfileController {
 
         // Separate upcoming and past events based on opportunity time
         LocalDateTime now = LocalDateTime.now();
-        List<ScheduleApplicationDto> upcomingApplications = allApplications.stream()
+
+        // All upcoming for calendar view (no filter)
+        List<ScheduleApplicationDto> allUpcomingForCalendar = allApplications.stream()
                 .filter(app -> app.getOpportunity().getStartTime().isAfter(now))
                 .filter(app -> app.getStatus() == Application.ApplicationStatus.APPROVED)
                 .map(this::convertToScheduleDto)
                 .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
                 .collect(Collectors.toList());
 
-        // Remove past applications - they will be shown in event history page
-        List<ScheduleApplicationDto> pastApplications = new ArrayList<>();
+        // Filtered upcoming for list view
+        List<ScheduleApplicationDto> filteredUpcoming = allApplications.stream()
+                .filter(app -> app.getOpportunity().getStartTime().isAfter(now))
+                .filter(app -> app.getStatus() == Application.ApplicationStatus.APPROVED)
+                .filter(app -> {
+                    // Search filter
+                    if (!q.isEmpty()) {
+                        String searchLower = q.toLowerCase();
+                        boolean matchTitle = app.getOpportunity().getTitle().toLowerCase().contains(searchLower);
+                        boolean matchLocation = app.getOpportunity().getLocation() != null &&
+                                app.getOpportunity().getLocation().toLowerCase().contains(searchLower);
+                        return matchTitle || matchLocation;
+                    }
+                    return true;
+                })
+                .filter(app -> {
+                    // Category filter
+                    if (!filterCategory.isEmpty()) {
+                        try {
+                            int catId = Integer.parseInt(filterCategory);
+                            return app.getOpportunity().getCategory() != null &&
+                                    app.getOpportunity().getCategory().getCategoryId() == catId;
+                        } catch (NumberFormatException e) {
+                            return true;
+                        }
+                    }
+                    return true;
+                })
+                .map(this::convertToScheduleDto)
+                .collect(Collectors.toList());
 
-        // Calculate total hours
+        // Sort
+        if ("latest".equals(sort)) {
+            filteredUpcoming.sort((a, b) -> b.getStartTime().compareTo(a.getStartTime()));
+        } else {
+            filteredUpcoming.sort((a, b) -> a.getStartTime().compareTo(b.getStartTime()));
+        }
+
+        // Pagination for list view
+        int pageSize = 5;
+        int totalItems = filteredUpcoming.size();
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        int startIndex = page * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalItems);
+
+        List<ScheduleApplicationDto> pagedItems = new ArrayList<>();
+        if (startIndex < totalItems) {
+            pagedItems = filteredUpcoming.subList(startIndex, endIndex);
+        }
+
+        // Calculate statistics
+        long completedCount = allApplications.stream()
+                .filter(app -> app.getStatus() == Application.ApplicationStatus.COMPLETED)
+                .count();
+
         long totalHours = allApplications.stream()
                 .filter(app -> app.getStatus() == Application.ApplicationStatus.APPROVED ||
                         app.getStatus() == Application.ApplicationStatus.COMPLETED)
@@ -283,14 +347,25 @@ public class ProfileController {
 
         // Create response DTO
         VolunteerScheduleResponseDto scheduleResponse = new VolunteerScheduleResponseDto();
-        scheduleResponse.setUpcomingApplications(upcomingApplications);
-        scheduleResponse.setPastApplications(pastApplications);
-        scheduleResponse.setUpcomingCount(upcomingApplications.size());
-        scheduleResponse.setCompletedCount(0); // Past events moved to event history
+        scheduleResponse.setUpcomingApplications(allUpcomingForCalendar);
+        scheduleResponse.setPastApplications(new ArrayList<>());
+        scheduleResponse.setUpcomingCount(allUpcomingForCalendar.size());
+        scheduleResponse.setCompletedCount((int) completedCount);
         scheduleResponse.setTotalHours(totalHours);
+
+        // Get categories for filter dropdown
+        model.addAttribute("categories", categoryService.listAll());
 
         model.addAttribute("user", freshUser);
         model.addAttribute("scheduleData", scheduleResponse);
+        model.addAttribute("allUpcomingForCalendar", allUpcomingForCalendar);
+        model.addAttribute("items", pagedItems);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("q", q);
+        model.addAttribute("filterCategory", filterCategory);
+        model.addAttribute("sort", sort);
+        model.addAttribute("view", view);
         model.addAttribute("activePage", "schedule");
 
         return "volunteer/my-schedual";
@@ -314,8 +389,12 @@ public class ProfileController {
 
     // Event History Methods
     @GetMapping("/event-history")
-    public String eventHistory(@RequestParam(defaultValue = "0") int page,
+    public String eventHistory(
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(name = "opportunity", defaultValue = "") String opportunitySearch,
+            @RequestParam(name = "location", defaultValue = "") String locationSearch,
+            @RequestParam(name = "category", defaultValue = "") String filterCategory,
             Authentication authentication,
             Model model) {
 
@@ -328,17 +407,77 @@ public class ProfileController {
             return "redirect:/403";
         }
 
-        // Get event history
-        List<EventHistoryDto> eventHistory = feedbackService.getVolunteerEventHistory(
-                currentUser.getUserId(), page, size);
-        long totalEvents = feedbackService.countVolunteerEventHistory(currentUser.getUserId());
-        int totalPages = (int) Math.ceil((double) totalEvents / size);
+        // Get all event history
+        List<EventHistoryDto> allEventHistory = feedbackService.getVolunteerEventHistory(
+                currentUser.getUserId(), 0, Integer.MAX_VALUE);
 
-        model.addAttribute("eventHistory", eventHistory);
+        // Apply filters
+        List<EventHistoryDto> filteredHistory = allEventHistory.stream()
+                .filter(event -> {
+                    // Opportunity search filter
+                    if (!opportunitySearch.isEmpty()) {
+                        String searchLower = opportunitySearch.toLowerCase();
+                        return event.getOpportunityTitle().toLowerCase().contains(searchLower);
+                    }
+                    return true;
+                })
+                .filter(event -> {
+                    // Location search filter
+                    if (!locationSearch.isEmpty()) {
+                        String searchLower = locationSearch.toLowerCase();
+                        return event.getLocation() != null &&
+                                event.getLocation().toLowerCase().contains(searchLower);
+                    }
+                    return true;
+                })
+                .filter(event -> {
+                    // Category filter
+                    if (!filterCategory.isEmpty()) {
+                        try {
+                            int catId = Integer.parseInt(filterCategory);
+                            return event.getCategoryId() != null && event.getCategoryId() == catId;
+                        } catch (NumberFormatException e) {
+                            return true;
+                        }
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+
+        // Pagination
+        int totalItems = filteredHistory.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalItems);
+
+        List<EventHistoryDto> pagedHistory = new ArrayList<>();
+        if (startIndex < totalItems) {
+            pagedHistory = filteredHistory.subList(startIndex, endIndex);
+        }
+
+        // Calculate statistics
+        long totalCompleted = allEventHistory.size();
+        long totalAttended = allEventHistory.stream()
+                .filter(EventHistoryDto::isHasAttended)
+                .count();
+        long totalRated = allEventHistory.stream()
+                .filter(EventHistoryDto::isHasRated)
+                .count();
+
+        // Get categories for filter dropdown
+        model.addAttribute("categories", categoryService.listAll());
+
+        model.addAttribute("eventHistory", pagedHistory);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("pageSize", size);
-        model.addAttribute("totalEvents", totalEvents);
+        model.addAttribute("totalEvents", totalItems);
+        model.addAttribute("totalCompleted", totalCompleted);
+        model.addAttribute("totalAttended", totalAttended);
+        model.addAttribute("totalRated", totalRated);
+        model.addAttribute("opportunitySearch", opportunitySearch);
+        model.addAttribute("locationSearch", locationSearch);
+        model.addAttribute("filterCategory", filterCategory);
         model.addAttribute("user", currentUser);
         model.addAttribute("activePage", "event-history");
 

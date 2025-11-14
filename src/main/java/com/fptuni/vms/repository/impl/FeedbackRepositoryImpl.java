@@ -31,6 +31,7 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
                         o.endTime,
                         o.thumbnailUrl,
                         o.subtitle,
+                        o.category.categoryId,
                         CASE WHEN att.checkinTime IS NOT NULL THEN true ELSE false END,
                         CASE WHEN fb.feedbackId IS NOT NULL THEN true ELSE false END,
                         fb.feedbackId,
