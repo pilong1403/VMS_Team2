@@ -43,6 +43,12 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     @Transactional
     public void createVolunteerFeedback(int oppId, int volunteerId, Integer rating, String content) {
+        // Check if feedback already exists
+        Feedback existingFeedback = feedbackRepo.findVolunteerFeedback(oppId, volunteerId);
+        if (existingFeedback != null) {
+            throw new IllegalStateException("Bạn đã đánh giá hoạt động này rồi!");
+        }
+
         if (!canVolunteerGiveFeedback(oppId, volunteerId)) {
             throw new IllegalStateException("Bạn không thể đánh giá hoạt động này!");
         }
@@ -56,6 +62,7 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .orElseThrow(() -> new IllegalArgumentException("Tình nguyện viên không tồn tại!"));
 
         Feedback feedback = new Feedback();
+        feedback.setFeedbackId(null); // Explicitly set to null to ensure auto-generation
         feedback.setOpportunity(opportunity);
         feedback.setUser(volunteer);
         feedback.setRating(rating);

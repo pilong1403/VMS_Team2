@@ -229,7 +229,7 @@
               </div>
 
               <!-- Pagination -->
-              <div class="card border-0 shadow-sm mt-3" th:if="${eventHistory != null and !eventHistory.empty}"></div>
+              <div class="card border-0 shadow-sm mt-3" th:if="${eventHistory != null and !eventHistory.empty}">
                 <div class="card-footer d-flex justify-content-between align-items-center">
                   <div class="text-muted small">
                     Trang <span th:text="${currentPage + 1}">1</span>/<span th:text="${totalPages}">1</span>
