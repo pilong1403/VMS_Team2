@@ -221,14 +221,13 @@
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <span class="badge rounded-pill text-bg-light border"
                                             th:text="${categoryNameMap[o.oppId]}">Danh mục</span>
-                                        <span class="badge"
-                                              th:text="${o.status.name() == 'OPEN'}      ? 'Đang mở'
+                                        <span class="badge" th:text="${o.status.name() == 'OPEN'}      ? 'Đang mở'
                                                            : (${o.status.name() == 'CLOSED'} ? 'Đã đóng'
                                                                                             : 'Đã hủy')"
-                                                                                          th:classappend="${o.status.name() == 'OPEN'}      ? ' text-bg-success'
+                                            th:classappend="${o.status.name() == 'OPEN'}      ? ' text-bg-success'
                                                                  : (${o.status.name() == 'CLOSED'} ? ' text-bg-secondary'
                                                                                                   : ' text-bg-danger')">
-                                            </span>
+                                        </span>
 
                                     </div>
 
@@ -269,15 +268,57 @@
                                     </div>
 
                                     <div class="mt-auto d-flex gap-2">
+
+                                        <!-- Chi tiết -->
                                         <a th:href="@{/opportunities/{id}(id=${o.oppId})}"
                                             class="btn btn-outline-primary flex-fill">
                                             <i class="bi bi-eye me-1"></i> Chi tiết
                                         </a>
+
+                                        <!-- 1) ĐÃ NỘP -->
+                                        <a class="btn btn-outline-secondary flex-fill"
+                                            th:if="${btnStates[o.oppId]['alreadyApplied']}"
+                                            th:href="@{/profile/applications}">
+                                            Đã nộp - Xem đơn
+                                        </a>
+
+                                        <!-- 2) CHO PHÉP ĐĂNG KÝ -->
                                         <button type="button" class="btn btn-primary flex-fill js-apply-btn"
-                                            th:attr="data-opp-id=${o.oppId}, data-opp-status=${o.status != null ? o.status.name() : 'CLOSED'}">
+                                            th:if="${btnStates[o.oppId]['canApply']}" th:attr="data-opp-id=${o.oppId}">
                                             <i class="bi bi-person-plus me-1"></i> Đăng ký
                                         </button>
+
+                                        <!-- 3) ĐÃ HỦY -->
+                                        <button class="btn btn-secondary flex-fill" disabled th:if="${!btnStates[o.oppId]['alreadyApplied']
+               and btnStates[o.oppId]['isCancelled']}">
+                                            Đã hủy
+                                        </button>
+
+                                        <!-- 4) QUÁ HẠN -->
+                                        <button class="btn btn-secondary flex-fill" disabled th:if="${!btnStates[o.oppId]['alreadyApplied']
+               and !btnStates[o.oppId]['canApply']
+               and btnStates[o.oppId]['isExpired']}">
+                                            Quá hạn
+                                        </button>
+
+                                        <!-- 5) ĐỦ SỐ LƯỢNG -->
+                                        <button class="btn btn-secondary flex-fill" disabled th:if="${!btnStates[o.oppId]['alreadyApplied']
+               and btnStates[o.oppId]['isFull']}">
+                                            Đủ số lượng
+                                        </button>
+
+                                        <!-- 6) CHƯA ĐĂNG NHẬP - CHỈ HIỂN THỊ KHI CƠ HỘI ĐANG MỞ -->
+                                        <a class="btn btn-primary flex-fill" th:if="${AUTH_USER_ID == null 
+           and o.status.name() == 'OPEN'
+           and !btnStates[o.oppId]['alreadyApplied']
+           and !btnStates[o.oppId]['isExpired']
+           and !btnStates[o.oppId]['isFull']
+           and !btnStates[o.oppId]['isCancelled']}">
+                                            Đăng nhập để đăng ký
+                                        </a>
+
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -409,25 +450,24 @@
             // === Giữ NGUYÊN logic gốc của nút Đăng ký ===
             document.querySelectorAll('.js-apply-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    // 1) Chưa đăng nhập -> chuyển đăng nhập
+
+                    // 1) Chưa đăng nhập -> chuyển login
                     if (window.CURRENT_USER_ID == null) {
                         window.location.href = '/login?e=USERNAME_PASSWORD_REQUIRED';
                         return;
                     }
-                    // 2) Không OPEN -> alert
+
+                    // 2) Lấy oppId từ button
                     const oppId = btn.getAttribute('data-opp-id');
-                    const status = (btn.getAttribute('data-opp-status') || 'CLOSED').toUpperCase();
-                    if (status !== 'OPEN') {
-                        alert('Cơ hội này không ở trạng thái mở để đăng ký.');
-                        return;
-                    }
-                    // 3) OPEN -> prefill + mở modal
                     if (oppIdInput) oppIdInput.value = oppId;
+
+                    // 3) Prefill modal + mở
                     applyForm.classList.remove('was-validated');
                     prefillFromModalData();
                     new bootstrap.Modal(applyModalEl).show();
                 });
             });
+
 
             // Submit validation y như cũ
             applyForm?.addEventListener('submit', e => {
