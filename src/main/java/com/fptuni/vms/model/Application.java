@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class Application {
 
         public enum ApplicationStatus {
-                PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED, ABSENT
+                PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED, ABSENT, PRESENT
         }
 
         @Id
