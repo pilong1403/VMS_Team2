@@ -421,4 +421,22 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         return q.getResultList();
     }
 
+    @Override
+    public Long countActiveApplications(Integer oppId) {
+        if (oppId == null)
+            return 0L;
+
+        return em.createQuery("""
+                SELECT COUNT(a)
+                FROM Application a
+                WHERE a.opportunity.oppId = :id
+                  AND a.status IN (:p, :a, :c)
+                """, Long.class)
+                .setParameter("id", oppId)
+                .setParameter("p", Application.ApplicationStatus.PENDING)
+                .setParameter("a", Application.ApplicationStatus.APPROVED)
+                .setParameter("c", Application.ApplicationStatus.COMPLETED)
+                .getSingleResult();
+    }
+
 }

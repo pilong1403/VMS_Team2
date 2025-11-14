@@ -11,49 +11,53 @@ import java.util.List;
 
 public interface OpportunityService {
 
-    Page<OpportunityCardDto> getOpportunityCardsWithFilters(
-            Integer categoryId,
-            String location,
-            String status,
-            String searchTerm,
-            String time,
-            String sortBy,
-            Pageable pageable);
+        Page<OpportunityCardDto> getOpportunityCardsWithFilters(
+                        Integer categoryId,
+                        String location,
+                        String status,
+                        String searchTerm,
+                        String time,
+                        String sortBy,
+                        Pageable pageable);
 
-    List<Category> getCategoriesWithOpportunities();
+        List<Category> getCategoriesWithOpportunities();
 
-    Opportunity findById(Integer id);
+        Opportunity findById(Integer id);
 
-    List<OpportunityCardDto> getTop3LatestOpportunities();
+        List<OpportunityCardDto> getTop3LatestOpportunities();
 
-    Page<OpportunityCardDto> getOpportunityCards(Pageable pageable);
+        Page<OpportunityCardDto> getOpportunityCards(Pageable pageable);
 
-    List<Opportunity> getAll();
+        List<Opportunity> getAll();
 
-    List<Opportunity> findByOrganization(int orgId);
+        List<Opportunity> findByOrganization(int orgId);
 
-    Opportunity save(Opportunity o);
+        Opportunity save(Opportunity o);
 
-    Page<Opportunity> searchByOrg(int orgId, String q,
-                                  Opportunity.OpportunityStatus status, int page, int size, String timeOrder);
+        Page<Opportunity> searchByOrg(int orgId, String q,
+                        Opportunity.OpportunityStatus status, int page, int size, String timeOrder);
 
-    // Opportunity findById(int id);
+        // Opportunity findById(int id);
 
-    // ================= PHI LONG ITER 3 =================//
-    // Trang tổ chức - trả về Entity trực tiếp
-    Page<Opportunity> getOrgOpportunities(
-            int orgId,
-            Integer categoryId,
-            String keyword,
-            String status, // OPEN|CLOSED|CANCELLED
-            String quick, // upcoming|ongoing|past|null
-            String sortBy,
-            Pageable pageable);
+        // ================= PHI LONG ITER 3 =================//
+        // Trang tổ chức - trả về Entity trực tiếp
+        Page<Opportunity> getOrgOpportunities(
+                        int orgId,
+                        Integer categoryId,
+                        String keyword,
+                        String status, // OPEN|CLOSED|CANCELLED
+                        String quick, // upcoming|ongoing|past|null
+                        String sortBy,
+                        Pageable pageable);
 
-    // đếm số đơn APPROVED/COMPLETED cho 1 opp (dùng để render progress)
-    long countApproved(int oppId);
-    // ================= PHI LONG ITER 3 =================//
+        // đếm số đơn APPROVED/COMPLETED cho 1 opp (dùng để render progress)
+        long countApproved(int oppId);
+        // ================= PHI LONG ITER 3 =================//
 
-    List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
-                                         LocalDateTime start, LocalDateTime end, int limit);
+        List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
+                        LocalDateTime start, LocalDateTime end, int limit);
+
+        // đếm số đơn ACTIVE cho 1 opp (dùng để kiểm tra trùng lịch)
+        long countActive(int oppId);
+
 }
