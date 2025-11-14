@@ -98,9 +98,9 @@ public class ApplicationController {
         boolean isCancelled = opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED;
         boolean isExpired = opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now());
 
-        long activeCount = opportunityService.countActive(opp.getOppId());
+        long approvedCount = service.countApprovedByOppId(opp.getOppId());
         Integer needVols = opp.getNeededVolunteers();
-        boolean isFull = (needVols != null) && (activeCount >= needVols);
+        boolean isFull = (needVols != null) && (approvedCount >= needVols);
 
         boolean alreadyApplied = currentUserId != null
                 && service.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
@@ -117,7 +117,7 @@ public class ApplicationController {
         model.addAttribute("isFull", isFull);
         model.addAttribute("canApply", canApply);
         model.addAttribute("alreadyApplied", alreadyApplied);
-        model.addAttribute("appliedCount", activeCount);
+        model.addAttribute("appliedCount", approvedCount);
 
         // Badge
         model.addAttribute("statusDisplayName", toStatusDisplay(opp.getStatus()));

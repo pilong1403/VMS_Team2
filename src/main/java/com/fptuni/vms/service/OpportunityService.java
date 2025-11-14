@@ -57,7 +57,4 @@ public interface OpportunityService {
         List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
                         LocalDateTime start, LocalDateTime end, int limit);
 
-        // đếm số đơn ACTIVE cho 1 opp (dùng để kiểm tra trùng lịch)
-        long countActive(int oppId);
-
 }

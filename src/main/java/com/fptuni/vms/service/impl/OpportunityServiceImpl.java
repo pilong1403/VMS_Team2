@@ -201,11 +201,4 @@ public class OpportunityServiceImpl implements OpportunityService {
         return opportunityRepository.findOverlapsForOrg(orgId, excludeOppId, start, end, limit);
     }
 
-    // đếm số đơn ACTIVE cho 1 opp (dùng để kiểm tra trùng lịch)
-    @Override
-    public long countActive(int oppId) {
-        Long c = opportunityRepository.countActiveApplications(oppId);
-        return c == null ? 0L : c;
-    }
-
 }
