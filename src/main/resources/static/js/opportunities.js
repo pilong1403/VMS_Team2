@@ -67,11 +67,10 @@ function applyFilters() {
   }
 
   // Get selected category
-  const selectedCategory = document.querySelector('input[name="category"]:checked');
+  const selectedCategory = document.querySelector('input[name="categoryId"]:checked');
   if (selectedCategory && selectedCategory.value) {
     params.append("categoryId", selectedCategory.value);
   }
-
   // Get location input
   const locationInput = document.querySelector('input[name="location"]');
   if (locationInput && locationInput.value.trim()) {
