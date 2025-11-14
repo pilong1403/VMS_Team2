@@ -51,7 +51,6 @@ public class HomeController {
                 model.addAttribute("currentUser", userService.getUserById(currentUserId));
             }
             List<OpportunityCardDto> latestOpportunities = opportunityService.getTop3LatestOpportunities();
-            // Ẩn DRAFT ở khu “Mới đăng”
             latestOpportunities = latestOpportunities.stream()
                     .filter(this::isAllowedStatus)
                     .toList();
@@ -60,7 +59,6 @@ public class HomeController {
             Map<Integer, Map<String, Object>> latestBtnStates = computeButtonStates(latestOpportunities, currentUserId);
             model.addAttribute("latestBtnStates", latestBtnStates);
 
-            // Thêm thống kê
             Map<String, Object> stats = homeStatsService.getHomeStats();
             model.addAttribute("stats", stats);
         } catch (Exception e) {

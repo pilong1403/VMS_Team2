@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class Application {
 
         public enum ApplicationStatus {
-                PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED
+                PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED, ABSENT
         }
 
         @Id
@@ -32,7 +32,7 @@ public class Application {
 
         @Enumerated(EnumType.STRING)
         @Column(name = "status", length = 20, nullable = false)
-        private ApplicationStatus status; // DB CHECK: PENDING/APPROVED/REJECTED/COMPLETED/CANCELLED
+        private ApplicationStatus status; // DB CHECK: PENDING/APPROVED/REJECTED/COMPLETED/CANCELLED/ABSENT
 
         @Column(name = "reason", length = 255)
         private String reason;

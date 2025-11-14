@@ -8,6 +8,28 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
     <link th:href="@{/css/schedule.css}" rel="stylesheet" />
     <link th:href="@{/css/volunteer-sidebar.css}" rel="stylesheet" />
+    <style>
+      .stats-card {
+        background: #fff;
+        border-radius: 6px;
+        padding: 12px 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .stats-card .stats-icon {
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+      }
+      .stats-card .stats-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+      .stats-card .stats-label {
+        color: #7f8c8d;
+        font-size: 0.85rem;
+      }
+    </style>
   </head>
   <body>
     <div class="container-fluid">
@@ -35,6 +57,37 @@
                 <button class="btn btn-outline-secondary" id="calendar-view-btn" onclick="switchToCalendarView()">
                   Lịch
                 </button>
+              </div>
+            </div>
+
+            <!-- Statistics Cards (only shown in list view) -->
+            <div class="row g-2 mb-3" id="statistics-cards" style="display: none">
+              <div class="col-md-4">
+                <div class="stats-card">
+                  <div class="stats-icon text-primary">
+                    <i class="bi bi-calendar-check"></i>
+                  </div>
+                  <div class="stats-value" th:text="${scheduleData.upcomingCount}">0</div>
+                  <div class="stats-label">Hoạt động sắp tới</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stats-card">
+                  <div class="stats-icon text-success">
+                    <i class="bi bi-check-circle"></i>
+                  </div>
+                  <div class="stats-value" th:text="${scheduleData.completedCount}">0</div>
+                  <div class="stats-label">Đã hoàn thành</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stats-card">
+                  <div class="stats-icon text-info">
+                    <i class="bi bi-clock-history"></i>
+                  </div>
+                  <div class="stats-value" th:text="${scheduleData.totalHours}">0</div>
+                  <div class="stats-label">Tổng giờ tình nguyện</div>
+                </div>
               </div>
             </div>
 
@@ -70,13 +123,48 @@
 
             <!-- List View -->
             <div id="list-view" class="section" style="display: none">
-              <h2 class="section-title" th:text="'Sắp diễn ra (' + ${scheduleData.upcomingCount} + ')'">Sắp diễn ra</h2>
-              <div
-                class="events-list"
-                th:if="${scheduleData.upcomingApplications != null and !scheduleData.upcomingApplications.empty}"
-              >
+              <h2 class="section-title">Danh sách hoạt động</h2>
+
+              <!-- Search, Filter, Sort Form -->
+              <form class="row g-2 align-items-end mb-3" method="get" th:action="@{/profile/my-schedule}">
+                <input type="hidden" name="view" value="list" />
+                <div class="col-md-4">
+                  <label class="form-label">Tìm theo Cơ hội / Địa điểm</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="q"
+                    placeholder="Nhập tên cơ hội hoặc địa điểm"
+                    th:value="${q}"
+                  />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Danh mục</label>
+                  <select name="category" class="form-select">
+                    <option th:value="''" th:selected="${filterCategory == ''}">Tất cả</option>
+                    <option
+                      th:each="cat : ${categories}"
+                      th:value="${cat.categoryId}"
+                      th:text="${cat.categoryName}"
+                      th:selected="${filterCategory == cat.categoryId.toString()}"
+                    ></option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Sắp xếp</label>
+                  <select name="sort" class="form-select">
+                    <option value="earliest" th:selected="${sort=='earliest'}">Sớm nhất</option>
+                    <option value="latest" th:selected="${sort=='latest'}">Muộn nhất</option>
+                  </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Lọc</button>
+                </div>
+              </form>
+
+              <div class="events-list" th:if="${items != null and !items.empty}">
                 <div
-                  th:each="app : ${scheduleData.upcomingApplications}"
+                  th:each="app : ${items}"
                   class="event-card upcoming clickable-event"
                   th:data-app-id="${app.appId}"
                   th:data-title="${app.opportunityTitle}"
@@ -130,12 +218,60 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Pagination -->
+              <div class="card border-0 shadow-sm mt-3" th:if="${items != null and !items.empty}">
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                  <div class="text-muted small">
+                    Trang <span th:text="${currentPage + 1}">1</span>/<span th:text="${totalPages}">1</span>
+                  </div>
+                  <nav>
+                    <ul class="pagination mb-0">
+                      <li class="page-item" th:classappend="${currentPage <= 0} ? ' disabled'">
+                        <a
+                          class="page-link"
+                          th:href="@{/profile/my-schedule(view='list', page=${currentPage - 1}, q=${q}, category=${filterCategory}, sort=${sort})}"
+                        >
+                          «
+                        </a>
+                      </li>
+                      <li
+                        class="page-item"
+                        th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                        th:classappend="${i == currentPage} ? ' active'"
+                      >
+                        <a
+                          class="page-link"
+                          th:text="${i+1}"
+                          th:href="@{/profile/my-schedule(view='list', page=${i}, q=${q}, category=${filterCategory}, sort=${sort})}"
+                          >1</a
+                        >
+                      </li>
+                      <li class="page-item" th:classappend="${currentPage >= totalPages-1} ? ' disabled'">
+                        <a
+                          class="page-link"
+                          th:href="@{/profile/my-schedule(view='list', page=${currentPage + 1}, q=${q}, category=${filterCategory}, sort=${sort})}"
+                        >
+                          »
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+
+              <!-- Empty State for List View -->
+              <div class="empty-state" th:if="${items == null or items.empty}">
+                <i class="bi bi-calendar3"></i>
+                <h3>Không tìm thấy hoạt động nào</h3>
+                <p>Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+              </div>
             </div>
 
-            <!-- Hidden data for JavaScript -->
+            <!-- Hidden data for JavaScript (for Calendar View) -->
             <div id="events-data" style="display: none">
               <div
-                th:each="app : ${scheduleData.upcomingApplications}"
+                th:each="app : ${allUpcomingForCalendar}"
                 th:data-app-id="${app.appId}"
                 th:data-title="${app.opportunityTitle}"
                 th:data-start="${app.startTime}"
@@ -151,11 +287,11 @@
               ></div>
             </div>
 
-            <!-- Empty State -->
+            <!-- Empty State for Calendar View -->
             <div
               id="empty-state"
               class="empty-state"
-              th:if="${scheduleData.upcomingApplications == null or scheduleData.upcomingApplications.empty}"
+              th:if="${allUpcomingForCalendar == null or allUpcomingForCalendar.empty}"
             >
               <i class="bi bi-calendar3"></i>
               <h3>Chưa có lịch trình nào</h3>
@@ -165,7 +301,6 @@
           </div>
         </div>
       </div>
-    </div>
 
     <!-- Event Detail Modal -->
     <div
@@ -224,9 +359,6 @@
                   <div class="event-status-card">
                     <div class="status-badge" id="modal-status">Sắp diễn ra</div>
                     <div class="countdown" id="modal-countdown"></div>
-                    <div class="application-info mt-3">
-                      <small class="text-muted">ID Đăng ký: #<span id="modal-app-id">--</span></small>
-                    </div>
                   </div>
                 </div>
               </div>

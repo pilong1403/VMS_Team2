@@ -12,6 +12,7 @@ public class EventHistoryDto {
     private LocalDateTime endTime;
     private String thumbnailUrl;
     private String subtitle;
+    private Integer categoryId;
     private boolean hasAttended;
     private boolean hasRated;
     private Integer existingFeedbackId;
@@ -30,7 +31,7 @@ public class EventHistoryDto {
     // Constructor with all fields
     public EventHistoryDto(Integer appId, Integer oppId, String opportunityTitle, String organizationName,
             String location, LocalDateTime startTime, LocalDateTime endTime, String thumbnailUrl,
-            String subtitle, boolean hasAttended, boolean hasRated, Integer existingFeedbackId,
+            String subtitle, Integer categoryId, boolean hasAttended, boolean hasRated, Integer existingFeedbackId,
             Integer existingRating, String existingContent, boolean hasOrgRating,
             Short orgRatingStars, String orgRatingComment) {
         this.appId = appId;
@@ -42,6 +43,7 @@ public class EventHistoryDto {
         this.endTime = endTime;
         this.thumbnailUrl = thumbnailUrl;
         this.subtitle = subtitle;
+        this.categoryId = categoryId;
         this.hasAttended = hasAttended;
         this.hasRated = hasRated;
         this.existingFeedbackId = existingFeedbackId;
@@ -123,6 +125,14 @@ public class EventHistoryDto {
 
     public void setSubtitle(String subtitle) {
         this.subtitle = subtitle;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 
     public boolean isHasAttended() {
