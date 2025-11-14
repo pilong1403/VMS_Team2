@@ -140,11 +140,19 @@
               th:text="${opp.categoryName}">Category</span>
 
             <!-- Badge trạng thái -->
-            <span class="badge position-absolute" style="top: 12px; right: 12px" th:text="${opp.status}" th:classappend="${
-                    opp.status?.name() == 'OPEN'      ? ' bg-success'  :
-                    opp.status?.name() == 'CLOSED'    ? ' bg-secondary':
-                    opp.status?.name() == 'CANCELLED' ? ' bg-danger'   : ' bg-dark'
-                  }">OPEN</span>
+              <span class="badge position-absolute"
+                    style="top: 12px; right: 12px"
+                    th:text="${
+                            opp.status?.name() == 'OPEN'      ? 'Đang mở' :
+                            opp.status?.name() == 'CLOSED'    ? 'Đã đóng' :
+                            opp.status?.name() == 'CANCELLED' ? 'Đã hủy'  : 'Không xác định'
+                      }"
+                    th:classappend="${
+                            opp.status?.name() == 'OPEN'      ? ' bg-success'  :
+                            opp.status?.name() == 'CLOSED'    ? ' bg-secondary':
+                            opp.status?.name() == 'CANCELLED' ? ' bg-danger'   : ' bg-dark'
+                      }">
+</span>
 
             <!-- Ribbons ưu tiên: HỦY -> HẾT CHỖ -> QUÁ HẠN -->
             <span class="badge position-absolute bg-danger" style="top: 52px; right: 12px"

@@ -221,8 +221,15 @@
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <span class="badge rounded-pill text-bg-light border"
                                             th:text="${categoryNameMap[o.oppId]}">Danh mục</span>
-                                        <span class="badge" th:text="${o.status}"
-                                            th:classappend="${o.status.name() == 'OPEN'} ? ' text-bg-success' : (${o.status.name() == 'CLOSED'} ? ' text-bg-secondary' : ' text-bg-danger')">OPEN</span>
+                                        <span class="badge"
+                                              th:text="${o.status.name() == 'OPEN'}      ? 'Đang mở'
+                                                           : (${o.status.name() == 'CLOSED'} ? 'Đã đóng'
+                                                                                            : 'Đã hủy')"
+                                                                                          th:classappend="${o.status.name() == 'OPEN'}      ? ' text-bg-success'
+                                                                 : (${o.status.name() == 'CLOSED'} ? ' text-bg-secondary'
+                                                                                                  : ' text-bg-danger')">
+                                            </span>
+
                                     </div>
 
                                     <!-- Bỏ stretched-link để không che nút -->
