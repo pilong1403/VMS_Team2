@@ -313,9 +313,10 @@
            and !btnStates[o.oppId]['alreadyApplied']
            and !btnStates[o.oppId]['isExpired']
            and !btnStates[o.oppId]['isFull']
-           and !btnStates[o.oppId]['isCancelled']}">
+           and !btnStates[o.oppId]['isCancelled']}" th:href="@{/login(e='USERNAME_PASSWORD_REQUIRED')}">
                                             Đăng nhập để đăng ký
                                         </a>
+
 
                                     </div>
 
