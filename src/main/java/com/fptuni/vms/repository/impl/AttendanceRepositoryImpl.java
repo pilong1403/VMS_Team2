@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -31,10 +32,25 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("orgId", orgId);
         parameters.put("draftStatus", Opportunity.OpportunityStatus.DRAFT);
+        // nếu status  = all -> ko thêm điều kiện lọc status
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
 
-        if ((status != null && !status.trim().isEmpty()) && !status.equalsIgnoreCase("ALL")) {
-            jpqlBuilder.append(" AND o.status = :status");
-            parameters.put("status", Opportunity.OpportunityStatus.valueOf(status.toUpperCase()));
+            if ("upcoming".equalsIgnoreCase(status)) {
+                // "Sắp diễn ra": Status là OPEN và thời gian bắt đầu > hiện tại
+                jpqlBuilder.append(" AND o.status = :status AND o.startTime > :now");
+                parameters.put("status", Opportunity.OpportunityStatus.OPEN);
+                parameters.put("now", LocalDateTime.now());
+
+            } else if ("present".equalsIgnoreCase(status)) {
+                // "Đang diễn ra": Status là OPEN và thời gian bắt đầu <= hiện tại
+                jpqlBuilder.append(" AND o.status = :status AND o.startTime <= :now");
+                parameters.put("status", Opportunity.OpportunityStatus.OPEN);
+                parameters.put("now", LocalDateTime.now());
+
+            } else if ("closed".equalsIgnoreCase(status) || "cancelled".equalsIgnoreCase(status)) {
+                jpqlBuilder.append(" AND o.status = :status");
+                parameters.put("status", Opportunity.OpportunityStatus.valueOf(status.toUpperCase()));
+            }
         }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -68,8 +84,23 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
         parameters.put("draftStatus", Opportunity.OpportunityStatus.DRAFT);
 
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
-            jpqlBuilder.append(" AND o.status = :status");
-            parameters.put("status", Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase()));
+
+            if ("upcoming".equalsIgnoreCase(status)) {
+                // "Sắp diễn ra": Status là OPEN và thời gian bắt đầu > hiện tại
+                jpqlBuilder.append(" AND o.status = :status AND o.startTime > :now");
+                parameters.put("status", Opportunity.OpportunityStatus.OPEN);
+                parameters.put("now", LocalDateTime.now());
+
+            } else if ("present".equalsIgnoreCase(status)) {
+                // "Đang diễn ra": Status là OPEN và thời gian bắt đầu <= hiện tại
+                jpqlBuilder.append(" AND o.status = :status AND o.startTime <= :now");
+                parameters.put("status", Opportunity.OpportunityStatus.OPEN);
+                parameters.put("now", LocalDateTime.now());
+
+            } else if ("closed".equalsIgnoreCase(status) || "cancelled".equalsIgnoreCase(status)) {
+                jpqlBuilder.append(" AND o.status = :status");
+                parameters.put("status", Opportunity.OpportunityStatus.valueOf(status.trim().toUpperCase()));
+            }
         }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
