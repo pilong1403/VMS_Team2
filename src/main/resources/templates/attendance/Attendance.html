@@ -82,7 +82,8 @@
 
                             <select name="status" onchange="this.form.submit()">
                                 <option th:selected="${status == null or #strings.isEmpty(status)}" disabled>Lọc theo trạng thái</option>
-                                <option value="open" th:selected="${status == 'open'}">Mở</option>
+                                <option value="upcoming" th:selected="${status == 'upcoming'}">Sắp diễn ra</option>
+                                <option value="present" th:selected="${status == 'present'}">Đang diễn ra</option>
                                 <option value="closed" th:selected="${status == 'closed'}">Kết thúc</option>
                                 <option value="cancelled" th:selected="${status == 'cancelled'}">Hủy</option>
                                 <option value="all" th:selected="${status == 'all'}">Tất cả</option>
@@ -124,10 +125,19 @@
                         </td>
 
                         <td>
-                            <span class="status-badge"
-                                  th:classappend="${opp.status.name().toLowerCase()}"
-                                  th:text="${opp.status.name() == 'OPEN' ? 'Mở' : (opp.status.name() == 'CLOSED' ? 'Kết Thúc' : 'Bị Hủy')}">
-                                  Trạng thái
+                            <span th:with="now=${T(java.time.LocalDateTime).now()}"
+                                  class="status-badge"
+
+                                  th:classappend="${opp.status.name() == 'OPEN' ?
+                                                    (opp.startTime.isAfter(now) ? 'upcoming' : 'present') :
+                                                    opp.status.name().toLowerCase()}"
+
+                                  th:text="${opp.status.name() == 'OPEN' ?
+                                               (opp.startTime.isAfter(now) ? 'Sắp diễn ra' : 'Đang diễn ra') :
+                                             (opp.status.name() == 'CLOSED' ? 'Kết Thúc' :
+                                             (opp.status.name() == 'CANCELLED' ? 'Bị Hủy' :
+                                             (opp.status.name() == 'DRAFT' ? 'Nháp' : opp.status.name())))}">
+                                Trạng thái
                             </span>
                         </td>
 
