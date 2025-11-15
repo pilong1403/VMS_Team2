@@ -80,4 +80,7 @@ public interface ApplicationRepository {
         Application findByIdAndVolunteerId(Integer appId, Integer volunteerId);
 
         long countApprovedApplications(Integer oppId);
+
+        List<Application> findActiveApplicationsByOppId(Integer oppId);
+
 }

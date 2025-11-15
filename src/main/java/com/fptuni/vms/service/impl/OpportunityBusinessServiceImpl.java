@@ -124,6 +124,8 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
         return opp;
     }
 
+// OpportunityBusinessServiceImpl.java
+
     @Override
     public void cancelOpportunity(Integer oppId, User actor) {
         Opportunity opp = opportunityService.findById(oppId);
@@ -142,8 +144,8 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
 
         // 2) Sự kiện đang diễn ra: start <= now < end => không cho hủy
         if (start != null && end != null
-                && !now.isBefore(start)   // now >= start
-                && now.isBefore(end)) {   // now < end
+                && !now.isBefore(start)
+                && now.isBefore(end)) {
             throw new IllegalStateException("Sự kiện đang diễn ra, không thể hủy.");
         }
 
@@ -155,6 +157,10 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
         // 4) Chỉ còn lại trường hợp: start > now (chưa diễn ra) => cho phép hủy
         opp.setStatus(Opportunity.OpportunityStatus.CANCELLED);
         opportunityService.save(opp);
+
+        // 4.1) Hủy toàn bộ đơn PENDING/APPROVED của cơ hội này
+        String bulkReason = "Đơn của bạn đã bị hủy do sự kiện \"" + opp.getTitle() + "\" đã bị hủy.";
+        applicationService.cancelAllByOppId(opp.getOppId(), actor.getUserId(), bulkReason);
 
         // Chuẩn bị gửi notification cho các volunteer đã được duyệt
         Organization org = organizationService.findByOwnerId(actor.getUserId());
@@ -176,6 +182,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
                 orgId
         );
     }
+
 
     // =================== PRIVATE HELPERS =================== //
 

@@ -343,4 +343,32 @@ public class ApplicationServiceImpl implements ApplicationService {
                 return repo.countApprovedByOppId(oppId);  // Sử dụng phương thức đã có trong repository
         }
 
+        @Override
+        public void cancelAllByOppId(Integer oppId, Integer processedById, String reason) {
+                if (oppId == null) return;
+
+                List<Application> apps = repo.findActiveApplicationsByOppId(oppId);
+                if (apps.isEmpty()) return;
+
+                User processedBy = null;
+                if (processedById != null) {
+                        processedBy = repo.findUserById(processedById);
+                }
+
+                String note = (reason == null || reason.isBlank())
+                        ? "Đơn bị hủy do sự kiện đã bị hủy bởi tổ chức."
+                        : reason.trim();
+
+                LocalDateTime now = LocalDateTime.now();
+
+                for (Application app : apps) {
+                        app.setStatus(Application.ApplicationStatus.CANCELLED);
+                        app.setCancelReason(note);
+                        app.setUpdatedAt(now);
+                        if (processedBy != null) {
+                                app.setProcessedBy(processedBy);
+                        }
+                        repo.save(app);
+                }
+        }
 }

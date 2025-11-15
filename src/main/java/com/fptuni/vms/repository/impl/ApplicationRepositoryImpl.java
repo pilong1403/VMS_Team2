@@ -458,4 +458,21 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
         return cnt == null ? 0L : cnt;
     }
 
+    @Override
+    public List<Application> findActiveApplicationsByOppId(Integer oppId) {
+        return em.createQuery("""
+                SELECT a
+                  FROM Application a
+                  JOIN FETCH a.volunteer v
+                  JOIN FETCH a.opportunity o
+                 WHERE o.oppId = :oppId
+                   AND a.status IN (:p, :a)
+                 ORDER BY a.appliedAt DESC
+                """, Application.class)
+                .setParameter("oppId", oppId)
+                .setParameter("p", Application.ApplicationStatus.PENDING)
+                .setParameter("a", Application.ApplicationStatus.APPROVED)
+                .getResultList();
+    }
+
 }

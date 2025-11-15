@@ -74,4 +74,5 @@ public interface ApplicationService {
 
         long countApprovedApplications(Integer oppId);
 
+        void cancelAllByOppId(Integer oppId, Integer processedById, String reason);
 }
