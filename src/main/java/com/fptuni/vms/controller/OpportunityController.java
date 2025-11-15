@@ -2,19 +2,21 @@ package com.fptuni.vms.controller;
 
 import com.fptuni.vms.dto.request.OpportunityForm;
 import com.fptuni.vms.dto.request.OpportunitySectionForm;
-import com.fptuni.vms.integrations.cloud.CloudStorageService;
-import com.fptuni.vms.model.*;
+import com.fptuni.vms.model.Opportunity;
+import com.fptuni.vms.model.OpportunitySection;
+import com.fptuni.vms.model.Organization;
+import com.fptuni.vms.model.User;
 import com.fptuni.vms.security.SecurityUtils;
-import com.fptuni.vms.service.*;
-import jakarta.persistence.PersistenceException;
+import com.fptuni.vms.service.OpportunityBusinessService;
+import com.fptuni.vms.service.OpportunitySectionService;
+import com.fptuni.vms.service.OpportunityService;
+import com.fptuni.vms.service.OrganizationService;
 import jakarta.validation.Valid;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
@@ -27,33 +29,26 @@ public class OpportunityController {
 
     private final OpportunityService opportunityService;
     private final OpportunitySectionService sectionService;
-    private final CloudStorageService cloudStorage;
     private final OrganizationService organizationService;
-    private final ApplicationService applicationService;
-    private final NotificationService notificationService;
+    private final OpportunityBusinessService opportunityBusinessService;
 
     public OpportunityController(OpportunityService opportunityService,
                                  OpportunitySectionService sectionService,
-                                 CloudStorageService cloudStorage,
                                  OrganizationService organizationService,
-                                 ApplicationService applicationService,
-                                 NotificationService notificationService) {
+                                 OpportunityBusinessService opportunityBusinessService) {
         this.opportunityService = opportunityService;
         this.sectionService = sectionService;
-        this.cloudStorage = cloudStorage;
         this.organizationService = organizationService;
-        this.applicationService = applicationService;
-        this.notificationService = notificationService;
+        this.opportunityBusinessService = opportunityBusinessService;
     }
 
-    private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/gif", "image/webp");
+    // ================= COMMON MAPPING =================
 
     private static Map<String, String> viStatus() {
         return Map.of(
-                "DRAFT", "Bản nháp",
-                "OPEN", "Đang mở",
-                "CANCELLED", "Đã hủy",
+                "DRAFT", "Lưu dưới dạng nháp",
+                "OPEN", "Công khai sự kiên ",
+                "CANCELLED", "Huỷ sự kiện",
                 "CLOSED", "Đã kết thúc"
         );
     }
@@ -69,6 +64,8 @@ public class OpportunityController {
             case CLOSED -> List.of(Opportunity.OpportunityStatus.CLOSED);
         };
     }
+
+    // ================= LIST =================
 
     @GetMapping
     public String listForOwner(@RequestParam(value = "q", required = false) String q,
@@ -125,6 +122,8 @@ public class OpportunityController {
         return "organization/opportunity-list";
     }
 
+    // ================= NEW / EDIT FORM =================
+
     @GetMapping("/new")
     public String createForm(Model model) {
         OpportunityForm form = new OpportunityForm();
@@ -141,7 +140,10 @@ public class OpportunityController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Integer id, Model model, RedirectAttributes ra) {
         Opportunity opp = opportunityService.findById(id);
-        if (opp == null) return "redirect:/org/opps";
+        if (opp == null) {
+            ra.addFlashAttribute("err", "Không tìm thấy cơ hội.");
+            return "redirect:/org/opps";
+        }
 
         boolean startedLock = opp.getStartTime() != null && !LocalDateTime.now().isBefore(opp.getStartTime());
         boolean cancelledLock = opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED;
@@ -165,6 +167,8 @@ public class OpportunityController {
         return "organization/opportunity-form";
     }
 
+    // ================= SAVE =================
+
     @PostMapping("/save")
     public String save(@Valid @ModelAttribute("form") OpportunityForm form,
                        BindingResult binding,
@@ -172,110 +176,43 @@ public class OpportunityController {
                        Model model,
                        @RequestParam(value = "confirmPublish", defaultValue = "false") String confirmPublish) {
 
-        Opportunity old = (form.getOppId() != null) ? opportunityService.findById(form.getOppId()) : null;
-// loại bỏ khoảng trắng thừa
-        if (form.getTitle() != null)    form.setTitle(form.getTitle().trim());
-        if (form.getSubtitle() != null) form.setSubtitle(form.getSubtitle().trim());
-        if (form.getLocation() != null) form.setLocation(form.getLocation().trim());
-
-        if (form.getSections() != null) {
-            form.getSections().forEach(s -> {
-                if (s.getHeading() != null) s.setHeading(s.getHeading().trim());
-                if (s.getContent() != null) s.setContent(s.getContent().trim());
-                if (s.getCaption() != null) s.setCaption(s.getCaption().trim());
-            });
-        }
-
-        // build time
-        LocalDateTime start = null, end = null;
-        if (form.getStartDate() != null && form.getStartTime() != null) {
-            start = LocalDateTime.of(form.getStartDate(), form.getStartTime());
-        }
-        if (form.getEndDate() != null && form.getEndTime() != null) {
-            end = LocalDateTime.of(form.getEndDate(), form.getEndTime());
-        }
-// Kiểm tra ràng buộc số lượng tình nguyện viên
-        long approvedApplicants = applicationService.countApprovedApplications(form.getOppId());
-        Integer needed = form.getNeededVolunteers();
-
-        if (needed != null && approvedApplicants > 0 && needed < approvedApplicants) {
-            binding.rejectValue(
-                    "neededVolunteers",
-                    "invalid.minApproved",
-                    "Số TNV cần tối thiểu là " + approvedApplicants +
-                            " (hiện đã có " + approvedApplicants + " tình nguyện viên đã được duyệt)."
-            );
-        }
-
-        // end > start
-        if (start != null && end != null && !end.isAfter(start)) {
-            binding.rejectValue("endDate", "invalid", "Ngày/giờ kết thúc phải sau thời điểm bắt đầu");
-        }
-
-        // 24h rule
-        if (start != null) {
-            boolean startChanged = (old == null) || !start.equals(old.getStartTime());
-            if (startChanged) {
-                LocalDateTime minStart = LocalDateTime.now().plusHours(24);
-                if (start.isBefore(minStart)) {
-                    binding.rejectValue("startDate", "invalid.soon",
-                            "Thời điểm bắt đầu phải sau ít nhất 24 giờ kể từ hiện tại");
-                }
-            }
-        }
-
-        // validate thumbnail
-        if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
-            MultipartFile f = form.getThumbnailFile();
-            if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType())) {
-                binding.rejectValue("thumbnailFile", "upload.type",
-                        "Chỉ chấp nhận tệp hình ảnh (jpg, png, gif, webp)");
-            } else if (f.getSize() > MAX_IMAGE_BYTES) {
-                binding.rejectValue("thumbnailFile", "upload.tooLarge", "Ảnh đại diện tối đa 5MB");
-            }
-        }
-
-        // validate section images
-        for (int i = 0; i < form.getSections().size(); i++) {
-            var sf = form.getSections().get(i);
-            if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
-                MultipartFile f = sf.getImageFile();
-                if (f.getContentType() == null || !ALLOWED_IMAGE_TYPES.contains(f.getContentType())) {
-                    binding.rejectValue("sections[" + i + "].imageFile", "upload.type",
-                            "Ảnh trong phần phải là hình (jpg, png, gif, webp)");
-                } else if (f.getSize() > MAX_IMAGE_BYTES) {
-                    binding.rejectValue("sections[" + i + "].imageFile", "upload.tooLarge",
-                            "Ảnh trong phần tối đa 5MB");
-                }
-            }
-        }
-
-        // validate order
-        Set<Integer> seen = new HashSet<>();
-        for (int i = 0; i < form.getSections().size(); i++) {
-            var sf = form.getSections().get(i);
-            Integer ord = sf.getSectionOrder();
-            if (ord == null || ord < 1) {
-                binding.rejectValue("sections[" + i + "].sectionOrder", "order.invalid", "Thứ tự phải là số dương (>=1)");
-                continue;
-            }
-            if (!seen.add(ord)) {
-                binding.rejectValue("sections[" + i + "].sectionOrder", "order.dup", "Thứ tự bị trùng. Vui lòng chọn số khác.");
-            }
-        }
-
-        // org check
         User me = SecurityUtils.getCurrentUser();
-        Organization org = organizationService.findByOwnerId(me.getUserId());
-        if (org == null) {
-            binding.reject("org.missing", "Không tìm thấy thông tin tổ chức hợp lệ.");
+        Opportunity old = (form.getOppId() != null) ? opportunityService.findById(form.getOppId()) : null;
+
+        Opportunity.OpportunityStatus oldStatus =
+                (old == null) ? Opportunity.OpportunityStatus.DRAFT : old.getStatus();
+        Opportunity.OpportunityStatus requested = form.getStatus();
+
+        // Giữ nguyên logic confirm publish (modal) ở controller
+        boolean needPublishConfirm =
+                (requested == Opportunity.OpportunityStatus.OPEN) &&
+                        (old == null || oldStatus == Opportunity.OpportunityStatus.DRAFT) &&
+                        !"true".equals(confirmPublish);
+
+        if (needPublishConfirm) {
+            model.addAttribute("forcePublishConfirm", true);
+            model.addAttribute("initialStatus", oldStatus.name());
+
+            boolean startedLock = false;
+            if (old != null && old.getStartTime() != null) {
+                startedLock = !LocalDateTime.now().isBefore(old.getStartTime());
+            }
+
+            populateCommon(model, form,
+                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
+                    oldStatus, startedLock);
+
+            return "organization/opportunity-form";
         }
 
-        if (binding.hasErrors()) {
-            Opportunity.OpportunityStatus basis = (form.getOppId() == null)
-                    ? Opportunity.OpportunityStatus.DRAFT
-                    : Optional.ofNullable(old).map(Opportunity::getStatus)
-                    .orElse(Opportunity.OpportunityStatus.DRAFT);
+        // Gọi service xử lý toàn bộ nghiệp vụ
+        Opportunity opp = opportunityBusinessService.saveOpportunityWithBusinessRules(form, binding, me);
+
+        if (binding.hasErrors() || opp == null) {
+            Opportunity.OpportunityStatus basis =
+                    (form.getOppId() == null)
+                            ? Opportunity.OpportunityStatus.DRAFT
+                            : oldStatus;
 
             model.addAttribute("err", "Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại.");
             model.addAttribute("initialStatus", basis.name());
@@ -288,278 +225,31 @@ public class OpportunityController {
             populateCommon(model, form,
                     form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
                     basis, startedLock);
+
             return "organization/opportunity-form";
         }
 
-        // lock if started/canceled/closed
-        if (old != null) {
-            boolean startedLock = old.getStartTime() != null && !LocalDateTime.now().isBefore(old.getStartTime());
-            if (startedLock || old.getStatus() == Opportunity.OpportunityStatus.CANCELLED
-                    || old.getStatus() == Opportunity.OpportunityStatus.CLOSED) {
-                model.addAttribute("err", startedLock
-                        ? "Sự kiện đã bắt đầu, không thể lưu chỉnh sửa."
-                        : (old.getStatus() == Opportunity.OpportunityStatus.CANCELLED
-                        ? "Sự kiện đã hủy, không thể lưu chỉnh sửa."
-                        : "Sự kiện đã kết thúc, không thể lưu chỉnh sửa."));
-                form.setStatus(old.getStatus());
-                model.addAttribute("initialStatus", old.getStatus().name());
-                populateCommon(model, form, "Chi tiết cơ hội (đã khóa)", old.getStatus(), startedLock);
-                return "organization/opportunity-form";
-            }
-        }
-
-        // status rule
-        Opportunity.OpportunityStatus oldStatus = (old == null)
-                ? Opportunity.OpportunityStatus.DRAFT
-                : old.getStatus();
-
-        var allowed = allowedStatusesFor(oldStatus);
-        var requested = form.getStatus();
-        if (requested == null || !allowed.contains(requested)) {
-            String msg = switch (oldStatus) {
-                case DRAFT -> "Bản nháp chỉ có thể giữ DRAFT hoặc chuyển sang OPEN.";
-                case OPEN -> "Chỉ được chọn OPEN hoặc CANCELLED (không thể quay về DRAFT).";
-                case CANCELLED -> "Sự kiện đã HỦY, không thể đổi trạng thái.";
-                case CLOSED -> "Sự kiện CLOSED đã bị khóa, không thể chỉnh sửa.";
-            };
-            model.addAttribute("err", msg);
-            form.setStatus(oldStatus);
-            model.addAttribute("initialStatus", oldStatus.name());
-            populateCommon(model, form,
-                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                    oldStatus, false);
-            return "organization/opportunity-form";
-        }
-
-        // overlap
-        List<Opportunity> overlaps = opportunityService.findOverlapsForOrg(
-                org.getOrgId(),
-                form.getOppId(),
-                start, end,
-                5
-        );
-        if (!overlaps.isEmpty()) {
-            StringBuilder detail = new StringBuilder("Thời gian bị chồng lấn với các cơ hội sau:\n");
-            for (Opportunity o : overlaps) {
-                detail.append("• ")
-                        .append(o.getTitle())
-                        .append(" (")
-                        .append(FMT.format(o.getStartTime()))
-                        .append(" → ")
-                        .append(FMT.format(o.getEndTime()))
-                        .append(")\n");
-            }
-            binding.rejectValue("startDate", "time.overlap", "Khoảng thời gian trùng với cơ hội khác.");
-            binding.rejectValue("endDate", "time.overlap", "Khoảng thời gian trùng với cơ hội khác.");
-
-            model.addAttribute("err", detail.toString().trim());
-            model.addAttribute("initialStatus", oldStatus.name());
-            populateCommon(model, form,
-                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                    oldStatus, false);
-            return "organization/opportunity-form";
-        }
-
-        // confirm publish
-        boolean needPublishConfirm =
-                (requested == Opportunity.OpportunityStatus.OPEN) &&
-                        (old == null || oldStatus == Opportunity.OpportunityStatus.DRAFT) &&
-                        !"true".equals(confirmPublish);
-
-        if (needPublishConfirm) {
-            model.addAttribute("forcePublishConfirm", true);
-            model.addAttribute("initialStatus", oldStatus.name());
-            populateCommon(model, form,
-                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                    oldStatus, false);
-            return "organization/opportunity-form";
-        }
-
-        // map entity
-        Opportunity opp = (old == null) ? new Opportunity() : old;
-        opp.setOrganization(org);
-        Category cat = new Category();
-        cat.setCategoryId(form.getCategoryId());
-        opp.setCategory(cat);
-        opp.setTitle(form.getTitle());
-        opp.setSubtitle(form.getSubtitle());
-        opp.setLocation(form.getLocation());
-        opp.setNeededVolunteers(form.getNeededVolunteers());
-        opp.setStatus(form.getStatus());
-        opp.setStartTime(start);
-        opp.setEndTime(end);
-
-        // ================================
-        // THUMBNAIL: upload / giữ / XÓA
-        // ================================
-        if (form.getThumbnailFile() != null && !form.getThumbnailFile().isEmpty()) {
-            // upload mới
-            String url = cloudStorage.uploadFile(form.getThumbnailFile());
-            if (url == null) {
-                binding.rejectValue("thumbnailFile", "upload.fail", "Upload ảnh thất bại");
-                model.addAttribute("err", "Upload ảnh thất bại. Vui lòng thử lại.");
-                model.addAttribute("initialStatus", oldStatus.name());
-                populateCommon(model, form,
-                        form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                        oldStatus, false);
-                return "organization/opportunity-form";
-            }
-            form.setThumbnailUrl(url);
-            opp.setThumbnailUrl(url);
-        } else {
-            // không upload mới -> kiểm tra cờ clear
-            String thumbFlag = form.getThumbnailUrl(); // có thể là null / "" / "__CLEAR__" / URL
-            boolean askedToClear = thumbFlag != null && (thumbFlag.isBlank() || "__CLEAR__".equals(thumbFlag));
-            if (askedToClear) {
-                // nếu muốn thì xóa file cũ trên cloud tại đây
-                opp.setThumbnailUrl(null);
-                form.setThumbnailUrl(null);
-            } else {
-                // giữ
-                if (thumbFlag != null) {
-                    opp.setThumbnailUrl(thumbFlag);
-                } else if (old != null) {
-                    opp.setThumbnailUrl(old.getThumbnailUrl());
-                    form.setThumbnailUrl(old.getThumbnailUrl());
-                }
-            }
-        }
-
-        // ================================
-        // SECTIONS: upload / giữ / XÓA
-        // ================================
-        List<OpportunitySection> toSave = new ArrayList<>();
-        int idx = 1;
-
-        Map<Integer, OpportunitySection> oldByOrder = Collections.emptyMap();
-        if (old != null) {
-            List<OpportunitySection> existing = sectionService.findByOpportunity(old.getOppId());
-            oldByOrder = new HashMap<>();
-            for (OpportunitySection ex : existing) {
-                Integer ord = (ex.getSectionOrder() != null ? ex.getSectionOrder() : 0);
-                oldByOrder.put(ord, ex);
-            }
-        }
-
-        for (int i = 0; i < form.getSections().size(); i++) {
-            var sf = form.getSections().get(i);
-            int order = (sf.getSectionOrder() != null ? sf.getSectionOrder() : idx);
-
-            String finalImageUrl = null;
-
-            // 1. có upload mới
-            if (sf.getImageFile() != null && !sf.getImageFile().isEmpty()) {
-                String uploaded = cloudStorage.uploadFile(sf.getImageFile());
-                if (uploaded == null) {
-                    binding.rejectValue("sections[" + i + "].imageFile", "upload.fail", "Upload ảnh thất bại");
-                } else {
-                    finalImageUrl = uploaded;
-                }
-            } else {
-                // 2. không upload mới -> xem cờ
-                String cur = sf.getImageUrl(); // null / "" / "__CLEAR__" / url
-                boolean askedToClear = cur != null && (cur.isBlank() || "__CLEAR__".equals(cur));
-                if (askedToClear) {
-                    finalImageUrl = null; // xóa
-                } else if (cur != null) {
-                    finalImageUrl = cur;  // client gửi url (giữ)
-                } else {
-                    // fallback từ DB cũ
-                    OpportunitySection oldSec = oldByOrder.get(order);
-                    if (oldSec != null && oldSec.getImageUrl() != null && !oldSec.getImageUrl().isBlank()) {
-                        finalImageUrl = oldSec.getImageUrl();
-                    }
-                }
-            }
-
-            OpportunitySection s = new OpportunitySection();
-            s.setOpportunity(opp);
-            s.setSectionOrder(order);
-            s.setHeading(sf.getHeading());
-            s.setContent(sf.getContent());
-            s.setCaption(sf.getCaption());
-            s.setImageUrl(finalImageUrl);
-
-            toSave.add(s);
-            idx++;
-        }
-
-        if (binding.hasErrors()) {
-            model.addAttribute("err", "Upload ảnh phần nội dung thất bại.");
-            model.addAttribute("initialStatus", oldStatus.name());
-            populateCommon(model, form,
-                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                    oldStatus, false);
-            return "organization/opportunity-form";
-        }
-
-        // save
-        try {
-            opp = opportunityService.save(opp);
-            sectionService.replaceSections(opp, toSave);
-        } catch (DataIntegrityViolationException | PersistenceException ex) {
-            binding.reject("db.constraint", "Lưu thất bại do dữ liệu trùng lặp hoặc vi phạm ràng buộc.");
-            model.addAttribute("err", "Lưu thất bại do dữ liệu không hợp lệ (ví dụ trùng Thứ tự).");
-            model.addAttribute("initialStatus", oldStatus.name());
-            populateCommon(model, form,
-                    form.getOppId() == null ? "Tạo cơ hội mới" : "Chỉnh sửa cơ hội",
-                    oldStatus, false);
-            return "organization/opportunity-form";
-        }
-
-        // notify
-        String publicLink = "/opportunities/" + opp.getOppId();
-        List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
-
-        OppSnapshot oldSnap = (old == null) ? null : OppSnapshot.from(old);
-
-        if (oldSnap == null) {
-            String title = "Cơ hội mới: " + opp.getTitle();
-            String msg = buildCreateMessage(opp, organizationService.findByOwnerId(me.getUserId()));
-            notificationService.notifyUsers(recipients, title, msg, "INFO", publicLink, me.getUserId(), opp.getOrganization().getOrgId());
-            ra.addFlashAttribute("ok", "Tạo cơ hội thành công.");
-        } else {
-            String title = "Cập nhật cơ hội: " + opp.getTitle();
-            String msg = buildUpdateMessage(oldSnap, opp, organizationService.findByOwnerId(me.getUserId()));
-            if (!msg.isBlank()) {
-                notificationService.notifyUsers(recipients, title, msg, "INFO", publicLink, me.getUserId(), opp.getOrganization().getOrgId());
-            }
-            ra.addFlashAttribute("ok", "Cập nhật cơ hội thành công.");
-        }
+        ra.addFlashAttribute("ok",
+                form.getOppId() == null ? "Tạo cơ hội thành công." : "Cập nhật cơ hội thành công.");
 
         return "redirect:/org/opps/%d/edit".formatted(opp.getOppId());
     }
 
+    // ================= CANCEL =================
+
     @PostMapping("/{id}/cancel")
     public String cancel(@PathVariable Integer id, RedirectAttributes ra) {
-        Opportunity opp = opportunityService.findById(id);
-        if (opp == null) {
-            ra.addFlashAttribute("err", "Không tìm thấy sự kiện.");
-            return "redirect:/org/opps";
-        }
-        if (opp.getEndTime() != null && !LocalDateTime.now().isBefore(opp.getEndTime())) {
-            ra.addFlashAttribute("err", "Sự kiện đã kết thúc, không thể hủy.");
-            return "redirect:/org/opps";
-        }
-
-        opp.setStatus(Opportunity.OpportunityStatus.CANCELLED);
-        opportunityService.save(opp);
-
         User me = SecurityUtils.getCurrentUser();
-        Organization org = organizationService.findByOwnerId(me.getUserId());
-        Integer orgId = (org != null) ? org.getOrgId() : null;
-
-        String title = "Thông báo hủy: " + opp.getTitle();
-        String msg = "Cơ hội \"" + opp.getTitle() + "\" đã bị hủy bởi tổ chức "
-                + (org != null ? org.getName() : "") + ". Rất mong bạn thông cảm.";
-        String link = "/opportunities/" + opp.getOppId();
-
-        List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
-        notificationService.notifyUsers(recipients, title, msg, "ALERT", link, me.getUserId(), orgId);
-
-        ra.addFlashAttribute("ok", "Đã hủy sự kiện và gửi thông báo đến tình nguyện viên.");
+        try {
+            opportunityBusinessService.cancelOpportunity(id, me);
+            ra.addFlashAttribute("ok", "Đã hủy sự kiện và gửi thông báo đến tình nguyện viên.");
+        } catch (IllegalStateException ex) {
+            ra.addFlashAttribute("err", ex.getMessage());
+        }
         return "redirect:/org/opps";
     }
+
+    // ================= HELPERS =================
 
     private void populateCommon(Model model, OpportunityForm form, String title,
                                 Opportunity.OpportunityStatus basisStatus,
@@ -579,32 +269,9 @@ public class OpportunityController {
         model.addAttribute("statuses", Opportunity.OpportunityStatus.values());
         model.addAttribute("statusVN", viStatus());
         model.addAttribute("categories", opportunityService.getCategoriesWithOpportunities());
-
-        model.addAttribute("dynamicStatusLabel", computeDynamicLabel(
-                basisStatus, form.getStartDate() != null && form.getStartTime() != null
-                        ? LocalDateTime.of(form.getStartDate(), form.getStartTime()) : null,
-                form.getEndDate() != null && form.getEndTime() != null
-                        ? LocalDateTime.of(form.getEndDate(), form.getEndTime()) : null
-        ));
         model.addAttribute("basisStatus", basisStatus);
     }
 
-    private String computeDynamicLabel(Opportunity.OpportunityStatus st, LocalDateTime start, LocalDateTime end) {
-        LocalDateTime now = LocalDateTime.now();
-        if (st == null) return "—";
-        return switch (st) {
-            case DRAFT -> "Bản nháp";
-            case CANCELLED -> "Đã hủy";
-            case CLOSED -> "Đã kết thúc";
-            case OPEN -> {
-                if (start != null && now.isBefore(start)) yield "Sắp diễn ra";
-                if (start != null && end != null && (now.isEqual(start) || (now.isAfter(start) && now.isBefore(end))))
-                    yield "Đang diễn ra";
-                if (end != null && !now.isBefore(end)) yield "Đã kết thúc";
-                yield "Đang mở";
-            }
-        };
-    }
 
     private OpportunityForm mapToForm(Opportunity o, List<OpportunitySection> sections) {
         OpportunityForm f = new OpportunityForm();
@@ -640,51 +307,5 @@ public class OpportunityController {
         }
         f.setSections(sfs);
         return f;
-    }
-
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-    private String buildCreateMessage(Opportunity opp, Organization org) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Tổ chức ").append(org.getName()).append(" đã tạo cơ hội mới:\n")
-                .append("• Tiêu đề: ").append(opp.getTitle()).append("\n");
-        if (opp.getSubtitle() != null && !opp.getSubtitle().isBlank())
-            sb.append("• Mô tả: ").append(opp.getSubtitle()).append("\n");
-        if (opp.getLocation() != null && !opp.getLocation().isBlank())
-            sb.append("• Địa điểm: ").append(opp.getLocation()).append("\n");
-        sb.append("• Thời gian: ").append(FMT.format(opp.getStartTime())).append(" → ")
-                .append(FMT.format(opp.getEndTime())).append("\n")
-                .append("• Trạng thái: ")
-                .append(viStatus().getOrDefault(opp.getStatus().name(), opp.getStatus().name()));
-        return sb.toString();
-    }
-
-    private record OppSnapshot(String title, String subtitle, String location,
-                               Integer neededVolunteers, Opportunity.OpportunityStatus status,
-                               LocalDateTime startTime, LocalDateTime endTime) {
-        static OppSnapshot from(Opportunity o) {
-            return new OppSnapshot(o.getTitle(), o.getSubtitle(), o.getLocation(),
-                    o.getNeededVolunteers(), o.getStatus(), o.getStartTime(), o.getEndTime());
-        }
-    }
-
-    private String buildUpdateMessage(OppSnapshot old, Opportunity o, Organization org) {
-        List<String> changes = new ArrayList<>();
-        if (!Objects.equals(old.title, o.getTitle())) changes.add("Tiêu đề");
-        if (!Objects.equals(old.subtitle, o.getSubtitle())) changes.add("Mô tả");
-        if (!Objects.equals(old.location, o.getLocation())) changes.add("Địa điểm");
-        if (!Objects.equals(old.neededVolunteers, o.getNeededVolunteers())) changes.add("Số lượng TNV");
-        if (!Objects.equals(old.status, o.getStatus())) changes.add("Trạng thái");
-        if (!Objects.equals(old.startTime, o.getStartTime()) || !Objects.equals(old.endTime, o.getEndTime()))
-            changes.add("Thời gian");
-
-        if (changes.isEmpty()) return "";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Cơ hội \"").append(o.getTitle()).append("\" của tổ chức ").append(org.getName())
-                .append(" đã được cập nhật (").append(String.join(", ", changes)).append("):\n")
-                .append("• Từ: ").append(FMT.format(o.getStartTime())).append(" → ").append(FMT.format(o.getEndTime())).append("\n")
-                .append("• Trạng thái: ").append(viStatus().getOrDefault(o.getStatus().name(), o.getStatus().name()));
-        return sb.toString();
     }
 }

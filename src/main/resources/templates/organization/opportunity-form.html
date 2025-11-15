@@ -232,6 +232,14 @@
                         <button type="button" class="btn btn-sm btn-primary" id="btnAddSection"
                                 th:disabled="${basisStatus != null and (basisStatus.name() == 'CLOSED' or basisStatus.name() == 'CANCELLED')}">+ Thêm phần</button>
                     </div>
+                    <!-- hiển thị lỗi nếu field 'sections' có lỗi (OPEN mà không có section) -->
+                    <div class="px-3 pt-2">
+                        <div class="form-error text-danger fw-semibold"
+                             th:if="${#fields.hasErrors('sections')}"
+                             th:errors="*{sections}">
+                            <!-- thông báo lỗi sẽ hiển thị ở đây -->
+                        </div>
+                    </div>
 
                     <div class="card-body" id="sectionsContainer">
                         <div th:each="s, it : *{sections}" class="border rounded p-3 mb-3 section-item">
@@ -243,9 +251,11 @@
                             <div class="row g-3">
                                 <div class="col-md-2">
                                     <label class="form-label required" th:for="${'sec-order-' + it.index}">Thứ tự</label>
-                                    <input th:id="${'sec-order-' + it.index}" type="number" min="1" class="form-control"
+                                    <input th:id="${'sec-order-' + it.index}" type="number" min="1"
+                                           class="form-control sec-order"
                                            th:classappend="${#fields.hasErrors('sections[' + it.index + '].sectionOrder')} ? ' is-invalid' : ''"
                                            th:field="*{sections[__${it.index}__].sectionOrder}" required>
+
                                     <div class="form-error"
                                          th:if="${#fields.hasErrors('sections[' + it.index + '].sectionOrder')}"
                                          th:errors="*{sections[__${it.index}__].sectionOrder}"></div>

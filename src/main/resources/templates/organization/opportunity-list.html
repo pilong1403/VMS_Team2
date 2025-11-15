@@ -135,15 +135,19 @@
                                 Sửa
                             </a>
 
-                            <!-- Hủy: chỉ khi OPEN và chưa hết hạn; dùng modal xác nhận khóa vĩnh viễn -->
+
+                            <!-- Hủy: chỉ khi OPEN và CHƯA BẮT ĐẦU -->
                             <button type="button"
                                     class="btn btn-sm btn-outline-danger"
-                                    th:if="${o.status.name() == 'OPEN' and (o.endTime == null or o.endTime.isAfter(T(java.time.LocalDateTime).now()))}"
+                                    th:if="${o.status.name() == 'OPEN'
+                and o.startTime != null
+                and T(java.time.LocalDateTime).now().isBefore(o.startTime)}"
                                     data-bs-toggle="modal"
                                     data-bs-target="#cancelConfirmModal"
                                     th:attr="data-opp-id=${o.oppId},data-opp-title=${o.title}">
                                 Hủy
                             </button>
+
 
                             <a class="btn btn-sm btn-outline-secondary ms-1"
                                th:href="@{|/opportunities/${o.oppId}|}" target="_blank">

@@ -62,9 +62,9 @@ public class OpportunityForm {
     private String thumbnailUrl;
 
     @Valid
-    @NotNull(message = "Danh sách phần nội dung không được null")
-    @Size(min = 1, message = "Cần ít nhất 1 phần nội dung")
+    @Size(max = 10, message = "Tối đa 10 phần nội dung chi tiết")
     private List<OpportunitySectionForm> sections = new ArrayList<>();
+
 
     @AssertTrue(message = "Ngày/giờ kết thúc phải sau thời điểm bắt đầu")
     public boolean isEndAfterStart() {
