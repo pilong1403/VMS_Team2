@@ -32,25 +32,25 @@ public class ApplicationController {
             Opportunity.OpportunityStatus.CLOSED,
             Opportunity.OpportunityStatus.CANCELLED);
 
-    private final ApplicationService service;
+    private final ApplicationService applicationService;
     private final OpportunitySectionService sectionService;
     private final OrganizationService organizationService;
     private final OpportunityService opportunityService;
     private final FeedbackService feedbackService;
-    private final UserService userService; // NEW
+    private final UserService userService;
 
-    public ApplicationController(ApplicationService service,
+    public ApplicationController(ApplicationService applicationService,
             OpportunitySectionService sectionService,
             OrganizationService organizationService,
             OpportunityService opportunityService,
             FeedbackService feedbackService,
             UserService userService) {
-        this.service = service;
+        this.applicationService = applicationService;
         this.sectionService = sectionService;
         this.organizationService = organizationService;
         this.opportunityService = opportunityService;
         this.feedbackService = feedbackService;
-        this.userService = userService; // NEW
+        this.userService = userService;
     }
 
     // ====== OPPORTUNITY DETAIL ======
@@ -72,16 +72,24 @@ public class ApplicationController {
         model.addAttribute("currentUserRole", currentUserRole);
 
         // Quyền xem: công khai hoặc chủ tổ chức
-        boolean isOwner = isOwner(currentUserId, opp);
+        boolean isOwner = isOwner(currentUserId, opp); // Chỉ ORG xem được bản opp chưa công bố của chính họ
+
+        // Các trạng thái của opportunity OPEN / CLOSED / CANCELLED =
+        // PUBLIC_STATUSES.contains(opp.getStatus());
+        // Chỉ 3 trạng thái này được xem công khai trên hệ thống
+        // OPEN → đang mở cho TNV xem
+        // CLOSED → đã đóng nhưng vẫn hiển thị lịch sử
+        // CANCELLED → đã hủy nhưng vẫn công khai cho minh bạch
         boolean isPublic = opp.getStatus() != null && PUBLIC_STATUSES.contains(opp.getStatus());
+
         if (!isPublic && !isOwner) {
             model.addAttribute("error", "Không tìm thấy cơ hội hoặc bạn không đủ quyền xem.");
-            model.addAttribute("reviews", List.of());
-            model.addAttribute("sections", List.of());
+            model.addAttribute("reviews", List.of()); // Hệ thống không tìm thấy cơ hội hoặc bạn không đủ quyền xem.
+            model.addAttribute("sections", List.of());// List trống để tránh lỗi Thymeleaf
             return "opportunity/opportunity-detail";
         }
 
-        // Common model
+        // model render ra thông tin opportunity detail
         model.addAttribute("opp", opp);
         model.addAttribute("org", opp.getOrganization());
         if (opp.getOrganization() != null && opp.getOrganization().getOwner() != null) {
@@ -89,7 +97,13 @@ public class ApplicationController {
         }
 
         if (currentUserId != null) {
-            model.addAttribute("items", service.listMyApplications(currentUserId));
+            // "item" lấy danh sách đơn ứng tuyển của TNV hiện tại
+            // tự động điền thông tin vào form apply
+            // kiểm tra trùng thời gian apply
+            // hiển thị nút “Xem kết quả đơn ứng tuyển”
+            // hiển thị cảnh báo đã apply
+            // xử lý logic trong modal apply
+            model.addAttribute("items", applicationService.listMyApplications(currentUserId));
             User currentUser = userService.getUserById(currentUserId);
             model.addAttribute("currentUser", currentUser);
         } else {
@@ -99,15 +113,20 @@ public class ApplicationController {
 
         // Trạng thái & nút hành động
         boolean isCancelled = opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED;
+
+        // nếu startTime <= now -> đã quá hạn -> tắt nút apply
         boolean isExpired = opp.getStartTime() != null && !opp.getStartTime().isAfter(LocalDateTime.now());
 
-        long approvedCount = service.countApprovedByOppId(opp.getOppId());
+        // Kiểm tra đã đủ số lượng volunteer chưa
+        long approvedCount = applicationService.countApprovedByOppId(opp.getOppId());
         Integer needVols = opp.getNeededVolunteers();
         boolean isFull = (needVols != null) && (approvedCount >= needVols);
 
+        // Kiểm tra đã apply chưa
         boolean alreadyApplied = currentUserId != null
-                && service.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
+                && applicationService.existsByOppIdAndVolunteerId(opp.getOppId(), currentUserId);
 
+        // Điều kiện tổng hợp để bấm nút Apply
         boolean canApply = (opp.getStatus() == Opportunity.OpportunityStatus.OPEN)
                 && !isExpired
                 && !isFull
@@ -115,6 +134,7 @@ public class ApplicationController {
                 && currentUserId != null
                 && !alreadyApplied;
 
+        // Set model attributes cho view dùng hiện thị nút đăng ký
         model.addAttribute("isCancelled", isCancelled);
         model.addAttribute("isExpired", isExpired);
         model.addAttribute("isFull", isFull);
@@ -122,27 +142,33 @@ public class ApplicationController {
         model.addAttribute("alreadyApplied", alreadyApplied);
         model.addAttribute("appliedCount", approvedCount);
 
-        // Badge
+        // Badge hiện thị trạng thái
         model.addAttribute("statusDisplayName", toStatusDisplay(opp.getStatus()));
         model.addAttribute("statusBadgeClass", toStatusBadgeClass(opp.getStatus()));
 
-        // Sections
+        // Load sections mô tả cơ hội
         List<OpportunitySection> sections = sectionService.findByOpportunity(opp.getOppId());
         model.addAttribute("sections", sections);
 
-        // Feedback
+        // Load feedback + điều kiện sửa feedback
         boolean isEventEnded = opp.getEndTime() != null && opp.getEndTime().isBefore(LocalDateTime.now());
+
         if (isEventEnded) {
+            // Nếu event đã kết thúc:
+
             List<Feedback> feedbacks = feedbackService.findByOpportunity(opp.getOppId());
             model.addAttribute("reviews", feedbacks);
 
             if (currentUserId != null) {
+                // Nếu user có feedback của chính họ
                 var myFb = feedbackService.findByOpportunityAndVolunteer(opp.getOppId(), currentUserId);
                 model.addAttribute("myFeedback", myFb);
 
+                // Kiểm tra được phép tạo/sửa feedback hay không
                 boolean canCreateMyFeedback = feedbackService.canVolunteerGiveFeedback(opp.getOppId(), currentUserId);
                 model.addAttribute("canCreateMyFeedback", canCreateMyFeedback);
 
+                // Sửa feedback chỉ từ 3 ngày trở lại
                 boolean canEditMyFeedback = false;
                 if (myFb != null && myFb.getCreatedAt() != null) {
                     canEditMyFeedback = myFb.getCreatedAt().isAfter(LocalDateTime.now().minusDays(3));
@@ -171,9 +197,10 @@ public class ApplicationController {
             @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "address", required = false) String address,
-            RedirectAttributes ra) {
+            RedirectAttributes ra /** truyền giá trị giữa các controller khi redirect */
+    ) {
         try {
-            service.apply(oppId, userId, reason, fullName, phone, address);
+            applicationService.apply(oppId, userId, reason, fullName, phone, address);
             ra.addFlashAttribute("success", "Bạn đã gửi đơn đăng ký thành công, vui lòng chờ xét duyệt đơn!");
             return "redirect:/opportunities/" + oppId;
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -241,10 +268,10 @@ public class ApplicationController {
             to = t;
         }
 
-        var result = service.searchOrgApplicationsByOrgId(
+        var result = applicationService.searchOrgApplicationsByOrgId(
                 orgId, oppId, q, status, from, to, Math.max(page, 0), Math.max(size, 1));
 
-        var stats = service.computeOrgAppStats(orgId, oppId, q, status, from, to);
+        var stats = applicationService.computeOrgAppStats(orgId, oppId, q, status, from, to);
 
         List<Opportunity> myOpps = opportunityService.findByOrganization(orgId);
 
@@ -306,7 +333,7 @@ public class ApplicationController {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
             if (processedById == null)
                 return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-            service.approveApplication(orgId, appId, processedById, note);
+            applicationService.approveApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã duyệt đơn thành công.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
@@ -328,7 +355,7 @@ public class ApplicationController {
             Integer processedById = (Integer) session.getAttribute("AUTH_USER_ID");
             if (processedById == null)
                 return "redirect:/login?e=USERNAME_PASSWORD_REQUIRED";
-            service.rejectApplication(orgId, appId, processedById, note);
+            applicationService.rejectApplication(orgId, appId, processedById, note);
             ra.addFlashAttribute("success", "Đã từ chối đơn.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());
