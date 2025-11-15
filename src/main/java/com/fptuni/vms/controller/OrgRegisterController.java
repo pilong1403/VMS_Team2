@@ -1,11 +1,9 @@
 package com.fptuni.vms.controller;
 
 import com.fptuni.vms.dto.request.OrgRegisterForm;
-import com.fptuni.vms.integrations.cloud.CloudStorageService;
-import com.fptuni.vms.model.User;
 import com.fptuni.vms.service.AuthService;
+import com.fptuni.vms.service.OrgRegisterBusinessService;
 import com.fptuni.vms.service.OtpVerificationService;
-import com.fptuni.vms.service.OrganizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -20,35 +18,30 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import static com.fptuni.vms.constants.OrgRegisterConstants.*;
 
 @Controller
 public class OrgRegisterController {
 
-    private final OrganizationService organizationService;
     private final OtpVerificationService otpService;
-    private final CloudStorageService cloudStorageService;
     private final AuthService authService;
+    private final OrgRegisterBusinessService orgRegisterBusinessService;
 
-    public OrgRegisterController(OrganizationService organizationService,
-                                 OtpVerificationService otpService,
-                                 CloudStorageService cloudStorageService,
-                                 AuthService authService) {
-        this.organizationService = organizationService;
+    public OrgRegisterController(OtpVerificationService otpService,
+                                 AuthService authService,
+                                 OrgRegisterBusinessService orgRegisterBusinessService) {
         this.otpService = otpService;
-        this.cloudStorageService = cloudStorageService;
         this.authService = authService;
+        this.orgRegisterBusinessService = orgRegisterBusinessService;
     }
 
     private static final String SESSION_FILE_BYTES = "ORG_PENDING_FILE_BYTES";
     private static final String SESSION_FILE_NAME  = "ORG_PENDING_FILE_NAME";
     private static final String SESSION_FILE_TYPE  = "ORG_PENDING_FILE_TYPE";
 
-    // NEW: session keys cho avatar
+    // avatar
     private static final String SESSION_AVATAR_BYTES = "ORG_PENDING_AVATAR_BYTES";
     private static final String SESSION_AVATAR_NAME  = "ORG_PENDING_AVATAR_NAME";
     private static final String SESSION_AVATAR_TYPE  = "ORG_PENDING_AVATAR_TYPE";
@@ -84,13 +77,13 @@ public class OrgRegisterController {
             }
             model.addAttribute("form", form);
 
-            // tên file cũ (nếu có) để hiển thị nhắc
             model.addAttribute("existingDocName", session.getAttribute(SESSION_FILE_NAME));
             model.addAttribute("existingAvatarName", session.getAttribute(SESSION_AVATAR_NAME));
         }
         model.addAttribute(ATTR_ERROR, mapError(e));
         return VIEW_ORG_REGISTER;
     }
+
     @PostMapping("/org/register")
     public String submit(@Valid @ModelAttribute("form") OrgRegisterForm form,
                          BindingResult binding,
@@ -98,7 +91,6 @@ public class OrgRegisterController {
                          Model model) {
         if (isAuthenticated()) return "redirect:/login?e=" + E_MUST_LOGOUT;
 
-        // luôn có session để mình có thể lưu file tạm dù có lỗi
         HttpSession session = req.getSession(true);
 
         byte[] prevBytes = (byte[]) session.getAttribute(SESSION_FILE_BYTES);
@@ -126,13 +118,12 @@ public class OrgRegisterController {
                 binding.rejectValue("regDocFile", "Type", "Chỉ chấp nhận PDF/Word/Ảnh.");
                 regDocOk = false;
             }
-            // nếu file tài liệu hợp lệ -> LƯU NGAY vào session để giữ lại khi form có lỗi khác
             if (regDocOk) {
                 try {
                     session.setAttribute(SESSION_FILE_BYTES, file.getBytes());
                     session.setAttribute(SESSION_FILE_NAME, safe(file.getOriginalFilename(), "document"));
                     session.setAttribute(SESSION_FILE_TYPE, file.getContentType());
-                    prevName = (String) session.getAttribute(SESSION_FILE_NAME); // cập nhật để render lại
+                    prevName = (String) session.getAttribute(SESSION_FILE_NAME);
                 } catch (IOException e) {
                     binding.rejectValue("regDocFile", "IO", "Không đọc được file tải lên.");
                     regDocOk = false;
@@ -155,7 +146,6 @@ public class OrgRegisterController {
                 binding.rejectValue("avatarFile", "Type", "Chỉ chấp nhận định dạng ảnh.");
                 avatarOk = false;
             }
-            // file avatar hợp lệ -> LƯU NGAY vào session
             if (avatarOk) {
                 try {
                     session.setAttribute(SESSION_AVATAR_BYTES, avatar.getBytes());
@@ -167,7 +157,6 @@ public class OrgRegisterController {
                 }
             }
         }
-        // nếu không upload mới, vẫn giữ cái đã có trong session (nếu có)
 
         // ===== 2) Confirm password
         if (!binding.hasFieldErrors("password") && !binding.hasFieldErrors("confirmPassword")) {
@@ -198,7 +187,6 @@ public class OrgRegisterController {
         try {
             otpService.generateAndSendOtp(emailForOtp, OTP_PURPOSE_ORG_REGISTER);
 
-            // Lưu toàn bộ form (text) để prefill lại khi quay lại chỉnh sửa từ trang verify
             session.setAttribute(SESSION_PENDING_ORG, form);
 
             model.addAttribute(ATTR_EMAIL, emailForOtp);
@@ -238,54 +226,28 @@ public class OrgRegisterController {
             return "redirect:/org/register?e=" + E_SESSION_EXPIRED;
         }
 
-        OrgRegisterForm form = (OrgRegisterForm) ss.getAttribute(SESSION_PENDING_ORG);
-        byte[] fileBytes     = (byte[]) ss.getAttribute(SESSION_FILE_BYTES);
-        String fileName      = (String) ss.getAttribute(SESSION_FILE_NAME);
-        String contentType   = (String) ss.getAttribute(SESSION_FILE_TYPE);
+        OrgRegisterForm form   = (OrgRegisterForm) ss.getAttribute(SESSION_PENDING_ORG);
+        byte[] fileBytes       = (byte[]) ss.getAttribute(SESSION_FILE_BYTES);
+        String fileName        = (String) ss.getAttribute(SESSION_FILE_NAME);
+        String contentType     = (String) ss.getAttribute(SESSION_FILE_TYPE);
 
-        // NEW: avatar từ session
-        byte[] avatarBytes   = (byte[]) ss.getAttribute(SESSION_AVATAR_BYTES);
-        String avatarName    = (String) ss.getAttribute(SESSION_AVATAR_NAME);
-        String avatarType    = (String) ss.getAttribute(SESSION_AVATAR_TYPE);
+        byte[] avatarBytes     = (byte[]) ss.getAttribute(SESSION_AVATAR_BYTES);
+        String avatarName      = (String) ss.getAttribute(SESSION_AVATAR_NAME);
+        String avatarType      = (String) ss.getAttribute(SESSION_AVATAR_TYPE);
 
         try {
             // 1) OTP
             String normalizedEmail = safe(email).trim().toLowerCase();
             otpService.verifyOtp(normalizedEmail, OTP_PURPOSE_ORG_REGISTER, otp);
 
-            // 2) Upload avatar nếu có, lấy URL
-            String avatarUrl = null;
-            if (avatarBytes != null && avatarBytes.length > 0) {
-                MultipartFile avatarInMem = new InMemFile("avatarFile", avatarName, avatarType, avatarBytes);
-                avatarUrl = cloudStorageService.uploadFile(avatarInMem); // trả URL
-                if (avatarUrl == null) throw new RuntimeException("Upload avatar thất bại.");
-            }
-
-            // 3) Tạo user ORG_OWNER (AuthServiceImpl đã set LOCKED)
-            User owner = authService.registerOwnerAccount(
-                    form.getFullName(),
-                    form.getEmail(),
-                    form.getPhone(),
-                    form.getPassword(),
-                    form.getAddress(),
-                    avatarUrl // có thể null
+            // 2–5) Luồng nghiệp vụ chính ở service
+            orgRegisterBusinessService.finalizeRegistration(
+                    form,
+                    fileBytes, fileName, contentType,
+                    avatarBytes, avatarName, avatarType
             );
 
-            // 4) Upload tài liệu đăng ký
-            MultipartFile inMem = new InMemFile("regDocFile", fileName, contentType, fileBytes);
-            String regDocUrl = cloudStorageService.uploadFile(inMem);
-            if (regDocUrl == null) throw new RuntimeException("Upload tài liệu thất bại.");
-
-            // 5) Insert organizations (PENDING)
-            organizationService.submitRegistration(
-                    owner,
-                    form.getOrgName(),
-                    form.getDescription(),
-                    regDocUrl,
-                    form.getRegNote()
-            );
-
-// 6) Clear session
+            // 6) Clear session
             ss.removeAttribute(SESSION_PENDING_ORG);
             ss.removeAttribute(SESSION_FILE_BYTES);
             ss.removeAttribute(SESSION_FILE_NAME);
@@ -294,8 +256,6 @@ public class OrgRegisterController {
             ss.removeAttribute(SESSION_AVATAR_NAME);
             ss.removeAttribute(SESSION_AVATAR_TYPE);
 
-
-// Flash + redirect về trang login
             ra.addFlashAttribute("success",
                     "Hồ sơ đăng ký đã được gửi thành công. Quản trị viên sẽ xem xét và thông báo kết quả qua email đăng ký.");
             return "redirect:/login";
@@ -312,7 +272,6 @@ public class OrgRegisterController {
         }
     }
 
-    /** RESEND OTP (POST) */
     @PostMapping("/org/register/resend")
     @ResponseBody
     public String resend(@RequestParam String email, HttpSession ss) {
@@ -332,32 +291,12 @@ public class OrgRegisterController {
         Authentication a = SecurityContextHolder.getContext().getAuthentication();
         if (a == null) return false;
         Object principal = a.getPrincipal();
-        return a.isAuthenticated() && !(principal instanceof String); // tránh "anonymousUser"
+        return a.isAuthenticated() && !(principal instanceof String);
     }
+
     private static boolean isBlank(String s){ return s == null || s.isBlank(); }
     private static String safe(String s){ return s == null ? "" : s; }
     private static String safe(String s, String def){ return isBlank(s) ? def : s; }
-
-    /** MultipartFile in-memory (không lưu file vào session) */
-    private static final class InMemFile implements MultipartFile {
-        private final String name, originalFilename, contentType; private final byte[] content;
-        InMemFile(String name, String originalFilename, String contentType, byte[] content){
-            this.name = name==null?"file":name;
-            this.originalFilename = originalFilename==null?"file":originalFilename;
-            this.contentType = contentType;
-            this.content = content==null?new byte[0]:content;
-        }
-        @Override public String getName(){ return name; }
-        @Override public String getOriginalFilename(){ return originalFilename; }
-        @Override public String getContentType(){ return contentType; }
-        @Override public boolean isEmpty(){ return content.length==0; }
-        @Override public long getSize(){ return content.length; }
-        @Override public byte[] getBytes(){ return content.clone(); }
-        @Override public InputStream getInputStream(){ return new ByteArrayInputStream(content); }
-        @Override public void transferTo(java.io.File dest) throws IOException {
-            java.nio.file.Files.write(dest.toPath(), content);
-        }
-    }
 
     private String mapError(String code) {
         if (code == null || code.isBlank()) return null;
