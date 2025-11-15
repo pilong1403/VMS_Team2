@@ -10,6 +10,7 @@ import com.fptuni.vms.model.User;
 
 public interface ApplicationRepository {
 
+        // Kiểm tra volunteer đã apply chưa
         boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
 
         Application save(Application application);
@@ -71,7 +72,7 @@ public interface ApplicationRepository {
 
         long countApprovedByOppId(Integer oppId);
 
-        // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+        // ====== kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
         boolean hasOverlappingActiveApplications(Integer volunteerId,
                         LocalDateTime newStart,
                         LocalDateTime newEnd,

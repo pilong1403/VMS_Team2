@@ -21,9 +21,10 @@ import org.springframework.stereotype.Repository;
 @Transactional
 public class ApplicationRepositoryImpl implements ApplicationRepository {
 
-    @PersistenceContext
+    @PersistenceContext // Inject EntityManager
     private EntityManager em;
 
+    // Kiểm tra volunteer đã apply chưa
     @Override
     public boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId) {
         try {
@@ -46,10 +47,10 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
     public Application save(Application application) {
         try {
             if (application.getAppId() == null) {
-                em.persist(application);
+                em.persist(application); // insert new application
                 return application;
             } else {
-                return em.merge(application);
+                return em.merge(application); // update existing application
             }
         } catch (PersistenceException e) {
             throw e;
@@ -372,6 +373,7 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getResultList();
     }
 
+    // Đếm số đơn PENDING/APPROVED/COMPLETED theo oppId
     @Override
     public long countApprovedByOppId(Integer oppId) {
         if (oppId == null)
@@ -390,7 +392,7 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
                 .getSingleResult();
     }
 
-    // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
+    // ====== check trùng thời gian với các đơn đang PENDING/APPROVED ======
     @Override
     public boolean hasOverlappingActiveApplications(Integer volunteerId,
             LocalDateTime newStart,

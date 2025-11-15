@@ -11,8 +11,8 @@ import com.fptuni.vms.model.Application;
 import com.fptuni.vms.model.User;
 
 public interface ApplicationService {
-        Application apply(Integer oppId, Integer volunteerId, String reason);
 
+        // ĐĂNG KÝ ỨNG TUYỂN
         Application apply(Integer oppId, Integer volunteerId, String reason,
                         String fullName, String phone, String address);
 
@@ -59,14 +59,18 @@ public interface ApplicationService {
                         LocalDate from,
                         LocalDate to);
 
+        Application apply(Integer oppId, Integer volunteerId, String reason);
+
         void approveApplication(Integer orgId, Integer appId, Integer processedById, String note);
 
         void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note);
 
         List<User> findApprovedUsersByOppId(Integer oppId);
 
+        // Đếm số đơn PENDING/APPROVED/COMPLETED theo oppId
         long countApprovedByOppId(Integer oppId);
 
+        // Kiểm tra volunteer đã apply chưa
         boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId);
 
         /** Volunteer tự hủy đơn (chỉ khi PENDING, trước giờ bắt đầu). */

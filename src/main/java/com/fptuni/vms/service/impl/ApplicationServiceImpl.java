@@ -23,20 +23,21 @@ import java.util.Map;
 @Transactional
 public class ApplicationServiceImpl implements ApplicationService {
 
-        private final ApplicationRepository repo;
+        private final ApplicationRepository applicationRepository;
 
-        public ApplicationServiceImpl(ApplicationRepository repo) {
-                this.repo = repo;
+        public ApplicationServiceImpl(ApplicationRepository applicationRepository) {
+                this.applicationRepository = applicationRepository;
         }
 
-        // ========= APPLY =========
+        // Check cơ hội và tình nguyện viên, áp dụng các business rule, tạo application
+        // mới
         @Override
         public Application apply(Integer oppId, Integer volunteerId, String reason) {
-                Opportunity opp = repo.findOpportunityById(oppId);
+                Opportunity opp = applicationRepository.findOpportunityById(oppId);
                 if (opp == null)
                         throw new IllegalArgumentException("Cơ hội không tồn tại: " + oppId);
 
-                // Giữ đầy đủ các rule từ bản 1 (nâng cao)
+                // Kiểm tra các business rule opportunity trước khi apply
                 if (opp.getStatus() == Opportunity.OpportunityStatus.CANCELLED)
                         throw new IllegalStateException("Cơ hội đã bị hủy.");
                 if (opp.getStatus() != Opportunity.OpportunityStatus.OPEN)
@@ -47,46 +48,47 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (opp.getEndTime() != null && !opp.getEndTime().isAfter(LocalDateTime.now()))
                         throw new IllegalStateException("Cơ hội đã kết thúc.");
 
-                User volunteer = repo.findUserById(volunteerId);
+                User volunteer = applicationRepository.findUserById(volunteerId);
                 if (volunteer == null)
                         throw new IllegalArgumentException("Tình nguyện viên không tồn tại: " + volunteerId);
 
-                if (repo.existsByOppIdAndVolunteerId(oppId, volunteerId))
+                if (applicationRepository.existsByOppIdAndVolunteerId(oppId, volunteerId))
                         throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
 
-                // Capacity
+                // check số lượng đăng ký đơn
                 Integer need = opp.getNeededVolunteers();
                 if (need != null) {
-                        long active = repo.countByOppId(oppId);
+                        long active = applicationRepository.countByOppId(oppId);
                         if (active >= need)
                                 throw new IllegalStateException("Cơ hội đã đủ số lượng đăng ký.");
                 }
 
-                // Overlap check PENDING/APPROVED của volunteer
+                // Check trùng thời gian, check PENDING/APPROVED của volunteer
                 if (opp.getStartTime() != null && opp.getEndTime() != null) {
-                        boolean overlapped = repo.hasOverlappingActiveApplications(
+                        boolean overlapped = applicationRepository.hasOverlappingActiveApplications(
                                         volunteerId,
                                         opp.getStartTime(),
                                         opp.getEndTime(),
-                                        opp.getOppId());
+                                        opp.getOppId()); // tham số cơ hội mới
+                        // nếu overlap = true thì throw
                         if (overlapped) {
                                 throw new IllegalStateException(
                                                 "Bạn đang có lịch trùng với một cơ hội khác đã đăng ký (đang chờ duyệt/đã duyệt).");
                         }
                 }
 
+                // Lưu application mới
                 Application app = new Application();
                 app.setOpportunity(opp);
                 app.setVolunteer(volunteer);
                 app.setAppliedAt(LocalDateTime.now());
                 app.setReason(reason);
-                app.setStatus(Application.ApplicationStatus.PENDING);
+                app.setStatus(Application.ApplicationStatus.PENDING); // mặc định PENDING khi mới nộp
                 app.setUpdatedAt(LocalDateTime.now());
 
                 try {
-                        return repo.save(app);
-                } catch (PersistenceException ex) {
-                        // unique/constraint
+                        return applicationRepository.save(app);
+                } catch (PersistenceException ex) { /* PersistenceException khi duplicate key/constraint */
                         throw new IllegalStateException("Bạn đã ứng tuyển vào cơ hội này.");
                 }
         }
@@ -94,10 +96,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         @Override
         public Application apply(Integer oppId, Integer volunteerId, String reason,
                         String fullName, String phone, String address) {
-                var user = repo.findUserById(volunteerId);
+                var user = applicationRepository.findUserById(volunteerId);
                 if (user == null)
                         throw new IllegalArgumentException("Volunteer not found: " + volunteerId);
-
+                // cập nhật thông tin volunteer nếu có thay đổi
                 boolean dirty = false;
                 if (fullName != null && !fullName.isBlank() && !fullName.equals(user.getFullName())) {
                         user.setFullName(fullName);
@@ -111,8 +113,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                         user.setAddress(address);
                         dirty = true;
                 }
+                // dirty true thì save
                 if (dirty)
-                        repo.saveUser(user);
+                        applicationRepository.saveUser(user);
 
                 return apply(oppId, volunteerId, reason);
         }
@@ -120,7 +123,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // ========= VOLUNTEER VIEWS =========
         @Override
         public List<Application> listMyApplications(Integer volunteerId) {
-                return repo.findAllByVolunteerId(volunteerId);
+                return applicationRepository.findAllByVolunteerId(volunteerId);
         }
 
         // (THÊM từ bản 2) tìm kiếm/lọc/sort + phân trang cho volunteer
@@ -143,12 +146,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 boolean newestFirst = !"oldest".equalsIgnoreCase(sort);
 
-                List<Application> rows = repo.findMyApplications(
+                List<Application> rows = applicationRepository.findMyApplications(
                                 volunteerId, st, q, newestFirst ? "DESC" : "ASC",
                                 pageable.getPageNumber() * pageable.getPageSize(),
                                 pageable.getPageSize());
-                long total = repo.countMyApplications(volunteerId, st, q);
-
+                long total = applicationRepository.countMyApplications(volunteerId, st, q);
                 return new PageImpl<>(rows, pageable, total);
         }
 
@@ -174,12 +176,11 @@ public class ApplicationServiceImpl implements ApplicationService {
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
-                List<Application> rows = repo.findOrgApplications(
+                List<Application> rows = applicationRepository.findOrgApplications(
                                 orgId, oppId, q, st, fromDT, toDT,
                                 pageable.getPageNumber() * pageable.getPageSize(),
                                 pageable.getPageSize());
-                long total = repo.countOrgApplications(orgId, oppId, q, st, fromDT, toDT);
-
+                long total = applicationRepository.countOrgApplications(orgId, oppId, q, st, fromDT, toDT);
                 // DÙNG VM ĐẦY ĐỦ (khớp UI modal chi tiết)
                 List<ApplicationRowVM> vms = new ArrayList<>(rows.size());
                 for (Application a : rows) {
@@ -220,7 +221,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                 LocalDateTime fromDT = (from == null) ? null : from.atStartOfDay();
                 LocalDateTime toDT = (to == null) ? null : to.plusDays(1).atStartOfDay(); // exclusive
 
-                Map<Application.ApplicationStatus, Long> m = repo.computeOrgAppStats(orgId, oppId, q, st, fromDT, toDT);
+                Map<Application.ApplicationStatus, Long> m = applicationRepository.computeOrgAppStats(orgId, oppId, q,
+                                st, fromDT, toDT);
 
                 long total = 0, pending = 0, approved = 0, rejected = 0, completed = 0, cancelled = 0;
                 for (var e : m.entrySet()) {
@@ -248,14 +250,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         // ========= APPROVE / REJECT =========
         @Override
         public void approveApplication(Integer orgId, Integer appId, Integer processedById, String note) {
-                var app = repo.findByIdAndOrgId(appId, orgId);
+                var app = applicationRepository.findByIdAndOrgId(appId, orgId);
                 if (app == null)
                         throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc tổ chức.");
                 if (app.getStatus() != Application.ApplicationStatus.PENDING)
                         throw new IllegalStateException("Chỉ có thể duyệt đơn đang chờ.");
 
                 if (processedById != null) {
-                        var user = repo.findUserById(processedById);
+                        var user = applicationRepository.findUserById(processedById);
                         if (user != null)
                                 app.setProcessedBy(user);
                 }
@@ -265,19 +267,19 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 app.setStatus(Application.ApplicationStatus.APPROVED);
                 app.setUpdatedAt(LocalDateTime.now());
-                repo.save(app);
+                applicationRepository.save(app);
         }
 
         @Override
         public void rejectApplication(Integer orgId, Integer appId, Integer processedById, String note) {
-                var app = repo.findByIdAndOrgId(appId, orgId);
+                var app = applicationRepository.findByIdAndOrgId(appId, orgId);
                 if (app == null)
                         throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc tổ chức.");
                 if (app.getStatus() != Application.ApplicationStatus.PENDING)
                         throw new IllegalStateException("Chỉ có thể từ chối đơn đang chờ.");
 
                 if (processedById != null) {
-                        var user = repo.findUserById(processedById);
+                        var user = applicationRepository.findUserById(processedById);
                         if (user != null)
                                 app.setProcessedBy(user);
                 }
@@ -286,26 +288,27 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 app.setStatus(Application.ApplicationStatus.REJECTED);
                 app.setUpdatedAt(LocalDateTime.now());
-                repo.save(app);
+                applicationRepository.save(app);
         }
 
         // ========= QUERY HELPERS =========
         @Override
         public List<User> findApprovedUsersByOppId(Integer oppId) {
-                return repo.findApprovedVolunteersByOppId(oppId);
+                return applicationRepository.findApprovedVolunteersByOppId(oppId);
         }
 
+        // Đếm số đơn PENDING/APPROVED/COMPLETED theo oppId
         @Override
         public long countApprovedByOppId(Integer oppId) {
-                return repo.countApprovedByOppId(oppId);
+                return applicationRepository.countApprovedByOppId(oppId);
         }
 
         @Override
-        @Transactional(readOnly = true)
+        @Transactional(readOnly = true) // method chỉ đọc dữ liệu, không ghi
         public boolean existsByOppIdAndVolunteerId(Integer oppId, Integer volunteerId) {
                 if (oppId == null || volunteerId == null)
                         return false;
-                return repo.existsByOppIdAndVolunteerId(oppId, volunteerId);
+                return applicationRepository.existsByOppIdAndVolunteerId(oppId, volunteerId);
         }
 
         @Override
@@ -315,7 +318,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
                 // Lấy application thuộc chính volunteer này (fetch opportunity & org để hiển
                 // thị/nối rule)
-                Application app = repo.findByIdAndVolunteerId(appId, volunteerId);
+                Application app = applicationRepository.findByIdAndVolunteerId(appId, volunteerId);
                 if (app == null)
                         throw new IllegalArgumentException("Không tìm thấy đơn hoặc không thuộc sở hữu của bạn.");
 
@@ -335,12 +338,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                 app.setCancelReason(cancelReason.trim());
                 app.setUpdatedAt(LocalDateTime.now());
 
-                repo.save(app);
+                applicationRepository.save(app);
         }
 
         @Override
         public long countApprovedApplications(Integer oppId) {
-                return repo.countApprovedByOppId(oppId);  // Sử dụng phương thức đã có trong repository
+                return applicationRepository.countApprovedByOppId(oppId); // Sử dụng phương thức đã có trong repository
         }
 
 }
