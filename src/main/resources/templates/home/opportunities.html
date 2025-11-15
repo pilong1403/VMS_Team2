@@ -215,11 +215,13 @@
                       </a>
 
                       <!-- 2) CHO PHÉP ĐĂNG KÝ -->
-                      <button type="button" class="btn btn-primary-custom flex-fill js-apply-btn"
-                        th:if="${btnStates[opp.oppId]['canApply']}" th:attr="data-opp-id=${opp.oppId}"
-                        data-bs-toggle="modal" data-bs-target="#applyModal">
+                      <button type="button" class="btn btn-primary-custom flex-fill js-apply-btn" th:if="${
+            btnStates[opp.oppId]['canApply'] 
+            and (currentUserRole == null or currentUserRole == 'VOLUNTEER')
+        }" th:attr="data-opp-id=${opp.oppId}" data-bs-toggle="modal" data-bs-target="#applyModal">
                         <i class="bi bi-person-plus me-1"></i>Đăng Ký
                       </button>
+
 
                       <!-- 2.5) ĐÃ HỦY -->
                       <button type="button" class="btn btn-secondary flex-fill" disabled th:if="${!btnStates[opp.oppId]['alreadyApplied']

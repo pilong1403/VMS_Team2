@@ -68,6 +68,9 @@ public class ApplicationController {
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         model.addAttribute("currentUserId", currentUserId);
 
+        String currentUserRole = (String) session.getAttribute("AUTH_ROLE");
+        model.addAttribute("currentUserRole", currentUserRole);
+
         // Quyền xem: công khai hoặc chủ tổ chức
         boolean isOwner = isOwner(currentUserId, opp);
         boolean isPublic = opp.getStatus() != null && PUBLIC_STATUSES.contains(opp.getStatus());

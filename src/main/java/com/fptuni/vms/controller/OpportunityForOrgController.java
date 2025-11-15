@@ -117,13 +117,21 @@ public class OpportunityForOrgController {
         // ---- Current User ----
         Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
         if (currentUserId != null) {
+            User u = userService.getUserById(currentUserId);
+            model.addAttribute("currentUser", u);
             model.addAttribute("AUTH_USER_ID", currentUserId);
-            model.addAttribute("currentUser", userService.getUserById(currentUserId));
+
+            // ⭐ thêm dòng này
+            model.addAttribute("currentUserRole", u.getRole().getRoleName());
         } else {
+            model.addAttribute("currentUser", null);
             model.addAttribute("AUTH_USER_ID", null);
+
+            // ⭐ nếu chưa login → role null
+            model.addAttribute("currentUserRole", null);
         }
 
-        // ⭐ NEW — Compute Apply Button Logic (giống /opportunities)
+        // NEW — Compute Apply Button Logic (giống /opportunities)
         Map<Integer, Map<String, Object>> btnStates = computeButtonStates(content, currentUserId);
         model.addAttribute("btnStates", btnStates);
 

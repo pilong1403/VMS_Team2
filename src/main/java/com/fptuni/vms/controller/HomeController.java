@@ -46,9 +46,14 @@ public class HomeController {
     public String volunteerHome(Model model, HttpSession session) {
         try {
             Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            String currentRole = (String) session.getAttribute("AUTH_ROLE");
+
             if (currentUserId != null) {
                 model.addAttribute("currentUserId", currentUserId);
                 model.addAttribute("currentUser", userService.getUserById(currentUserId));
+                model.addAttribute("currentUserRole", currentRole);
+            } else {
+                model.addAttribute("currentUserRole", null);
             }
             List<OpportunityCardDto> latestOpportunities = opportunityService.getTop3LatestOpportunities();
             latestOpportunities = latestOpportunities.stream()
@@ -120,9 +125,14 @@ public class HomeController {
 
         try {
             Integer currentUserId = (Integer) session.getAttribute("AUTH_USER_ID");
+            String currentRole = (String) session.getAttribute("AUTH_ROLE");
+
             if (currentUserId != null) {
                 model.addAttribute("currentUserId", currentUserId);
                 model.addAttribute("currentUser", userService.getUserById(currentUserId));
+                model.addAttribute("currentUserRole", currentRole);
+            } else {
+                model.addAttribute("currentUserRole", null);
             }
 
             StringBuilder warning = new StringBuilder();
