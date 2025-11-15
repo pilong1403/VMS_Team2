@@ -116,7 +116,6 @@ public class ProfileController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Get current user
             User currentUser = SecurityUtils.getCurrentUser(authentication);
             if (currentUser == null) {
                 response.put("success", false);
@@ -134,7 +133,6 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Update user information
             userService.updateProfile(currentUser.getUserId(), profileForm, avatarFile);
 
             response.put("success", true);
@@ -176,7 +174,6 @@ public class ProfileController {
                 return "profile/edit";
             }
 
-            // Update user information
             userService.updateProfile(currentUser.getUserId(), profileForm, avatarFile);
 
             redirectAttributes.addFlashAttribute("success", "Cập nhật thông tin cá nhân thành công");
@@ -404,7 +401,7 @@ public class ProfileController {
         }
 
         if (!"VOLUNTEER".equals(currentUser.getRole().getRoleName())) {
-            return "redirect:/403";
+            return "redirect:/home";
         }
 
         // Get all event history
