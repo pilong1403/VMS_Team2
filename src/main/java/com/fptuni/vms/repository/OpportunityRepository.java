@@ -58,4 +58,12 @@ public interface OpportunityRepository {
                         LocalDateTime start, LocalDateTime end, int limit);
 
         long countAll();
+
+        Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
+                                                   String keyword,
+                                                   String statusFilter,
+                                                   int page,
+                                                   int size,
+                                                   String timeOrder);
+
 }

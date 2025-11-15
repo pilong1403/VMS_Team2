@@ -104,24 +104,21 @@ public class OpportunityController {
      */
     @GetMapping
     public String listForOwner(@RequestParam(value = "q", required = false) String q,
-                               @RequestParam(value = "status", required = false) Opportunity.OpportunityStatus status,
+                               @RequestParam(value = "status", required = false) String statusFilter, // đổi
                                @RequestParam(value = "page", defaultValue = "1") int page,
                                @RequestParam(value = "size", defaultValue = "10") int size,
                                @RequestParam(value = "timeOrder", required = false) String timeOrder,
                                Model model) {
         model.addAttribute("activePage", "OppManagement");
 
-        // Lấy user hiện tại từ SecurityContext
         User me = SecurityUtils.getCurrentUser();
-        // Lấy organization mà user hiện tại là owner
         Organization org = organizationService.findByOwnerId(me.getUserId());
         if (org == null) {
-            // Không có org hợp lệ -> báo lỗi + trả về view rỗng
             model.addAttribute("error", "Không tìm thấy thông tin tổ chức hợp lệ. Vui lòng kiểm tra hoặc liên hệ quản trị viên.");
             model.addAttribute("page", Page.empty());
             model.addAttribute("statusVN", viStatusFilter());
             model.addAttribute("q", q);
-            model.addAttribute("status", status);
+            model.addAttribute("status", statusFilter);
             model.addAttribute("timeOrder", timeOrder);
             model.addAttribute("currentPage", 1);
             model.addAttribute("totalPages", 1);
@@ -131,22 +128,22 @@ public class OpportunityController {
             return "organization/opportunity-list";
         }
 
-        // Page trong Spring Data là zero-based, trong UI là 1-based
         int zeroBased = Math.max(page - 1, 0);
-        Page<Opportunity> result = opportunityService.searchByOrg(
-                org.getOrgId(), q, status, zeroBased, size, timeOrder
+
+        Page<Opportunity> result = opportunityService.searchByOrgWithTimeState(
+                org.getOrgId(), q, statusFilter, zeroBased, size, timeOrder
         );
 
         model.addAttribute("page", result);
         model.addAttribute("q", q);
-        model.addAttribute("status", status);
+        model.addAttribute("status", statusFilter);
         model.addAttribute("statusVN", viStatusFilter());
         model.addAttribute("timeOrder", timeOrder);
 
-        // Tính toán thông tin phân trang để hiển thị nút [1][2][3]...
-        int currentPage = result.getNumber() + 1; // convert lại thành 1-based
+        // các biến phân trang giữ nguyên...
+        int currentPage = result.getNumber() + 1;
         int totalPages = result.getTotalPages() == 0 ? 1 : result.getTotalPages();
-        int window = 5; // hiển thị tối đa 5 trang trên thanh phân trang
+        int window = 5;
         int startPage = Math.max(1, currentPage - 2);
         int endPage = Math.min(totalPages, startPage + window - 1);
         if (endPage - startPage + 1 < window) {
@@ -161,6 +158,7 @@ public class OpportunityController {
 
         return "organization/opportunity-list";
     }
+
 
     // ================= NEW / EDIT FORM =================
 

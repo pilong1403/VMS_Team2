@@ -53,14 +53,24 @@
                 <div class="col-md-3">
                     <label for="statusSelect" class="form-label mb-1">Trạng thái</label>
                     <select id="statusSelect" class="form-select" name="status">
-                        <option value="" th:selected="${status == null}">Tất cả</option>
-                        <option th:each="s : ${T(com.fptuni.vms.model.Opportunity.OpportunityStatus).values()}"
-                                th:value="${s}"
-                                th:text="${statusVN[s.name()] != null ? statusVN[s.name()] : s}"
-                                th:selected="${status == s}">
+                        <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
+
+                        <!-- DRAFT / CANCELLED / CLOSED như cũ -->
+                        <option value="DRAFT" th:selected="${status == 'DRAFT'}">Bản nháp</option>
+
+                        <!-- OPEN chia 2 -->
+                        <option value="OPEN_UPCOMING" th:selected="${status == 'OPEN_UPCOMING'}">
+                            OPEN – Sắp diễn ra
                         </option>
+                        <option value="OPEN_ONGOING" th:selected="${status == 'OPEN_ONGOING'}">
+                            OPEN – Đang diễn ra
+                        </option>
+
+                        <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Đã hủy</option>
+                        <option value="CLOSED" th:selected="${status == 'CLOSED'}">Đã kết thúc</option>
                     </select>
                 </div>
+
 
                 <div class="col-md-2">
                     <label for="sizeSelect" class="form-label mb-1">Số bản ghi/trang</label>

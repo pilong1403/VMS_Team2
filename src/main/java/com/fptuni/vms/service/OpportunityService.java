@@ -57,4 +57,11 @@ public interface OpportunityService {
         List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
                         LocalDateTime start, LocalDateTime end, int limit);
 
+        Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
+                                                   String keyword,
+                                                   String statusFilter,
+                                                   int page,
+                                                   int size,
+                                                   String timeOrder);
+
 }

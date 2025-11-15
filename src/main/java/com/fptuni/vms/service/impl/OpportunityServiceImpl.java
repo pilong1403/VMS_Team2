@@ -201,4 +201,14 @@ public class OpportunityServiceImpl implements OpportunityService {
         return opportunityRepository.findOverlapsForOrg(orgId, excludeOppId, start, end, limit);
     }
 
+    @Override
+    public Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
+                                                      String keyword,
+                                                      String statusFilter,
+                                                      int page,
+                                                      int size,
+                                                      String timeOrder) {
+        return opportunityRepository.searchByOrgWithTimeState(orgId, keyword, statusFilter, page, size, timeOrder);
+    }
+
 }

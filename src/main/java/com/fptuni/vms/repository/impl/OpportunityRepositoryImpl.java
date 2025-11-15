@@ -9,6 +9,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import jakarta.persistence.NoResultException;
@@ -426,5 +427,120 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         String jpql = "SELECT COUNT(o) FROM Opportunity o";
         return em.createQuery(jpql, Long.class).getSingleResult();
     }
+
+    @Override
+    public Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
+                                                      String keyword,
+                                                      String statusFilter,
+                                                      int page,
+                                                      int size,
+                                                      String timeOrder) {
+
+        if (orgId == null) {
+            return Page.empty();
+        }
+
+        // page trong repo nên là zero-based
+        page = Math.max(page, 0);
+        size = Math.max(size, 1);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // ===== WHERE chung =====
+        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId");
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", orgId);
+
+        // Keyword
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = keyword.trim().toLowerCase();
+            where.append(" AND (LOWER(o.title) LIKE :kw OR LOWER(o.location) LIKE :kw)");
+            params.put("kw", "%" + kw + "%");
+        }
+
+        // Trạng thái (DRAFT / CANCELLED / CLOSED / OPEN_UPCOMING / OPEN_ONGOING)
+        Opportunity.OpportunityStatus enumStatus = null;
+        boolean needNowParam = false;
+
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            String sf = statusFilter.trim().toUpperCase();
+
+            switch (sf) {
+                case "DRAFT" -> {
+                    enumStatus = Opportunity.OpportunityStatus.DRAFT;
+                    where.append(" AND o.status = :st");
+                }
+                case "CANCELLED" -> {
+                    enumStatus = Opportunity.OpportunityStatus.CANCELLED;
+                    where.append(" AND o.status = :st");
+                }
+                case "CLOSED" -> {
+                    enumStatus = Opportunity.OpportunityStatus.CLOSED;
+                    where.append(" AND o.status = :st");
+                }
+                case "OPEN_UPCOMING" -> {
+                    // OPEN + chưa bắt đầu
+                    enumStatus = Opportunity.OpportunityStatus.OPEN;
+                    where.append(" AND o.status = :st")
+                            .append(" AND o.startTime > :now");
+                    needNowParam = true;
+                }
+                case "OPEN_ONGOING" -> {
+                    // OPEN + đang diễn ra
+                    enumStatus = Opportunity.OpportunityStatus.OPEN;
+                    where.append(" AND o.status = :st")
+                            .append(" AND o.startTime <= :now AND o.endTime > :now");
+                    needNowParam = true;
+                }
+                default -> {
+                    // "ALL" hoặc rỗng -> không thêm điều kiện
+                }
+            }
+        }
+
+        // ===== ORDER BY =====
+        String order;
+        if ("deadline".equalsIgnoreCase(timeOrder)) {
+            order = " ORDER BY o.startTime ASC";
+        } else if ("asc".equalsIgnoreCase(timeOrder)) {
+            order = " ORDER BY o.createdAt ASC";
+        } else {
+            order = " ORDER BY o.createdAt DESC";
+        }
+
+        // ===== DATA QUERY =====
+        String dataJpql = "SELECT o FROM Opportunity o" + where + order;
+        TypedQuery<Opportunity> dataQuery = em.createQuery(dataJpql, Opportunity.class);
+
+        params.forEach(dataQuery::setParameter);
+        if (enumStatus != null) {
+            dataQuery.setParameter("st", enumStatus);
+        }
+        if (needNowParam) {
+            dataQuery.setParameter("now", now);
+        }
+
+        dataQuery.setFirstResult(page * size);
+        dataQuery.setMaxResults(size);
+        List<Opportunity> content = dataQuery.getResultList();
+
+        // ===== COUNT QUERY =====
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o" + where;
+        TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class);
+
+        params.forEach(countQuery::setParameter);
+        if (enumStatus != null) {
+            countQuery.setParameter("st", enumStatus);
+        }
+        if (needNowParam) {
+            countQuery.setParameter("now", now);
+        }
+
+        long total = countQuery.getSingleResult();
+
+        return new PageImpl<>(content, PageRequest.of(page, size), total);
+    }
+
+
 
 }
