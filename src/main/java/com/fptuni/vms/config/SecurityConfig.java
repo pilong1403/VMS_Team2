@@ -74,7 +74,7 @@ public class SecurityConfig {
                                         "/error", "/error/**")
 
                                 .permitAll()
-                                .requestMatchers("/org/register", "/org/register/**").anonymous()
+                                .requestMatchers("/org/register", "/org/register/**").permitAll()
                                 // ADMIN
                                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                                 .requestMatchers("/organization/**").hasAuthority("ORG_OWNER")

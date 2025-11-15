@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @PasswordMatches
-public class RegisterForm {
+public class RegisterForm implements PasswordConfirmation {
 
     @NotBlank(message = "Vui lòng nhập họ và tên.")
     @Size(max = 100, message = "Họ và tên không vượt quá 100 ký tự.")
@@ -21,7 +21,7 @@ public class RegisterForm {
     private String phone;
 
     @NotBlank(message = "Vui lòng nhập mật khẩu.")
-    @ValidPassword(message = "Mật khẩu phải tối thiểu 8 ký tự và bao gồm chữ, số, và ký tự đặc biệt.")
+    @ValidPassword(message = "Mật khẩu phải tối thiểu 8 ký tự và bao gồm chữ, số.")
     private String password;
 
     @NotBlank(message = "Vui lòng xác nhận mật khẩu.")

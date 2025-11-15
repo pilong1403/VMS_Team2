@@ -1,27 +1,32 @@
 package com.fptuni.vms.validation;
 
-import com.fptuni.vms.dto.request.RegisterForm;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, RegisterForm> {
+public class PasswordMatchesValidator
+        implements ConstraintValidator<PasswordMatches, PasswordConfirmation> {
 
     @Override
-    public boolean isValid(RegisterForm form, ConstraintValidatorContext context) {
-        if (form.getPassword() == null || form.getConfirmPassword() == null) {
-            return true; // để NotBlank xử lý riêng
+    public boolean isValid(PasswordConfirmation target, ConstraintValidatorContext context) {
+        if (target == null) return true; // để @NotBlank trên field xử lý
+
+        String pwd = target.getPassword();
+        String confirm = target.getConfirmPassword();
+
+        if (pwd == null || confirm == null) {
+            // để @NotBlank / @NotNull lo message riêng
+            return true;
         }
 
-        boolean matched = form.getPassword().equals(form.getConfirmPassword());
-
-        if (!matched) {
-            // Gắn lỗi vào trường confirmPassword thay vì global error
+        boolean match = pwd.equals(confirm);
+        if (!match) {
+            // gắn lỗi vào field confirmPassword
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
                     .addPropertyNode("confirmPassword")
                     .addConstraintViolation();
         }
 
-        return matched;
+        return match;
     }
 }

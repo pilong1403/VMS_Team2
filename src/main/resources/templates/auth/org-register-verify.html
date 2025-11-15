@@ -27,7 +27,12 @@
             <span class="fw-semibold text-dark" th:text="${email}">example@gmail.com</span>.
         </p>
 
-        <div th:if="${error}" class="alert alert-danger py-2 small mb-3" th:text="${error}"></div>
+        <div id="otpError"
+             th:if="${error}"
+             class="alert alert-danger py-2 small mb-3"
+             th:text="${error}">
+        </div>
+
 
         <!-- VERIFY OTP -->
         <form th:action="@{/org/register/verify}" method="post">
@@ -70,24 +75,49 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+        // Focus vào ô OTP
         const otpInput = document.getElementById("otp");
         otpInput && otpInput.focus();
 
-        let time = 30;
-        const countdown = document.getElementById("countdown");
-        const resendBtn = document.getElementById("resendBtn");
-        const timer = setInterval(() => {
-            time--;
-            countdown.textContent = time;
-            if (time <= 0) {
-                clearInterval(timer);
-                resendBtn.disabled = false;
-                resendBtn.textContent = "Gửi lại mã";
+        // ===== Countdown cho nút Gửi lại mã (form resend, độc lập với form verify) =====
+        const resendBtn  = document.getElementById("resendBtn");
+        const countdown  = document.getElementById("countdown");
+        const resendForm = document.getElementById("resendForm");
+
+        if (resendBtn && countdown) {
+            let time = 30;
+            const timer = setInterval(() => {
+                time--;
+                countdown.textContent = time;
+                if (time <= 0) {
+                    clearInterval(timer);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = "Gửi lại mã";
+                }
+            }, 1000);
+
+            // Chỉ chặn double-submit cho NÚT GỬI LẠI
+            if (resendForm) {
+                resendForm.addEventListener("submit", () => {
+                    // Nếu user bấm Gửi lại, disable nó, không ảnh hưởng nút Xác minh
+                    resendBtn.disabled = true;
+                    resendBtn.textContent = "Đang gửi...";
+                });
             }
-        }, 1000);
+        }
+
+        // ===== Ẩn thông báo lỗi OTP sau 5 giây =====
+        const otpError = document.getElementById("otpError");
+        if (otpError) {
+            setTimeout(() => {
+                otpError.classList.add("d-none");
+            }, 5000);
+        }
     });
 </script>
+
 </body>
 </html>

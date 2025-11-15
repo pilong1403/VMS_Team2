@@ -142,8 +142,9 @@ public class RegisterController {
             return "redirect:/login";
 
         } catch (OtpVerificationService.OtpException ex) {
+            // ex.getMessage() đang là "OTP_INVALID", "OTP_EXPIRED", ...
             model.addAttribute("email", form.getEmail());
-            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("error", mapOtpErrorMessage(ex.getMessage()));
             return "auth/register-verify";
 
         } catch (DataIntegrityViolationException ex) {
@@ -155,6 +156,38 @@ public class RegisterController {
         } catch (Exception ex) {
             ex.printStackTrace();
             return "redirect:/register?e=SYSTEM_ERROR";
+        }
+    }
+    @PostMapping("/register/resend")
+    public String resend(@RequestParam String email,
+                         HttpSession ss,
+                         Model model) {
+
+        RegisterForm pending = (RegisterForm) ss.getAttribute("PENDING_REG");
+        if (ss == null || pending == null) {
+            return "redirect:/register?e=SESSION_EXPIRED";
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        try {
+            otpService.generateAndSendOtp(normalizedEmail, "VERIFY_EMAIL");
+            // Đưa lại email vào model để view render đúng
+            model.addAttribute("email", normalizedEmail);
+            return "auth/register-verify";
+        } catch (OtpVerificationService.ActiveOtpExistsException ex) {
+            model.addAttribute("email", normalizedEmail);
+            model.addAttribute("error", "Bạn đã có mã xác minh còn hiệu lực. Vui lòng dùng mã đó hoặc thử lại sau ít phút.");
+            return "auth/register-verify";
+        } catch (OtpVerificationService.MailSendException ex) {
+            model.addAttribute("email", normalizedEmail);
+            model.addAttribute("error", "Không thể gửi email xác minh. Vui lòng thử lại hoặc liên hệ quản trị.");
+            return "auth/register-verify";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            model.addAttribute("email", normalizedEmail);
+            model.addAttribute("error", "Không thể gửi lại mã xác minh. Vui lòng thử lại.");
+            return "auth/register-verify";
         }
     }
 
@@ -176,4 +209,20 @@ public class RegisterController {
             return "";
         }
     }
+    private String mapOtpErrorMessage(String code) {
+        if (code == null || code.isBlank()) {
+            return "Có lỗi xảy ra, vui lòng thử lại.";
+        }
+
+        return switch (code) {
+            case "OTP_INVALID" -> "Mã xác nhận không chính xác. Vui lòng kiểm tra lại.";
+            case "OTP_EXPIRED" -> "Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.";
+            case "OTP_NOT_FOUND" -> "Không tìm thấy mã xác nhận phù hợp. Vui lòng kiểm tra email hoặc gửi lại mã.";
+            case "OTP_ALREADY_USED" -> "Mã xác nhận này đã được sử dụng. Vui lòng yêu cầu mã mới.";
+            case "OTP_ACTIVE_EXISTS" -> "Bạn đã có một mã xác nhận còn hiệu lực. Vui lòng dùng mã đó hoặc thử lại sau ít phút.";
+            case "OTP_PURPOSE_INVALID" -> "Mục đích xác thực không hợp lệ. Vui lòng thử lại.";
+            default -> "Có lỗi khi xác minh mã xác nhận. Vui lòng thử lại.";
+        };
+    }
+
 }

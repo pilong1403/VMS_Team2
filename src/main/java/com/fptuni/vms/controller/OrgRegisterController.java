@@ -55,9 +55,6 @@ public class OrgRegisterController {
     public String showForm(Model model,
                            @RequestParam(value = "e", required = false, defaultValue = "") String e,
                            HttpSession session) {
-        if (isAuthenticated()) {
-            return "redirect:/login?e=" + E_MUST_LOGOUT;
-        }
         if (!model.containsAttribute("form")) {
             OrgRegisterForm form = new OrgRegisterForm();
 
@@ -89,7 +86,6 @@ public class OrgRegisterController {
                          BindingResult binding,
                          HttpServletRequest req,
                          Model model) {
-        if (isAuthenticated()) return "redirect:/login?e=" + E_MUST_LOGOUT;
 
         HttpSession session = req.getSession(true);
 
@@ -158,12 +154,7 @@ public class OrgRegisterController {
             }
         }
 
-        // ===== 2) Confirm password
-        if (!binding.hasFieldErrors("password") && !binding.hasFieldErrors("confirmPassword")) {
-            if (!safe(form.getPassword()).equals(safe(form.getConfirmPassword()))) {
-                binding.rejectValue("confirmPassword", "Mismatch", "Mật khẩu xác nhận không khớp.");
-            }
-        }
+
 
         // ===== 3) Kiểm tra email ở service
         String emailForOtp = safe(form.getEmail()).trim().toLowerCase();
@@ -217,9 +208,7 @@ public class OrgRegisterController {
                          HttpServletRequest req,
                          Model model,
                          RedirectAttributes ra) {
-        if (isAuthenticated()) {
-            return "redirect:/login?e=" + E_MUST_LOGOUT;
-        }
+
 
         HttpSession ss = req.getSession(false);
         if (ss == null || ss.getAttribute(SESSION_PENDING_ORG) == null) {
@@ -262,9 +251,10 @@ public class OrgRegisterController {
 
         } catch (OtpVerificationService.OtpException ex) {
             model.addAttribute(ATTR_EMAIL, email);
-            model.addAttribute(ATTR_ERROR, ex.getMessage());
+            model.addAttribute(ATTR_ERROR, mapOtpErrorMessage(ex.getMessage()));
             return VIEW_ORG_VERIFY;
-        } catch (Exception ex) {
+        }
+   catch (Exception ex) {
             ex.printStackTrace();
             model.addAttribute(ATTR_EMAIL, email);
             model.addAttribute(ATTR_ERROR, "Lỗi khi xác minh/gửi hồ sơ: " + ex.getMessage());
@@ -307,4 +297,20 @@ public class OrgRegisterController {
             default -> null;
         };
     }
+    private String mapOtpErrorMessage(String code) {
+        if (code == null || code.isBlank()) {
+            return "Có lỗi xảy ra, vui lòng thử lại.";
+        }
+
+        return switch (code) {
+            case "OTP_INVALID" -> "Mã xác nhận không chính xác. Vui lòng kiểm tra lại.";
+            case "OTP_EXPIRED" -> "Mã xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.";
+            case "OTP_NOT_FOUND" -> "Không tìm thấy mã xác nhận phù hợp. Vui lòng kiểm tra email hoặc gửi lại mã.";
+            case "OTP_ALREADY_USED" -> "Mã xác nhận này đã được sử dụng. Vui lòng yêu cầu mã mới.";
+            case "OTP_ACTIVE_EXISTS" -> "Bạn đã có một mã xác nhận còn hiệu lực. Vui lòng dùng mã đó hoặc thử lại sau ít phút.";
+            case "OTP_PURPOSE_INVALID" -> "Mục đích xác thực không hợp lệ. Vui lòng thử lại.";
+            default -> "Có lỗi khi xác minh mã xác nhận. Vui lòng thử lại.";
+        };
+    }
+
 }

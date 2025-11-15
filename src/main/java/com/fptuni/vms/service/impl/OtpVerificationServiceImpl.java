@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 public class OtpVerificationServiceImpl implements OtpVerificationService {
 
     private static final int OTP_LENGTH = 6;
-    private static final int EXPIRE_MINUTES = 10;
+    private static final int EXPIRE_MINUTES = 5;
 
     private final OtpVerificationRepository repo;
     private final MailService mailService;

@@ -84,16 +84,23 @@ public class PasswordResetController {
         }
     }
 
-    // STEP 2: Nhập OTP
+// STEP 2: Nhập OTP
     @GetMapping("/forgot-password/verify")
     public String verifyPage(@RequestParam(value = "e", required = false) String e,
+                             @ModelAttribute(value = "errorCode") String flashCode,
                              HttpSession session, Model model) {
+
         String email = (String) session.getAttribute(SESSION_RESET_EMAIL);
         if (email == null) return "redirect:/forgot-password";
+
+        // Ưu tiên flashCode nếu có, nếu không thì dùng param e
+        String code = (flashCode != null && !flashCode.isBlank()) ? flashCode : e;
+
         model.addAttribute("email", email);
-        model.addAttribute("error", map(e));
+        model.addAttribute("error", map(code));
         return "auth/forgot-verify";
     }
+
 
     @PostMapping("/forgot-password/verify")
     public String handleVerify(@RequestParam("code") String code, HttpSession session) {
@@ -139,6 +146,31 @@ public class PasswordResetController {
         session.removeAttribute(SESSION_RESET_EMAIL);
         return "redirect:/login?e=RESET_OK&email=" + url(email);
     }
+    @PostMapping("/forgot-password/resend")
+    public String resendOtp(HttpSession session, RedirectAttributes redirectAttrs) {
+        String email = (String) session.getAttribute(SESSION_RESET_EMAIL);
+        if (email == null) {
+            // Hết session thì quay lại nhập email
+            return "redirect:/forgot-password";
+        }
+
+        try {
+            otpService.generateAndSendOtp(email, "RESET_PASSWORD");
+            // Báo là đã gửi lại, vẫn ở trang verify
+            redirectAttrs.addFlashAttribute("errorCode", "OTP_RESENT");
+            return "redirect:/forgot-password/verify";
+        } catch (OtpVerificationService.ActiveOtpExistsException ex) {
+            // Đã có OTP còn hiệu lực
+            redirectAttrs.addFlashAttribute("errorCode", "OTP_ACTIVE");
+            return "redirect:/forgot-password/verify";
+        } catch (OtpVerificationService.MailSendException ex) {
+            redirectAttrs.addFlashAttribute("errorCode", "MAIL_FAIL");
+            return "redirect:/forgot-password/verify";
+        } catch (RuntimeException ex) {
+            redirectAttrs.addFlashAttribute("errorCode", "SYSTEM_ERROR");
+            return "redirect:/forgot-password/verify";
+        }
+    }
 
     // ===== util =====
     private String map(String code) {
@@ -154,6 +186,7 @@ public class PasswordResetController {
             case "OTP_INVALID" -> "Mã OTP không đúng.";
             case "CONFIRM_MISMATCH" -> "Mật khẩu xác nhận không khớp.";
             case "SYSTEM_ERROR" -> "Có lỗi hệ thống. Vui lòng thử lại sau.";
+            case "OTP_RESENT" -> "Mã OTP mới đã được gửi tới email của bạn. Vui lòng kiểm tra hộp thư.";
             default -> null;
         };
     }

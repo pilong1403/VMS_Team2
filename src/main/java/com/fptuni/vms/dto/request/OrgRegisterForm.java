@@ -1,11 +1,15 @@
 package com.fptuni.vms.dto.request;
 
+import com.fptuni.vms.validation.PasswordConfirmation;
+import com.fptuni.vms.validation.PasswordMatches;
+import com.fptuni.vms.validation.ValidPassword;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class OrgRegisterForm {
+@PasswordMatches
+public class OrgRegisterForm implements PasswordConfirmation {
 
     @NotBlank(message = "Vui lòng nhập tên tổ chức.")
     @Size(max = 200, message = "Tên tổ chức không vượt quá 200 ký tự.")
@@ -20,7 +24,6 @@ public class OrgRegisterForm {
     @NotNull(message = "Vui lòng tải tài liệu đăng ký.")
     private MultipartFile regDocFile;
 
-    // NEW: Avatar tổ chức (tùy chọn, dạng file)
     private MultipartFile avatarFile;
 
     @NotBlank(message = "Vui lòng nhập họ và tên.")
@@ -41,7 +44,7 @@ public class OrgRegisterForm {
     private String address;
 
     @NotBlank(message = "Vui lòng nhập mật khẩu.")
-    @Size(min = 8, max = 64, message = "Mật khẩu phải từ 8 đến 64 ký tự.")
+    @ValidPassword(message = "Mật khẩu phải tối thiểu 8 ký tự và bao gồm chữ, số.")
     private String password;
 
     @NotBlank(message = "Vui lòng xác nhận mật khẩu.")
