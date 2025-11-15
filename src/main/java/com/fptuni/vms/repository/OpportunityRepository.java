@@ -13,49 +13,49 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OpportunityRepository {
 
-    Page<Opportunity> findOpenOpportunities(Pageable pageable);
+        Page<Opportunity> findOpenOpportunities(Pageable pageable);
 
-    Long countApprovedApplications(Integer oppId);
+        Long countApprovedApplications(Integer oppId);
 
-    Page<Opportunity> findOpportunitiesWithFilters(
-            Integer categoryId,
-            String location,
-            Opportunity.OpportunityStatus status,
-            String searchTerm,
-            String time,
-            String sortBy,
-            Pageable pageable);
+        Page<Opportunity> findOpportunitiesWithFilters(
+                        Integer categoryId,
+                        String location,
+                        Opportunity.OpportunityStatus status,
+                        String searchTerm,
+                        String time,
+                        String sortBy,
+                        Pageable pageable);
 
-    List<com.fptuni.vms.model.Category> findCategoriesWithOpportunities();
+        List<com.fptuni.vms.model.Category> findCategoriesWithOpportunities();
 
-    List<Opportunity> findTop3LatestOpportunities(Pageable pageable);
+        List<Opportunity> findTop3LatestOpportunities(Pageable pageable);
 
-    // THÊM HÀM ĐANG ĐƯỢC SERVICE GỌI
-    Optional<Opportunity> findById(Integer id);
+        // THÊM HÀM ĐANG ĐƯỢC SERVICE GỌI
+        Optional<Opportunity> findById(Integer id);
 
-    Opportunity save(Opportunity o);
+        Opportunity save(Opportunity o);
 
-    List<Opportunity> getAll();
+        List<Opportunity> getAll();
 
-    List<Opportunity> findByOrganization(int orgId);
+        List<Opportunity> findByOrganization(int orgId);
 
-    Opportunity findById(int id);
+        Opportunity findById(int id);
 
-    // === Org scope + keyword + quick chips ===
-    Page<Opportunity> findOrgOpportunitiesWithFilters(
-            int orgId,
-            Integer categoryId,
-            String keyword, // tìm trong title/subtitle/location
-            Opportunity.OpportunityStatus status,
-            String quick, // upcoming | ongoing | past | null
-            String sortBy,
-            Pageable pageable);
+        // === Org scope + keyword + quick chips ===
+        Page<Opportunity> findOrgOpportunitiesWithFilters(
+                        int orgId,
+                        Integer categoryId,
+                        String keyword, // tìm trong title/subtitle/location
+                        Opportunity.OpportunityStatus status,
+                        String quick, // upcoming | ongoing | past | null
+                        String sortBy,
+                        Pageable pageable);
 
-    Page<Opportunity> searchByOrg(int orgId, String q,
-                                  Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable);
+        Page<Opportunity> searchByOrg(int orgId, String q,
+                        Opportunity.OpportunityStatus status, String timeOrder, Pageable pageable);
 
+        List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
+                        LocalDateTime start, LocalDateTime end, int limit);
 
-    List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
-                                         LocalDateTime start, LocalDateTime end, int limit);
-
+        long countAll();
 }

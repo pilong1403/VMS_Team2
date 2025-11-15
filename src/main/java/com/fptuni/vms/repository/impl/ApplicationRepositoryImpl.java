@@ -374,17 +374,20 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
 
     @Override
     public long countApprovedByOppId(Integer oppId) {
-        Long cnt = em.createQuery("""
-                SELECT COUNT(a.appId)
+        if (oppId == null)
+            return 0L;
+
+        return em.createQuery("""
+                SELECT COUNT(a)
                 FROM Application a
-                WHERE a.opportunity.oppId = :oppId
-                  AND a.status IN (:s1, :s2)
+                WHERE a.opportunity.oppId = :id
+                  AND a.status IN (:p, :a, :c)
                 """, Long.class)
-                .setParameter("oppId", oppId)
-                .setParameter("s1", Application.ApplicationStatus.APPROVED)
-                .setParameter("s2", Application.ApplicationStatus.COMPLETED)
+                .setParameter("id", oppId)
+                .setParameter("p", Application.ApplicationStatus.PENDING)
+                .setParameter("a", Application.ApplicationStatus.APPROVED)
+                .setParameter("c", Application.ApplicationStatus.COMPLETED)
                 .getSingleResult();
-        return cnt == null ? 0L : cnt;
     }
 
     // ====== NEW: kiểm tra trùng thời gian với các đơn đang PENDING/APPROVED ======
@@ -439,14 +442,15 @@ public class ApplicationRepositoryImpl implements ApplicationRepository {
             return null;
         }
     }
+
     @Override
     public long countApprovedApplications(Integer oppId) {
         Long cnt = em.createQuery("""
-            SELECT COUNT(a.appId)
-            FROM Application a
-            WHERE a.opportunity.oppId = :oppId
-              AND a.status IN (:s1, :s2)
-            """, Long.class)
+                SELECT COUNT(a.appId)
+                FROM Application a
+                WHERE a.opportunity.oppId = :oppId
+                  AND a.status IN (:s1, :s2)
+                """, Long.class)
                 .setParameter("oppId", oppId)
                 .setParameter("s1", Application.ApplicationStatus.APPROVED)
                 .setParameter("s2", Application.ApplicationStatus.COMPLETED)

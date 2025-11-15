@@ -421,4 +421,10 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         return q.getResultList();
     }
 
+    @Override
+    public long countAll() {
+        String jpql = "SELECT COUNT(o) FROM Opportunity o";
+        return em.createQuery(jpql, Long.class).getSingleResult();
+    }
+
 }

@@ -168,9 +168,14 @@ body {
     font-weight: 500;
 }
 
-.status-badge.open {
-    background-color: #d4f4dd;
-    color: #0d7736;
+.status-badge.present {
+    background-color: #d4f4dd; /* Xanh lá nhạt */
+    color: #0d7736; /* Xanh lá đậm */
+}
+
+.status-badge.upcoming {
+    background-color: #e0f3ff; /* Xanh dương nhạt */
+    color: #005fb8; /* Xanh dương đậm */
 }
 
 .status-badge.closed {

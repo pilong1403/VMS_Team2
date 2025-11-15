@@ -484,7 +484,7 @@ public class ProfileController {
         return "volunteer/event-history";
     }
 
-    @PostMapping("/rate-event")
+    @PostMapping(value = "/rate-event", produces = "text/plain;charset=UTF-8")
     @ResponseBody
     public String rateEvent(@RequestParam int oppId,
             @RequestParam int rating,
@@ -510,7 +510,7 @@ public class ProfileController {
         }
     }
 
-    @PostMapping("/update-feedback")
+    @PostMapping(value = "/update-feedback", produces = "text/plain;charset=UTF-8")
     @ResponseBody
     public String updateFeedback(@RequestParam int feedbackId,
             @RequestParam int rating,

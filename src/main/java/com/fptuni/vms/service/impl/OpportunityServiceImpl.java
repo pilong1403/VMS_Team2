@@ -152,11 +152,10 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     @Override
     public Page<Opportunity> searchByOrg(int orgId, String q,
-                                         Opportunity.OpportunityStatus status, int page, int size, String timeOrder) {
+            Opportunity.OpportunityStatus status, int page, int size, String timeOrder) {
         Pageable pageable = PageRequest.of(page, size);
         return opportunityRepository.searchByOrg(orgId, q, status, timeOrder, pageable);
     }
-
 
     // @Override
     // public Opportunity findById(int id) {
@@ -194,10 +193,11 @@ public class OpportunityServiceImpl implements OpportunityService {
         Long c = opportunityRepository.countApprovedApplications(oppId);
         return c == null ? 0L : c;
     }
+
     // ================= PHI LONG ITER 3 =================//
     @Override
     public List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
-                                                LocalDateTime start, LocalDateTime end, int limit) {
+            LocalDateTime start, LocalDateTime end, int limit) {
         return opportunityRepository.findOverlapsForOrg(orgId, excludeOppId, start, end, limit);
     }
 
