@@ -56,4 +56,6 @@ public interface OpportunityRepository {
 
         List<Opportunity> findOverlapsForOrg(int orgId, Integer excludeOppId,
                         LocalDateTime start, LocalDateTime end, int limit);
+
+        long countAll();
 }

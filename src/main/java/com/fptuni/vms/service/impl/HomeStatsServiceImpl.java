@@ -15,13 +15,16 @@ public class HomeStatsServiceImpl implements HomeStatsService {
     private final UserRepository userRepository;
     private final FeedbackRepository feedbackRepository;
     private final OrganizationRepository organizationRepository;
+    private final com.fptuni.vms.repository.OpportunityRepository opportunityRepository;
 
     public HomeStatsServiceImpl(UserRepository userRepository,
             FeedbackRepository feedbackRepository,
-            OrganizationRepository organizationRepository) {
+            OrganizationRepository organizationRepository,
+            com.fptuni.vms.repository.OpportunityRepository opportunityRepository) {
         this.userRepository = userRepository;
         this.feedbackRepository = feedbackRepository;
         this.organizationRepository = organizationRepository;
+        this.opportunityRepository = opportunityRepository;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class HomeStatsServiceImpl implements HomeStatsService {
 
         try {
             // Đếm số cơ hội đã được lan tỏa (tổng số opportunity)
-            long opportunitiesCount = organizationRepository.countAll();
+            long opportunitiesCount = opportunityRepository.countAll();
             stats.put("opportunitiesCount", opportunitiesCount);
         } catch (Exception e) {
             stats.put("opportunitiesCount", 0L);
