@@ -64,7 +64,7 @@
                     </div>
                 </div>
 
-
+                <!-- Form update -->
                 <form th:action="@{/organization/ratings/update}" th:object="${rating}" method="post" class="panel form" style="grid-column:2/3">
                     <input type="hidden" th:field="*{id}" />
                     <input type="hidden" name="oppId" th:value="${rating.opportunity.oppId}" />

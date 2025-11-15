@@ -125,8 +125,15 @@
                                                 </div>
                                             </td>
                                             <td th:text="${a.opportunity.subtitle}">Mô tả ngắn...</td>
+
+                                            <!-- STATUS BADGE CLICKABLE -> STATUS MODAL -->
                                             <td>
-                                                <span class="badge"
+                                                <span class="badge app-status-badge" style="cursor: pointer;"
+                                                    data-bs-toggle="modal" data-bs-target="#statusModal"
+                                                    th:data-app-id="${a.appId}" th:data-opp-id="${a.opportunity.oppId}"
+                                                    th:data-status="${a.status.name()}" th:data-reason="${a.reason}"
+                                                    th:data-applied-at="${#temporals.format(a.appliedAt,'dd/MM/yyyy HH:mm')}"
+                                                    th:data-note="${a.cancelReason}"
                                                     th:classappend="${a.status.name()=='PENDING' ? ' bg-secondary' :
                                                 (a.status.name()=='APPROVED' ? ' bg-primary' :
                                                 (a.status.name()=='REJECTED' ? ' bg-danger' :
@@ -138,6 +145,7 @@
                                                 (a.status.name()=='CANCELLED' ? 'Đã hủy' : a.status.toString()))))}">
                                                 </span>
                                             </td>
+
                                             <td>
                                                 <div class="d-flex gap-2">
                                                     <a class="btn btn-sm btn-outline-secondary"
@@ -161,7 +169,7 @@
                                 </table>
                             </div>
 
-                            <!--  Pagination -->
+                            <!-- Pagination -->
                             <div class="card-footer d-flex justify-content-between align-items-center">
                                 <div class="text-muted small">
                                     Trang <span th:text="${currentPage + 1}">1</span>/<span
@@ -191,7 +199,6 @@
                                 </nav>
                             </div>
                             <!-- /Pagination -->
-
                         </div>
                     </div>
                 </div>
@@ -259,44 +266,124 @@
         </div>
     </div>
 
+    <!-- Status Detail Modal (MODIFIED) -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi tiết trạng thái đơn ứng tuyển</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <!-- NEW: Display volunteer full name -->
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary mb-0">Tên tình nguyện viên</label>
+                            <div class="fw-semibold" id="status-volunteer-name" th:text="${user.fullName}">—</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary mb-0">Trạng thái</label>
+                            <div id="status-status">—</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary mb-0">Thời gian ứng tuyển</label>
+                            <div id="status-applied-at">—</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-secondary mb-0">Lý do ứng tuyển</label>
+                            <div id="status-reason" class="text-break">—</div>
+                        </div>
+
+                        <!-- Note group (cancel_reason / approval note) -->
+                        <div class="col-12" id="status-note-group">
+                            <label class="form-label text-secondary mb-0" id="status-note-label"></label>
+                            <div id="status-note-value" class="text-break">—</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            const cancelModal = document.getElementById('cancelModal');
-            const appIdInput = document.getElementById('cancel-app-id');
-            const orgNameEl = document.getElementById('cancel-org-name');
-            const oppTitleEl = document.getElementById('cancel-opp-title');
-            const appliedAtEl = document.getElementById('cancel-applied-at');
-            const joinReasonEl = document.getElementById('cancel-join-reason');
-            const reasonTextarea = document.getElementById('cancel-reason');
 
-            // Lấy tên TNV từ server (model 'user')
             const volunteerName = /*[[${user.fullName}]]*/ 'Tình nguyện viên';
+            const volunteerId = /*[[${user.userId}]]*/ 0;
 
+            /* Cancel Modal */
             document.querySelectorAll('.btn-cancel-app').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    appIdInput.value = btn.dataset.appId || '';
-                    orgNameEl.textContent = btn.dataset.orgName || '—';
-                    oppTitleEl.textContent = btn.dataset.oppTitle || '—';
-                    appliedAtEl.textContent = btn.dataset.appliedAt || '—';
-                    joinReasonEl.textContent = btn.dataset.joinReason || '—';
+                    document.getElementById('cancel-app-id').value = btn.dataset.appId || '';
+                    document.getElementById('cancel-org-name').textContent = btn.dataset.orgName || '—';
+                    document.getElementById('cancel-opp-title').textContent = btn.dataset.oppTitle || '—';
+                    document.getElementById('cancel-applied-at').textContent = btn.dataset.appliedAt || '—';
+                    document.getElementById('cancel-join-reason').textContent = btn.dataset.joinReason || '—';
 
-                    // Prefill nội dung huỷ: "<Tên TNV> - Lý do hủy đơn: "
-                    reasonTextarea.value = `${volunteerName} - Lý do hủy đơn: `;
-                    // Đưa con trỏ về cuối để user gõ tiếp
+                    const textarea = document.getElementById('cancel-reason');
+                    textarea.value = `${volunteerName} - Lý do hủy đơn: `;
                     setTimeout(() => {
-                        const len = reasonTextarea.value.length;
-                        reasonTextarea.focus();
-                        reasonTextarea.setSelectionRange(len, len);
+                        textarea.focus();
+                        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
                     }, 0);
+                });
+            });
+
+            /* Status Modal */
+            document.querySelectorAll('.app-status-badge').forEach(badge => {
+                badge.addEventListener('click', () => {
+
+                    document.getElementById('status-volunteer-name').textContent = volunteerName;
+
+                    document.getElementById('status-status').textContent =
+                        badge.textContent.trim();
+
+                    document.getElementById('status-applied-at').textContent =
+                        badge.dataset.appliedAt || '—';
+
+                    document.getElementById('status-reason').textContent =
+                        badge.dataset.reason || '—';
+
+                    const note = badge.dataset.note || '';
+                    const upperStatus = (badge.dataset.status || '').toUpperCase();
+
+                    const group = document.getElementById('status-note-group');
+                    const label = document.getElementById('status-note-label');
+                    const value = document.getElementById('status-note-value');
+
+                    if (upperStatus === 'REJECTED' || upperStatus === 'CANCELLED') {
+                        label.textContent = 'Lý do hủy đơn';
+                        value.textContent = note || '—';
+                        group.classList.remove('d-none');
+                    } else if (upperStatus === 'APPROVED' || upperStatus === 'COMPLETED') {
+                        label.textContent = 'Ghi chú duyệt đơn';
+                        value.textContent = note || '—';
+                        group.classList.remove('d-none');
+                    } else {
+                        group.classList.add('d-none');
+                    }
+
+                    const modalEl = document.getElementById('statusModal');
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
                 });
             });
         });
     </script>
 
-
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/toast-utils.js}"></script>
+
 </body>
 
 </html>

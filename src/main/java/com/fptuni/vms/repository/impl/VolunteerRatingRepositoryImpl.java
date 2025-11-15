@@ -129,7 +129,6 @@ public class VolunteerRatingRepositoryImpl implements VolunteerRatingRepository 
     }
 
     // ===================== 2. LIST VOLUNTEERS FOR OPPORTUNITY
-    // =====================
     @Override
     public List<OpportunityVolunteerRatingDto> findVolunteersForOpportunity(
             int orgId, int opportunityId, String keyword, String statusFilter,

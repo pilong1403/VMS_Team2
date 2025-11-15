@@ -35,7 +35,6 @@ public class UserController {
     private CloudStorageService cloudStorageService;
 
     // Trang danh sách user
-
     @GetMapping
     public String listUsers(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -140,7 +139,7 @@ public class UserController {
     }
 
 
-    // Khóa / Mở khóa user
+    // khóa / mở khóa user
     @PostMapping("/{id}/toggle-status")
     public String toggleStatus(@PathVariable("id") Integer id,
                                RedirectAttributes redirectAttributes,
@@ -228,7 +227,7 @@ public class UserController {
     public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("url") String fileUrl) {
         return userService.downloadFileFromUrl(fileUrl);
     }
-
+// tải hàng loạt
     @PostMapping("/upload-volunteer-excel")
     public String uploadVolunteerExcel(@RequestParam("excelFile") MultipartFile file,
                                        HttpSession session,
@@ -363,7 +362,7 @@ public class UserController {
 
 
 
-
+// lưu user bằng excel
     @PostMapping("/confirm-volunteer-excel")
     public String confirmVolunteerExcel(HttpSession session, RedirectAttributes redirectAttributes) {
         List<User> volunteers = (List<User>) session.getAttribute("volunteerListSession");

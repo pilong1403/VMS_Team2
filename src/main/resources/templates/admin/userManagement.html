@@ -91,7 +91,7 @@
                 <button class="btn btn-outline" type="submit">Lọc</button>
             </div>
         </form>
-        <!-- Bảng -->
+        <!-- bảng hiển thị user -->
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -234,7 +234,7 @@
 </div>
 
 
-<!-- Modal: Thêm người dùng (tab Nhập tay / Tải hàng loạt) -->
+<!-- Modal: thêm người dùng ( nhập tay / tải hàng loạt) -->
 <div class="modal" id="addUserModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -248,7 +248,7 @@
                 <button class="tab" data-tab="bulk">Tải lên hàng loạt</button>
             </div>
 
-            <!-- Nhập tay -->
+            <!-- nhập tay -->
             <form th:action="@{/admin/users/create}" method="post" enctype="multipart/form-data" id="addUserForm" data-tab-panel="manual">
                 <div class="form-grid">
                     <div class="form-group">
@@ -331,7 +331,7 @@
             </form>
 
 
-            <!-- Bulk -->
+            <!-- tải hàng loạt -->
             <form th:action="@{/admin/users/upload-volunteer-excel}" method="post" enctype="multipart/form-data" id="bulkUploadForm">
                 <div id="bulkUploadPanel" class="bulk-panel" data-tab-panel="bulk" style="display:none">
                     <div class="note-box">
@@ -369,7 +369,7 @@
     </div>
 </div>
 
-<!-- Modal Chi tiết người dùng -->
+<!-- modal Chi tiết người dùng -->
 <div class="modal" id="userDetailModal"
      th:classappend="${showUserDetailModal} ? ' show'">
     <div class="modal-content user-detail-modal">

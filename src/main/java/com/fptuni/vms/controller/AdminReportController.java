@@ -22,7 +22,7 @@ public class AdminReportController {
 
     @Autowired
     private ReportService reportService;
-
+// hàm hiển thị trang báo cáo
     @GetMapping
     public String reportPage(
             @RequestParam(defaultValue = "month") String rangeType,
@@ -62,7 +62,7 @@ public class AdminReportController {
 
         return "admin/reportManagement";
     }
-
+// hàm drill down
     @GetMapping("/drilldown")
     @ResponseBody
     public Map<String, Object> drillDown(
@@ -70,7 +70,7 @@ public class AdminReportController {
             @RequestParam String label) {
         return reportService.getDrillDownStats(rangeType, label);
     }
-
+// hàm export report to excel
     @GetMapping("/export")
     public void exportReport(
             @RequestParam String type,

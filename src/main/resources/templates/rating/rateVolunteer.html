@@ -88,7 +88,7 @@
                     </div>
                 </div>
 
-                <!-- Form bên phải -->
+                <!-- Form đánh giá -->
                 <form th:action="@{/organization/ratings/save}" method="post" th:object="${rating}" class="panel form">
                     <!-- Hidden -->
                     <input type="hidden" name="oppId" th:value="${opportunity.oppId}">

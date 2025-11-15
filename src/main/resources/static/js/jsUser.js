@@ -91,7 +91,7 @@ function initUsersPage() {
         const pw = $('#password').value;
 
         if (!validateEmail(email)) { e.preventDefault(); showToast('Lỗi', 'Email không hợp lệ'); return; }
-        if (!validatePhone(phone)) { e.preventDefault(); showToast('Lỗi', 'Số điện thoại phải bắt đầu bằng 0 và đủ 9-10 số'); return; }
+        if (!validatePhone(phone)) { e.preventDefault(); showToast('Lỗi', 'Số điện thoại phải bắt đầu bằng 0 và đủ 10 số'); return; }
         if (!validatePassword(pw)) { e.preventDefault(); showToast('Lỗi', 'Mật khẩu ≥8 ký tự, gồm số và ký tự đặc biệt'); return; }
     });
 
@@ -107,7 +107,7 @@ function validateEmail(email) {
     return /^[\w.-]+@[\w.-]+\.\w+$/.test(email);
 }
 function validatePhone(phone) {
-    return /^0\d{9,10}$/.test(phone);   // Bắt đầu bằng 0, dài 9-10 số
+    return /^0\d{9}$/.test(phone);   // Bắt đầu bằng 0, dài 9-10 số
 }
 function validatePassword(pw) {
     return /^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/.test(pw);
@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fields = [
         { id: "email", validator: validateEmail, message: "Email không hợp lệ!" },
-        { id: "phone", validator: validatePhone, message: "Số điện thoại không hợp lệ!" },
+        { id: "phone", validator: validatePhone, message: "Số điện thoại phải bắt đầu bằng 0 và đủ 10 số!" },
         { id: "password", validator: validatePassword, message: "Mật khẩu ≥ 8 ký tự, gồm số & ký tự đặc biệt!" },
         { id: "fullName", validator: (v) => v.trim().length >= 2, message: "Tên quá ngắn!" }
     ];
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatarError = document.createElement("small");
     avatarError.className = "error-text";
     avatarInput.parentElement.appendChild(avatarError); // Gắn vào dưới avatar
-
+// giới hạn ảnh
     const ALLOWED_TYPES = [
         "image/jpeg",
         "image/png",

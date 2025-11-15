@@ -102,7 +102,7 @@
         <div class="stats-card text-center">
           <i class="bi bi-check-circle-fill mb-3" style="font-size: 3rem; color: #34d399"></i>
           <div class="h2 fw-bold text-dark mb-1" th:text="${stats != null ? stats.opportunitiesCount : 0}">0</div>
-          <div class="text-muted small">Cơ Hội Được Lan Tỏa</div>
+          <div class="text-muted small">Cơ Hội Đã và Đang Được Lan Tỏa</div>
         </div>
       </div>
       <div class="col-3">
@@ -140,19 +140,16 @@
               th:text="${opp.categoryName}">Category</span>
 
             <!-- Badge trạng thái -->
-              <span class="badge position-absolute"
-                    style="top: 12px; right: 12px"
-                    th:text="${
+            <span class="badge position-absolute" style="top: 12px; right: 12px" th:text="${
                             opp.status?.name() == 'OPEN'      ? 'Đang mở' :
                             opp.status?.name() == 'CLOSED'    ? 'Đã đóng' :
                             opp.status?.name() == 'CANCELLED' ? 'Đã hủy'  : 'Không xác định'
-                      }"
-                    th:classappend="${
+                      }" th:classappend="${
                             opp.status?.name() == 'OPEN'      ? ' bg-success'  :
                             opp.status?.name() == 'CLOSED'    ? ' bg-secondary':
                             opp.status?.name() == 'CANCELLED' ? ' bg-danger'   : ' bg-dark'
                       }">
-</span>
+            </span>
 
             <!-- Ribbons ưu tiên: HỦY -> HẾT CHỖ -> QUÁ HẠN -->
             <span class="badge position-absolute bg-danger" style="top: 52px; right: 12px"
@@ -214,11 +211,14 @@
                 </a>
 
                 <!-- 2) CHO PHÉP ĐĂNG KÝ -->
-                <button type="button" class="btn btn-primary-custom flex-fill js-apply-btn"
-                  th:if="${st != null and st.canApply}" th:attr="data-opp-id=${opp.oppId}" data-bs-toggle="modal"
-                  data-bs-target="#applyModal">
+                <button type="button" class="btn btn-primary-custom flex-fill js-apply-btn" th:if="${
+      st != null and 
+      st.canApply and 
+      (currentUserRole == null or currentUserRole == 'VOLUNTEER')
+  }" th:attr="data-opp-id=${opp.oppId}" data-bs-toggle="modal" data-bs-target="#applyModal">
                   <i class="bi bi-person-plus me-1"></i>Đăng Ký
                 </button>
+
 
                 <!-- 2.5) ĐÃ HỦY -->
                 <button type="button" class="btn btn-secondary flex-fill" disabled
@@ -425,7 +425,6 @@
               </div>
             </fieldset>
 
-
             <!-- PHẦN 2: Lý do tham gia (bắt buộc) -->
             <fieldset class="border rounded-3 p-3">
               <legend class="float-none w-auto px-2 fs-6 fw-semibold">Lý do tham gia</legend>
@@ -436,12 +435,9 @@
                 <label for="apply_reason" class="form-label">Lý do tham gia <span class="text-danger">*</span></label>
                 <textarea id="apply_reason" class="form-control" name="reason" minlength="10" maxlength="255" required
                   placeholder="Hãy chia sẻ ngắn gọn động lực hoặc lý do bạn muốn tham gia..."></textarea>
-                <div class="invalid-feedback">
-                  Lý do tham gia phải có ít nhất 10 ký tự và không được để trống.
-                </div>
+                <div class="invalid-feedback">Lý do tham gia phải có ít nhất 10 ký tự và không được để trống.</div>
               </div>
             </fieldset>
-
           </div>
 
           <!-- Footer -->
