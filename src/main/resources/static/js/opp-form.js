@@ -180,13 +180,18 @@ function setField(root, sel, name, id) {
     }
 }
 
-// Đánh số lại toàn bộ section + cập nhật name/id theo index
 function reindex() {
     const items = sectionsContainer.querySelectorAll('.section-item');
     items.forEach((it, idx) => {
-        const num = it.querySelector('.sec-number'); // số hiển thị "Phần N"
+        // hiển thị số thứ tự
+        const num = it.querySelector('.sec-number');
         if (num) num.innerText = idx + 1;
-        // Cập nhật name/id cho các field để Spring MVC bind chính xác theo index
+
+        // ép sectionOrder = idx + 1
+        const orderInput = it.querySelector('.sec-order');
+        if (orderInput) orderInput.value = idx + 1;
+
+        // cập nhật name/id
         setField(it, '.sec-order',     `sections[${idx}].sectionOrder`, `sec-order-${idx}`);
         setField(it, '.sec-heading',   `sections[${idx}].heading`,      `sec-heading-${idx}`);
         setField(it, '.sec-content',   `sections[${idx}].content`,      `sec-content-${idx}`);
@@ -195,6 +200,7 @@ function reindex() {
         setField(it, '.sec-caption',   `sections[${idx}].caption`,      `sec-caption-${idx}`);
     });
 }
+
 
 // Thêm section mới từ <template> rồi gắn sự kiện + reindex
 if (btnAdd) {
