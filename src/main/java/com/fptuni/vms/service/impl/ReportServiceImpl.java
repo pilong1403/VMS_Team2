@@ -21,7 +21,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private ReportRepository reportRepository;
-
+// hàm thống kê người dùng
     @Override
     public Map<String, Object> getUserRegistrationStats(String rangeType,
                                                         LocalDate from,
@@ -110,7 +110,7 @@ public class ReportServiceImpl implements ReportService {
     public Map<String, Long> getUserRoleDistribution() {
         return reportRepository.countUsersByRole();
     }
-
+// hàm drill down
     @Override
     public Map<String, Object> getDrillDownStats(String rangeType, String label) {
         Map<String, Object> result;
@@ -160,7 +160,7 @@ public class ReportServiceImpl implements ReportService {
         return result;
     }
 
-
+// hàm xuất excel
     @Override
     public void exportReportToExcel(String type, String rangeType, LocalDate from, LocalDate to, OutputStream out) {
         try (Workbook workbook = new XSSFWorkbook()) {
