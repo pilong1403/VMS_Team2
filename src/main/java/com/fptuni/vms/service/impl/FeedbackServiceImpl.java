@@ -27,7 +27,6 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Autowired
     private UserRepository userRepository;
 
-    // ===================== VOLUNTEER EVENT HISTORY =====================
     @Override
     public List<EventHistoryDto> getVolunteerEventHistory(int volunteerId, int page, int size) {
         int offset = page * size;
@@ -39,7 +38,6 @@ public class FeedbackServiceImpl implements FeedbackService {
         return feedbackRepo.countVolunteerEventHistory(volunteerId);
     }
 
-    // ===================== VOLUNTEER FEEDBACK =====================
     @Override
     @Transactional
     public void createVolunteerFeedback(int oppId, int volunteerId, Integer rating, String content) {
@@ -68,7 +66,6 @@ public class FeedbackServiceImpl implements FeedbackService {
         feedback.setRating(rating);
         feedback.setContent(content);
         feedback.setFeedbackType(Feedback.FeedbackType.VOLUNTEER);
-        // Don't set createdAt - it's handled by database
 
         feedbackRepo.save(feedback);
     }
@@ -81,7 +78,6 @@ public class FeedbackServiceImpl implements FeedbackService {
             throw new IllegalArgumentException("Đánh giá không tồn tại!");
         }
 
-        // Check if feedback is within 3 days of creation
         if (feedback.getCreatedAt().isBefore(LocalDateTime.now().minusDays(3))) {
             throw new IllegalStateException("Không thể chỉnh sửa đánh giá sau 3 ngày!");
         }
@@ -108,7 +104,6 @@ public class FeedbackServiceImpl implements FeedbackService {
         return feedbackRepo.findVolunteerFeedback(oppId, volunteerId);
     }
 
-    // ===================== CRUD =====================
     @Override
     public Feedback findById(int id) {
         return feedbackRepo.findById(id);

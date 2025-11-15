@@ -30,12 +30,7 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     @Override
     public Page<OpportunityCardDto> getOpportunityCards(Pageable pageable) {
-        Page<Opportunity> opportunities = opportunityRepository.findOpenOpportunities(pageable);
-        List<OpportunityCardDto> dtos = opportunities.getContent().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(dtos, pageable, opportunities.getTotalElements());
+        return getOpportunityCardsWithFilters(null, null, null, null, null, "newest", pageable);
     }
 
     @Override
@@ -68,7 +63,7 @@ public class OpportunityServiceImpl implements OpportunityService {
             try {
                 statusEnum = Opportunity.OpportunityStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Invalid status, ignore
+                // Something...
             }
         }
 
@@ -203,11 +198,11 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     @Override
     public Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
-                                                      String keyword,
-                                                      String statusFilter,
-                                                      int page,
-                                                      int size,
-                                                      String timeOrder) {
+            String keyword,
+            String statusFilter,
+            int page,
+            int size,
+            String timeOrder) {
         return opportunityRepository.searchByOrgWithTimeState(orgId, keyword, statusFilter, page, size, timeOrder);
     }
 

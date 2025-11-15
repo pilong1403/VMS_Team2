@@ -63,7 +63,6 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                 .getSingleResult();
     }
 
-    // ===== 3) Tìm có filter + sort + phân trang (chuỗi JPQL hoàn chỉnh)
     @Override
     public Page<Opportunity> findOpportunitiesWithFilters(
             Integer categoryId,
@@ -135,13 +134,11 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                 ? " ORDER BY o.endTime ASC "
                 : " ORDER BY o.createdAt DESC ";
 
-        // Data JPQL (có fetch join)
         String dataJpql = "SELECT o FROM Opportunity o " +
                 "JOIN FETCH o.organization org " +
                 "JOIN FETCH o.category c " +
                 where + orderClause;
 
-        // Count JPQL (không fetch join)
         String countJpql = "SELECT COUNT(o) FROM Opportunity o " +
                 "JOIN o.organization org " +
                 "JOIN o.category c " +

@@ -9,7 +9,6 @@ import com.fptuni.vms.service.OpportunityService;
 import com.fptuni.vms.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
@@ -23,9 +22,6 @@ import java.util.stream.Collectors;
 
 @Controller
 public class HomeController {
-
-    private static final Set<String> ALLOWED_STATUS = Set.of("OPEN", "CLOSED", "CANCELLED");
-    private static final Set<String> ALLOWED_TIME = Set.of("today", "week", "month");
 
     private final OpportunityService opportunityService;
     private final UserService userService;
@@ -56,10 +52,6 @@ public class HomeController {
                 model.addAttribute("currentUserRole", null);
             }
             List<OpportunityCardDto> latestOpportunities = opportunityService.getTop3LatestOpportunities();
-            latestOpportunities = latestOpportunities.stream()
-                    .filter(this::isAllowedStatus)
-                    .toList();
-
             model.addAttribute("latestOpportunities", latestOpportunities);
             Map<Integer, Map<String, Object>> latestBtnStates = computeButtonStates(latestOpportunities, currentUserId);
             model.addAttribute("latestBtnStates", latestBtnStates);
@@ -88,7 +80,6 @@ public class HomeController {
                 model.addAttribute("currentUser", userService.getUserById(currentUserId));
             }
 
-            // Thêm thống kê cho trang about
             Map<String, Object> stats = homeStatsService.getHomeStats();
             model.addAttribute("stats", stats);
         } catch (Exception e) {
@@ -135,101 +126,32 @@ public class HomeController {
                 model.addAttribute("currentUserRole", null);
             }
 
-            StringBuilder warning = new StringBuilder();
+            int p = parseIntOrNull(page, 0);
+            int s = parseIntOrNull(size, 6);
+            Integer catId = parseIntOrNull(categoryId != null ? categoryId : category, null);
 
-            // ---- Sanitize status/time (coi chuỗi rỗng là không lọc, KHÔNG cảnh báo) ----
-            String safeStatus = sanitizeStatus(status);
-            if (status != null && !status.isBlank() && safeStatus == null) {
-                appendWarn(warning, "Bộ lọc trạng thái không hợp lệ, chỉ cho phép: OPEN, CLOSED, CANCELLED.");
-            }
-
-            String safeTime = sanitizeTime(time);
-            if (time != null && !time.isBlank() && safeTime == null) {
-                appendWarn(warning, "Bộ lọc thời gian không hợp lệ, chỉ cho phép: today, week, month.");
-            }
-
-            // ---- Parse page/size ----
-            Integer pageNum = parseIntOrNull(page);
-            Integer sizeNum = parseIntOrNull(size);
-            if (page != null && pageNum == null) {
-                appendWarn(warning, "Tham số 'page' không hợp lệ, đã đặt về 0.");
-            }
-            if (size != null && sizeNum == null) {
-                appendWarn(warning, "Tham số 'size' không hợp lệ, đã đặt về 6.");
-            }
-            int p = (pageNum != null ? pageNum : 0);
-            int s = (sizeNum != null ? sizeNum : 6);
-            p = Math.max(p, 0);
-            s = Math.min(Math.max(s, 1), 50);
-
-            // ---- Lấy danh mục và tập ID hợp lệ ----
             List<Category> categories = opportunityService.getCategoriesWithOpportunities();
-            Set<Integer> allowedCategoryIds = categories.stream()
-                    .map(Category::getCategoryId)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-
-            // ---- Hợp nhất categoryRaw từ categoryId/category ----
-            String categoryRaw = (categoryId != null && !categoryId.isBlank()) ? categoryId : category;
-
-            Integer safeCategoryId = null;
-            if (categoryRaw != null && !categoryRaw.isBlank()) {
-                Integer cat = parseIntOrNull(categoryRaw);
-                if (cat == null) {
-                    appendWarn(warning, "Tham số 'category' không hợp lệ, đã bỏ lọc.");
-                } else if (!allowedCategoryIds.contains(cat)) {
-                    appendWarn(warning, "Danh mục không tồn tại, đã bỏ lọc.");
-                } else {
-                    safeCategoryId = cat;
-                }
-            }
-
             Pageable pageable = PageRequest.of(p, s);
-            Page<OpportunityCardDto> opportunityPage;
 
-            // Nếu status người dùng nhập không hợp lệ → trả về rỗng + cảnh báo
-            if (status != null && !status.isBlank() && safeStatus == null) {
-                opportunityPage = new PageImpl<>(List.of(), pageable, 0);
-            } else {
-                if (safeCategoryId != null || location != null || safeStatus != null || search != null
-                        || safeTime != null) {
-                    opportunityPage = opportunityService.getOpportunityCardsWithFilters(
-                            safeCategoryId, location, safeStatus, search, safeTime, "newest", pageable);
-                } else {
-                    opportunityPage = opportunityService.getOpportunityCards(pageable);
-                }
+            Page<OpportunityCardDto> opportunityPage = opportunityService.getOpportunityCardsWithFilters(
+                    catId, location, status, search, time, "newest", pageable);
 
-                // Lọc an toàn để không hiển thị trạng thái cấm (nếu service chưa chặn)
-                List<OpportunityCardDto> filtered = opportunityPage.getContent().stream()
-                        .filter(this::isAllowedStatus)
-                        .collect(Collectors.toList());
+            List<OpportunityCardDto> opportunities = opportunityPage.getContent();
+            Map<Integer, Map<String, Object>> btnStates = computeButtonStates(opportunities, currentUserId);
 
-                opportunityPage = new PageImpl<>(filtered, pageable,
-                        (safeStatus == null) ? opportunityPage.getTotalElements() : filtered.size());
-            }
-
-            Map<Integer, Map<String, Object>> btnStates = computeButtonStates(opportunityPage.getContent(),
-                    currentUserId);
-
-            model.addAttribute("opportunities", opportunityPage.getContent());
+            model.addAttribute("opportunities", opportunities);
             model.addAttribute("currentPage", p);
             model.addAttribute("totalPages", Math.max(opportunityPage.getTotalPages(), 1));
             model.addAttribute("totalElements", opportunityPage.getTotalElements());
             model.addAttribute("hasNext", opportunityPage.hasNext());
             model.addAttribute("hasPrevious", opportunityPage.hasPrevious());
-
             model.addAttribute("categories", categories);
-            model.addAttribute("selectedCategoryId", safeCategoryId);
+            model.addAttribute("selectedCategoryId", catId);
             model.addAttribute("selectedLocation", location);
-            model.addAttribute("selectedStatus", safeStatus);
+            model.addAttribute("selectedStatus", status);
             model.addAttribute("searchTerm", search);
-            model.addAttribute("selectedTime", safeTime);
-
+            model.addAttribute("selectedTime", time);
             model.addAttribute("btnStates", btnStates);
-
-            if (warning.length() > 0) {
-                model.addAttribute("filterWarning", warning.toString());
-            }
 
         } catch (Exception e) {
             model.addAttribute("error", "Có lỗi xảy ra khi tải dữ liệu: " + e.getMessage());
@@ -246,45 +168,14 @@ public class HomeController {
         return "home/opportunities";
     }
 
-    // ===== Helpers =====
-
-    private static void appendWarn(StringBuilder sb, String msg) {
-        if (sb.length() > 0)
-            sb.append(' ');
-        sb.append(msg);
-    }
-
-    private Integer parseIntOrNull(String raw) {
+    private Integer parseIntOrNull(String raw, Integer defaultValue) {
         if (raw == null || raw.isBlank())
-            return null;
+            return defaultValue;
         try {
             return Integer.parseInt(raw.trim());
         } catch (NumberFormatException ex) {
-            return null;
+            return defaultValue;
         }
-    }
-
-    private String sanitizeStatus(String status) {
-        if (status == null || status.isBlank())
-            return null; // coi rỗng là không lọc
-        String s = status.trim().toUpperCase(Locale.ROOT);
-        return ALLOWED_STATUS.contains(s) ? s : null;
-    }
-
-    private String sanitizeTime(String time) {
-        if (time == null || time.isBlank())
-            return null; // coi rỗng là không lọc
-        String s = time.trim().toLowerCase(Locale.ROOT);
-        return ALLOWED_TIME.contains(s) ? s : null;
-    }
-
-    private boolean isAllowedStatus(OpportunityCardDto c) {
-        if (c == null || c.getStatus() == null)
-            return false;
-        Opportunity.OpportunityStatus st = c.getStatus();
-        return st == Opportunity.OpportunityStatus.OPEN
-                || st == Opportunity.OpportunityStatus.CLOSED
-                || st == Opportunity.OpportunityStatus.CANCELLED;
     }
 
     private Map<Integer, Map<String, Object>> computeButtonStates(List<OpportunityCardDto> cards,
