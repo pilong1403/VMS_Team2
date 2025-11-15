@@ -126,6 +126,7 @@ public class SupportResponseController {
                                        @RequestParam("keyword") String keyword,
                                        @RequestParam("num") Integer num,
                                        @RequestParam(defaultValue = "1") int page,
+                                       @AuthenticationPrincipal CustomUserDetails loggedInUser,
                                        RedirectAttributes redirectAttributes) {
 
         Optional<SupportTicket> optionalTicket = supportTicketService.findById(ticketId);
@@ -144,6 +145,7 @@ public class SupportResponseController {
                 return "redirect:" + redirectUrl;
             }
 
+            ticket.setResolvedBy(loggedInUser.getUser());
             ticket.setStatus(SupportTicket.TicketStatus.CLOSED);
             supportTicketService.update(ticket);
             redirectAttributes.addFlashAttribute("success", "Đánh dấu đã xử lý đơn hỗ trợ #" + ticketId + " thành công !!");
