@@ -63,6 +63,9 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
                 ? opportunityService.findById(form.getOppId())
                 : null;
 
+        // CHỤP SNAPSHOT TRƯỚC KHI ĐỤNG VÀO old
+        OppSnapshot oldSnap = (old != null) ? OppSnapshot.from(old) : null;
+
         // 1) Chuẩn hoá dữ liệu text + XÓA SECTION RỖNG (trim text, bỏ section trống)
         trimForm(form);
 
@@ -99,10 +102,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             return null;
         }
 
-        // 8) Build danh sách OpportunitySection để lưu, gồm logic:
-        //    - upload ảnh section nếu có
-        //    - clear ảnh cũ nếu "__CLEAR__"
-        //    - kế thừa ảnh cũ nếu không đổi
+        // 8) Build danh sách OpportunitySection để lưu
         List<OpportunitySection> sectionsToSave = buildSectionsForSave(form, opp, old, binding);
         if (binding.hasErrors()) {
             return null;
@@ -119,12 +119,10 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
         }
 
         // 10) Gửi thông báo cho volunteer (nếu cần)
-        sendNotifications(old, opp, org, currentUser);
+        sendNotifications(oldSnap, opp, org, currentUser);
 
         return opp;
     }
-
-// OpportunityBusinessServiceImpl.java
 
     @Override
     public void cancelOpportunity(Integer oppId, User actor) {
@@ -183,7 +181,6 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
         );
     }
 
-
     // =================== PRIVATE HELPERS =================== //
 
     /**
@@ -230,9 +227,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
 
             boolean noNewImage = (s.getImageFile() == null || s.getImageFile().isEmpty());
 
-            // HƯỚNG 2: section được coi là "rỗng" nếu không có text + không upload ảnh mới
-            // -> imageUrl (ảnh cũ) không cứu section này, vì nếu user đã xoá hết text + không chọn ảnh,
-            //   thì coi như section đó không còn ý nghĩa => remove luôn.
+            // section rỗng = không text + không upload ảnh mới
             boolean emptySection = noText && noNewImage;
 
             if (!emptySection) {
@@ -270,15 +265,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
     }
 
     /**
-     * Validate toàn bộ rule nghiệp vụ:
-     *  - end > start
-     *  - start >= now + 2h (nếu start mới)
-     *  - neededVolunteers >= số approved
-     *  - Nếu OPEN thì phải có ít nhất 1 section
-     *  - Kiểm tra sectionOrder không null, >0, không trùng
-     *  - Bắt buộc heading & content cho các section còn lại
-     *  - Rule chuyển status (DRAFT -> OPEN, OPEN -> CANCEL,...)
-     *  - Không cho chỉnh nếu opp đã bị lock
+     * Validate toàn bộ rule nghiệp vụ.
      */
     private void validateBusinessRules(OpportunityForm form,
                                        Opportunity old,
@@ -286,9 +273,6 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
                                        LocalDateTime start,
                                        LocalDateTime end,
                                        BindingResult binding) {
-
-        // 0) Nếu org null thì đã reject ở ngoài, ở đây vẫn tiếp tục validate các rule khác
-        //    (để trả thêm lỗi cho user nếu có)
 
         // 1) end phải sau start
         if (start != null && end != null && !end.isAfter(start)) {
@@ -322,7 +306,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             }
         }
 
-        // 4) Nếu status là OPEN thì phải có ít nhất 1 section (sau khi đã trimForm)
+        // 4) Nếu status là OPEN thì phải có ít nhất 1 section
         if (form.getStatus() == Opportunity.OpportunityStatus.OPEN &&
                 (form.getSections() == null || form.getSections().isEmpty())) {
             binding.rejectValue(
@@ -332,7 +316,6 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             );
         }
 
-        // Đảm bảo không NPE
         if (form.getSections() == null) {
             form.setSections(new ArrayList<>());
         }
@@ -390,7 +373,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             binding.reject("status.invalid", msg);
         }
 
-        // 8) Không cho chỉnh sửa nếu opp đã bị lock (đã bắt đầu / CANCELLED / CLOSED)
+        // 8) Không cho chỉnh sửa nếu opp đã bị lock
         if (old != null && isLockedForEdit(old)) {
             binding.reject("opp.locked", "Sự kiện đã bị khóa, không thể chỉnh sửa.");
         }
@@ -412,9 +395,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
     }
 
     /**
-     * Kiểm tra opp đã bị "lock" để không cho chỉnh sửa:
-     *  - now >= startTime
-     *  - hoặc status = CANCELLED / CLOSED
+     * Kiểm tra opp đã bị "lock" để không cho chỉnh sửa.
      */
     private boolean isLockedForEdit(Opportunity opp) {
         boolean startedLock =
@@ -425,8 +406,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
     }
 
     /**
-     * Map các field cơ bản từ form sang entity Opportunity:
-     *  - org, category, title, subtitle, location, neededVolunteers, status, startTime, endTime.
+     * Map các field cơ bản từ form sang entity Opportunity.
      */
     private void mapBasicFields(OpportunityForm form,
                                 Opportunity opp,
@@ -450,14 +430,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
     }
 
     /**
-     * Xử lý ảnh thumbnail:
-     *  - Nếu user upload ảnh mới:
-     *      + check content-type & size
-     *      + upload -> set thumbnailUrl mới
-     *  - Nếu không upload ảnh mới:
-     *      + Nếu thumbnailUrl = "__CLEAR__" hoặc rỗng -> xoá ảnh
-     *      + Nếu thumbnailUrl có giá trị -> set ảnh đó
-     *      + Nếu form không có thumbnailUrl nhưng old != null -> giữ ảnh cũ
+     * Xử lý ảnh thumbnail.
      */
     private boolean processThumbnail(OpportunityForm form,
                                      Opportunity opp,
@@ -508,15 +481,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
     }
 
     /**
-     * Xây list OpportunitySection để lưu:
-     *  - Mỗi section:
-     *      + xử lý imageFile:
-     *          * nếu upload mới -> validate + upload + dùng URL mới
-     *          * nếu không upload:
-     *              - nếu imageUrl = "__CLEAR__"/rỗng -> xoá ảnh
-     *              - nếu imageUrl có giá trị -> dùng giá trị đó
-     *              - nếu imageUrl null → lấy ảnh từ section cũ cùng order (nếu có)
-     *      + set heading, content, caption
+     * Xây list OpportunitySection để lưu.
      */
     private List<OpportunitySection> buildSectionsForSave(OpportunityForm form,
                                                           Opportunity opp,
@@ -597,9 +562,8 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
      * Gửi notification đến volunteer:
      *  - Nếu tạo mới: gửi message "Cơ hội mới"
      *  - Nếu update: so sánh old snapshot vs opp hiện tại để build message liệt kê những trường thay đổi
-     *    (tiêu đề, mô tả, địa điểm, số lượng, trạng thái, thời gian...)
      */
-    private void sendNotifications(Opportunity old,
+    private void sendNotifications(OppSnapshot oldSnap,
                                    Opportunity opp,
                                    Organization org,
                                    User actor) {
@@ -607,7 +571,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
         String publicLink = "/opportunities/" + opp.getOppId();
         List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
 
-        if (old == null) {
+        if (oldSnap == null) {
             // Tạo mới
             String title = "Cơ hội mới: " + opp.getTitle();
             String msg = buildCreateMessage(opp, org);
@@ -622,7 +586,6 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             );
         } else {
             // Cập nhật
-            OppSnapshot oldSnap = OppSnapshot.from(old);
             String msg = buildUpdateMessage(oldSnap, opp, org);
             if (!msg.isBlank()) {
                 String title = "Cập nhật cơ hội: " + opp.getTitle();

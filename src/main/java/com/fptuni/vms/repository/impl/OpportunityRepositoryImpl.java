@@ -428,24 +428,23 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
-            String keyword,
-            String statusFilter,
-            int page,
-            int size,
-            String timeOrder) {
+                                                      String keyword,
+                                                      String statusFilter,
+                                                      int page,
+                                                      int size,
+                                                      String timeOrder) {
 
         if (orgId == null) {
             return Page.empty();
         }
 
-        // page trong repo nên là zero-based
         page = Math.max(page, 0);
         size = Math.max(size, 1);
 
         LocalDateTime now = LocalDateTime.now();
 
         // ===== WHERE chung =====
-        StringBuilder where = new StringBuilder(" WHERE o.organization.orgId = :orgId");
+        StringBuilder where = new StringBuilder(" WHERE org.orgId = :orgId");
         Map<String, Object> params = new HashMap<>();
         params.put("orgId", orgId);
 
@@ -477,21 +476,19 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                     where.append(" AND o.status = :st");
                 }
                 case "OPEN_UPCOMING" -> {
-                    // OPEN + chưa bắt đầu
                     enumStatus = Opportunity.OpportunityStatus.OPEN;
                     where.append(" AND o.status = :st")
                             .append(" AND o.startTime > :now");
                     needNowParam = true;
                 }
                 case "OPEN_ONGOING" -> {
-                    // OPEN + đang diễn ra
                     enumStatus = Opportunity.OpportunityStatus.OPEN;
                     where.append(" AND o.status = :st")
                             .append(" AND o.startTime <= :now AND o.endTime > :now");
                     needNowParam = true;
                 }
                 default -> {
-                    // "ALL" hoặc rỗng -> không thêm điều kiện
+                    // ALL hoặc rỗng: không thêm điều kiện
                 }
             }
         }
@@ -507,7 +504,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         }
 
         // ===== DATA QUERY =====
-        String dataJpql = "SELECT o FROM Opportunity o" + where + order;
+        String dataJpql = "SELECT o FROM Opportunity o JOIN o.organization org" + where + order;
         TypedQuery<Opportunity> dataQuery = em.createQuery(dataJpql, Opportunity.class);
 
         params.forEach(dataQuery::setParameter);
@@ -523,7 +520,7 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         List<Opportunity> content = dataQuery.getResultList();
 
         // ===== COUNT QUERY =====
-        String countJpql = "SELECT COUNT(o) FROM Opportunity o" + where;
+        String countJpql = "SELECT COUNT(o) FROM Opportunity o JOIN o.organization org" + where;
         TypedQuery<Long> countQuery = em.createQuery(countJpql, Long.class);
 
         params.forEach(countQuery::setParameter);
@@ -538,5 +535,6 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
         return new PageImpl<>(content, PageRequest.of(page, size), total);
     }
+
 
 }
