@@ -58,71 +58,71 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             BindingResult binding,
             User currentUser
     ) {
-        // Opp cũ (nếu đang update)
         Opportunity old = (form.getOppId() != null)
                 ? opportunityService.findById(form.getOppId())
                 : null;
 
-        // 1) Chuẩn hoá dữ liệu text + XÓA SECTION RỖNG (trim text, bỏ section trống)
+        // CHỤP SNAPSHOT TRƯỚC KHI MAP
+        OppSnapshot oldSnap = null;
+        if (old != null) {
+            oldSnap = OppSnapshot.from(old);
+        }
+
+        // 1) trimForm
         trimForm(form);
 
-        // 2) Build thời gian bắt đầu / kết thúc từ date + time trên form
+        // 2) build time
         LocalDateTime start = buildStart(form);
         LocalDateTime end   = buildEnd(form);
 
-        // 3) Tìm Organization theo owner hiện tại
+        // 3) org
         Organization org = organizationService.findByOwnerId(currentUser.getUserId());
         if (org == null) {
             binding.reject("org.missing", "Không tìm thấy thông tin tổ chức hợp lệ.");
         }
 
-        // 4) Validate nghiệp vụ (thời gian, số slot, section, status, lock,...)
+        // 4) validate
         validateBusinessRules(form, old, org, start, end, binding);
-
-        // Nếu đã có lỗi thì dừng luôn, không map/save nữa
         if (binding.hasErrors()) {
             return null;
         }
 
-        // 5) Check lock lần cuối (tránh trường hợp vừa validate xong thì opp bị lock)
+        // 5) lock check
         if (old != null && isLockedForEdit(old)) {
             binding.reject("opp.locked", "Sự kiện đã bị khóa, không thể chỉnh sửa nữa.");
             return null;
         }
 
-        // 6) Map dữ liệu cơ bản từ form → entity Opportunity
+        // 6) map basic fields
         Opportunity opp = (old == null) ? new Opportunity() : old;
         mapBasicFields(form, opp, org, start, end);
 
-        // 7) Xử lý thumbnail (upload / giữ / xoá)
+        // 7) thumbnail
         if (!processThumbnail(form, opp, binding, old)) {
             return null;
         }
 
-        // 8) Build danh sách OpportunitySection để lưu, gồm logic:
-        //    - upload ảnh section nếu có
-        //    - clear ảnh cũ nếu "__CLEAR__"
-        //    - kế thừa ảnh cũ nếu không đổi
+        // 8) sections
         List<OpportunitySection> sectionsToSave = buildSectionsForSave(form, opp, old, binding);
         if (binding.hasErrors()) {
             return null;
         }
 
-        // 9) Lưu Opportunity + replace toàn bộ Sections
+        // 9) save
         try {
             opp = opportunityService.save(opp);
             sectionService.replaceSections(opp, sectionsToSave);
         } catch (DataIntegrityViolationException | PersistenceException ex) {
-            // Ví dụ: vi phạm constraint, unique, FK,...
             binding.reject("db.constraint", "Lưu thất bại do dữ liệu trùng lặp hoặc vi phạm ràng buộc.");
             return null;
         }
 
-        // 10) Gửi thông báo cho volunteer (nếu cần)
-        sendNotifications(old, opp, org, currentUser);
+        // 10) Gửi thông báo
+        sendNotifications(oldSnap, opp, org, currentUser);   // ĐỔI CHỖ NÀY
 
         return opp;
     }
+
 
     @Override
     public void cancelOpportunity(Integer oppId, User actor) {
@@ -592,15 +592,20 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
      *  - Nếu update: so sánh old snapshot vs opp hiện tại để build message liệt kê những trường thay đổi
      *    (tiêu đề, mô tả, địa điểm, số lượng, trạng thái, thời gian...)
      */
-    private void sendNotifications(Opportunity old,
+    private void sendNotifications(OppSnapshot oldSnap,
                                    Opportunity opp,
                                    Organization org,
                                    User actor) {
 
         String publicLink = "/opportunities/" + opp.getOppId();
-        List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
 
-        if (old == null) {
+        // Ở đây tuỳ bạn: chỉ APPROVED hay PENDING + APPROVED
+        List<User> recipients = applicationService.findApprovedUsersByOppId(opp.getOppId());
+        if (recipients == null || recipients.isEmpty()) {
+            return;
+        }
+
+        if (oldSnap == null) {
             // Tạo mới
             String title = "Cơ hội mới: " + opp.getTitle();
             String msg = buildCreateMessage(opp, org);
@@ -615,7 +620,6 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             );
         } else {
             // Cập nhật
-            OppSnapshot oldSnap = OppSnapshot.from(old);
             String msg = buildUpdateMessage(oldSnap, opp, org);
             if (!msg.isBlank()) {
                 String title = "Cập nhật cơ hội: " + opp.getTitle();
@@ -631,6 +635,7 @@ public class OpportunityBusinessServiceImpl implements OpportunityBusinessServic
             }
         }
     }
+
 
     /**
      * Build nội dung thông báo khi tạo cơ hội mới.
