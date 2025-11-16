@@ -17,7 +17,6 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
     @PersistenceContext
     private EntityManager em;
 
-    // ===================== 1. VOLUNTEER EVENT HISTORY =====================
     @Override
     public List<EventHistoryDto> findVolunteerEventHistory(int volunteerId, int offset, int limit) {
         String jpql = """
@@ -76,11 +75,8 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
                 .getSingleResult();
     }
 
-    // ===================== 2. VOLUNTEER FEEDBACK CHECKS =====================
     @Override
     public boolean canVolunteerGiveFeedback(int oppId, int volunteerId) {
-        // Check if volunteer has attended and event is completed, and hasn't given
-        // feedback yet
         String jpql = """
                     SELECT COUNT(a)
                     FROM Application a
@@ -136,7 +132,6 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
                 .getResultList();
     }
 
-    // ===================== 3. CRUD =====================
     @Override
     public Feedback findById(int id) {
         return em.find(Feedback.class, id);
@@ -152,7 +147,6 @@ public class FeedbackRepositoryImpl implements FeedbackRepository {
         em.merge(feedback);
     }
 
-    // ===================== 4. STATISTICS =====================
     @Override
     public long countAll() {
         String jpql = "SELECT COUNT(fb) FROM Feedback fb";

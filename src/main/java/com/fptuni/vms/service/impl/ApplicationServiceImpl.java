@@ -350,12 +350,12 @@ public class ApplicationServiceImpl implements ApplicationService {
         public void cancelAllByOppId(Integer oppId, Integer processedById, String reason) {
                 if (oppId == null) return;
 
-                List<Application> apps = repo.findActiveApplicationsByOppId(oppId);
+                List<Application> apps = applicationRepository.findActiveApplicationsByOppId(oppId);
                 if (apps.isEmpty()) return;
 
                 User processedBy = null;
                 if (processedById != null) {
-                        processedBy = repo.findUserById(processedById);
+                        processedBy = applicationRepository.findUserById(processedById);
                 }
 
                 String note = (reason == null || reason.isBlank())
@@ -371,7 +371,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         if (processedBy != null) {
                                 app.setProcessedBy(processedBy);
                         }
-                        repo.save(app);
+                    applicationRepository.save(app);
                 }
         }
 }

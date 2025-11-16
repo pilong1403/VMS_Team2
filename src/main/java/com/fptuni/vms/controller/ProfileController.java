@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page; // import thêm để dùng Page
+import org.springframework.data.domain.Page;
 
 @Controller
 @RequestMapping("/profile")
@@ -123,7 +123,6 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Validation errors
             if (bindingResult.hasErrors()) {
                 Map<String, String> errors = new HashMap<>();
                 bindingResult.getFieldErrors()
@@ -195,7 +194,6 @@ public class ProfileController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Get current user
             User currentUser = SecurityUtils.getCurrentUser(authentication);
             if (currentUser == null) {
                 response.put("success", false);
@@ -203,7 +201,6 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Validation errors
             if (bindingResult.hasErrors()) {
                 Map<String, String> errors = new HashMap<>();
                 bindingResult.getFieldErrors()
@@ -213,7 +210,6 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Additional validation for password confirmation
             if (!changePasswordForm.isPasswordsMatch()) {
                 Map<String, String> errors = new HashMap<>();
                 errors.put("confirmPassword", "Mật khẩu xác nhận không khớp");
@@ -222,7 +218,6 @@ public class ProfileController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Change password
             userService.changePassword(currentUser.getUserId(), changePasswordForm);
 
             response.put("success", true);
@@ -253,7 +248,6 @@ public class ProfileController {
             return "redirect:/login";
         }
 
-        // Check if user is volunteer role
         if (!"VOLUNTEER".equals(currentUser.getRole().getRoleName())) {
             return "redirect:/";
         }
@@ -263,7 +257,6 @@ public class ProfileController {
             return "redirect:/login";
         }
 
-        // Get volunteer's applications
         List<Application> allApplications = applicationService.listMyApplications(currentUser.getUserId());
 
         // Separate upcoming and past events based on opportunity time
@@ -308,14 +301,12 @@ public class ProfileController {
                 .map(this::convertToScheduleDto)
                 .collect(Collectors.toList());
 
-        // Sort
         if ("latest".equals(sort)) {
             filteredUpcoming.sort((a, b) -> b.getStartTime().compareTo(a.getStartTime()));
         } else {
             filteredUpcoming.sort((a, b) -> a.getStartTime().compareTo(b.getStartTime()));
         }
 
-        // Pagination for list view
         int pageSize = 5;
         int totalItems = filteredUpcoming.size();
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
@@ -342,7 +333,6 @@ public class ProfileController {
                 })
                 .sum();
 
-        // Create response DTO
         VolunteerScheduleResponseDto scheduleResponse = new VolunteerScheduleResponseDto();
         scheduleResponse.setUpcomingApplications(allUpcomingForCalendar);
         scheduleResponse.setPastApplications(new ArrayList<>());
@@ -350,7 +340,6 @@ public class ProfileController {
         scheduleResponse.setCompletedCount((int) completedCount);
         scheduleResponse.setTotalHours(totalHours);
 
-        // Get categories for filter dropdown
         model.addAttribute("categories", categoryService.listAll());
 
         model.addAttribute("user", freshUser);
@@ -384,7 +373,6 @@ public class ProfileController {
         return dto;
     }
 
-    // Event History Methods
     @GetMapping("/event-history")
     public String eventHistory(
             @RequestParam(defaultValue = "0") int page,
@@ -404,11 +392,9 @@ public class ProfileController {
             return "redirect:/home";
         }
 
-        // Get all event history
         List<EventHistoryDto> allEventHistory = feedbackService.getVolunteerEventHistory(
                 currentUser.getUserId(), 0, Integer.MAX_VALUE);
 
-        // Apply filters
         List<EventHistoryDto> filteredHistory = allEventHistory.stream()
                 .filter(event -> {
                     // Opportunity search filter
@@ -441,7 +427,6 @@ public class ProfileController {
                 })
                 .collect(Collectors.toList());
 
-        // Pagination
         int totalItems = filteredHistory.size();
         int totalPages = (int) Math.ceil((double) totalItems / size);
         int startIndex = page * size;
@@ -452,7 +437,6 @@ public class ProfileController {
             pagedHistory = filteredHistory.subList(startIndex, endIndex);
         }
 
-        // Calculate statistics
         long totalCompleted = allEventHistory.size();
         long totalAttended = allEventHistory.stream()
                 .filter(EventHistoryDto::isHasAttended)
@@ -461,7 +445,6 @@ public class ProfileController {
                 .filter(EventHistoryDto::isHasRated)
                 .count();
 
-        // Get categories for filter dropdown
         model.addAttribute("categories", categoryService.listAll());
 
         model.addAttribute("eventHistory", pagedHistory);
@@ -533,7 +516,7 @@ public class ProfileController {
         }
     }
 
-    // My Applications PhiLong
+    // PhiLong
     @GetMapping("/applications")
     public String myApplications(
             Model model,

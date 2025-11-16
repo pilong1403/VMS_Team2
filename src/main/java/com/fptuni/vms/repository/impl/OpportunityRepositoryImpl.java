@@ -73,8 +73,9 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
             String sortBy,
             Pageable pageable) {
 
-        StringBuilder where = new StringBuilder(" WHERE 1=1 ");
+        StringBuilder where = new StringBuilder(" WHERE o.status <> :draftStatus ");
         Map<String, Object> params = new HashMap<>();
+        params.put("draftStatus", Opportunity.OpportunityStatus.DRAFT);
 
         if (categoryId != null) {
             where.append(" AND c.categoryId = :catId ");
@@ -163,9 +164,9 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
         return em.createQuery(
                 "SELECT DISTINCT c FROM Category c " +
                         "JOIN Opportunity o ON o.category = c " +
-                        "WHERE o.status = :st",
+                        "WHERE o.status <> :draftStatus",
                 Category.class)
-                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .setParameter("draftStatus", Opportunity.OpportunityStatus.DRAFT)
                 .getResultList();
     }
 
@@ -180,10 +181,10 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
                 "SELECT o FROM Opportunity o " +
                         "JOIN FETCH o.organization " +
                         "JOIN FETCH o.category " +
-                        "WHERE o.status = :st " +
+                        "WHERE o.status <> :draftStatus " +
                         "ORDER BY o.createdAt DESC",
                 Opportunity.class)
-                .setParameter("st", Opportunity.OpportunityStatus.OPEN)
+                .setParameter("draftStatus", Opportunity.OpportunityStatus.DRAFT)
                 .setMaxResults(size)
                 .getResultList();
     }
@@ -427,11 +428,11 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
     @Override
     public Page<Opportunity> searchByOrgWithTimeState(Integer orgId,
-                                                      String keyword,
-                                                      String statusFilter,
-                                                      int page,
-                                                      int size,
-                                                      String timeOrder) {
+            String keyword,
+            String statusFilter,
+            int page,
+            int size,
+            String timeOrder) {
 
         if (orgId == null) {
             return Page.empty();
@@ -537,7 +538,5 @@ public class OpportunityRepositoryImpl implements OpportunityRepository {
 
         return new PageImpl<>(content, PageRequest.of(page, size), total);
     }
-
-
 
 }
